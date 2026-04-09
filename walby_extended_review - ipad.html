@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CLASSIFIED // OPERATION PATRIARCHY // EXTENDED BRIEFING</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --cream:#f0e8d0;--cream-dark:#e0d4b0;--ink:#1a1209;--ink-mid:#2e2010;
+  --red:#8b1a1a;--paper:#f5edd5;--shadow:#c8b98a;--green:#1a4a1a;
+  --redact:#111;--paper2:#ede0bc;
+}
+body{background:#1a1209;background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);min-height:100vh;font-family:'Courier Prime','Courier New',monospace;color:var(--ink);padding:1.5rem 1rem 5rem;display:flex;flex-direction:column;align-items:center;-webkit-text-size-adjust:100%;}
+.page{width:100%;max-width:740px;}
+
+.doc{background:var(--paper);border:1px solid var(--shadow);position:relative;box-shadow:4px 4px 0 #0005,8px 8px 0 #0003;margin-bottom:1.5rem;}
+.doc-stripe{height:8px;background:repeating-linear-gradient(90deg,var(--red) 0,var(--red) 20px,var(--ink) 20px,var(--ink) 40px);}
+.doc-inner{padding:1.5rem 1.75rem;}
+.corner-fold{position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 36px 36px 0;border-color:transparent var(--cream-dark) transparent transparent;}
+.scanline{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.03) 3px,rgba(0,0,0,0.03) 4px);}
+
+.label{font-size:10px;letter-spacing:3px;color:var(--red);text-transform:uppercase;margin-bottom:0.5rem;}
+.title{font-family:'Special Elite',serif;font-size:22px;color:var(--ink);line-height:1.35;margin-bottom:0.75rem;}
+.body-text{font-size:13px;line-height:1.8;color:var(--ink-mid);}
+.redact{display:inline-block;background:var(--redact);color:transparent;user-select:none;border-radius:1px;}
+.stamp{position:absolute;border:3px solid var(--red);color:var(--red);font-family:'Special Elite',serif;font-size:18px;letter-spacing:4px;padding:4px 10px;transform:rotate(-8deg);opacity:0.85;pointer-events:none;}
+
+.progress-wrap{background:var(--paper);border:1px solid var(--shadow);padding:1rem 1.75rem;margin-bottom:1.5rem;box-shadow:4px 4px 0 #0005;}
+.section-pips{display:flex;gap:0;margin-top:0.5rem;}
+.sec-pip{flex:1;height:6px;background:var(--cream-dark);border-right:2px solid var(--paper);transition:background 0.4s;}
+.sec-pip.done{background:var(--ink);}
+.sec-pip.active{background:var(--red);}
+.sec-labels{display:flex;gap:0;margin-top:4px;}
+.sec-lbl{flex:1;font-size:8px;letter-spacing:1px;color:var(--shadow);text-align:center;}
+.sec-lbl.active{color:var(--red);}
+.sec-lbl.done{color:var(--ink-mid);}
+
+.sec-header{background:var(--ink);color:var(--cream);padding:0.6rem 1.2rem;margin-bottom:1.25rem;display:flex;justify-content:space-between;align-items:center;}
+.sec-header .sh-label{font-family:'Special Elite',serif;font-size:13px;letter-spacing:2px;}
+.sec-header .sh-time{font-size:11px;opacity:0.7;letter-spacing:1px;}
+.timer-display{font-family:'Special Elite',serif;font-size:26px;color:var(--ink);text-align:right;margin-bottom:0.5rem;letter-spacing:2px;transition:color 0.3s;}
+.timer-display.urgent{color:var(--red);animation:pulse 0.5s infinite alternate;}
+@keyframes pulse{from{opacity:1;}to{opacity:0.4;}}
+
+/* MATCHING — tap based */
+.match-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem;}
+.match-col-label{font-size:10px;letter-spacing:2px;color:var(--ink-mid);margin-bottom:6px;}
+.match-item{border:1px solid var(--shadow);padding:0.5rem 0.75rem;font-size:12px;margin-bottom:6px;line-height:1.4;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.match-item.structure{background:var(--cream);font-family:'Special Elite',serif;font-size:13px;transition:all 0.15s;}
+.match-item.structure:hover,.match-item.structure:active{background:var(--cream-dark);}
+.match-item.structure.selected{background:var(--ink);color:var(--cream);border-color:var(--ink);}
+.match-item.structure.matched{background:#d4ecd4;border-color:var(--green);color:var(--green);pointer-events:none;}
+.match-item.structure.wrong-flash{background:#f0d0d0;border-color:var(--red);}
+.def-item{background:var(--cream);transition:all 0.15s;}
+.def-item:hover,.def-item:active{background:var(--cream-dark);}
+.def-item.selected{border-color:var(--red);background:rgba(139,26,26,0.07);}
+.def-item.matched{opacity:0.4;pointer-events:none;background:var(--cream-dark);}
+
+/* CLASSIFY — tap to select then tap zone */
+.classify-instruction{font-size:12px;color:var(--ink-mid);background:var(--cream-dark);padding:0.6rem 0.75rem;margin-bottom:1rem;border-left:3px solid var(--shadow);line-height:1.6;}
+.c-pool{display:flex;flex-wrap:wrap;gap:8px;border:1px dashed var(--shadow);padding:10px;background:var(--cream-dark);margin-bottom:1rem;min-height:50px;}
+.c-chip{background:var(--ink);color:var(--cream);padding:6px 10px;font-size:12px;line-height:1.4;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity 0.15s;user-select:none;}
+.c-chip.selected-chip{background:var(--red);outline:2px solid var(--cream);}
+.c-chip.correct-placed{background:var(--green);}
+.c-chip.wrong-placed{background:var(--red);opacity:0.7;}
+.classify-zones{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem;}
+.c-zone-wrap{}
+.c-zone-label{font-size:9px;letter-spacing:2px;color:var(--ink-mid);margin-bottom:4px;font-weight:700;}
+.c-zone{border:1.5px dashed var(--shadow);padding:8px;min-height:70px;background:var(--cream);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color 0.2s,background 0.2s;}
+.c-zone:hover,.c-zone.tap-active{border-color:var(--ink);background:var(--cream-dark);}
+.c-zone .c-chip{margin-bottom:5px;display:block;font-size:11px;}
+
+/* SCENARIO */
+.scenario-box{background:var(--cream-dark);border-left:4px solid var(--ink);padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:13px;line-height:1.8;color:var(--ink-mid);}
+.scenario-box strong{color:var(--ink);}
+.q-block{margin-bottom:1.25rem;}
+.q-label{font-size:10px;letter-spacing:2px;color:var(--red);margin-bottom:4px;}
+.q-text{font-family:'Special Elite',serif;font-size:14px;color:var(--ink);margin-bottom:0.6rem;line-height:1.5;}
+.q-input{width:100%;background:var(--cream);border:1px solid var(--shadow);padding:0.6rem 0.75rem;font-family:'Courier Prime',monospace;font-size:13px;color:var(--ink);resize:vertical;outline:none;-webkit-appearance:none;}
+.q-input:focus{border-color:var(--ink);}
+.mc-opts{display:flex;flex-direction:column;gap:8px;}
+.mc-opt{background:var(--cream);border:1px solid var(--shadow);padding:0.6rem 0.75rem;cursor:pointer;font-size:13px;font-family:'Courier Prime',monospace;text-align:left;transition:all 0.15s;-webkit-tap-highlight-color:transparent;line-height:1.5;}
+.mc-opt::before{content:'[ ] ';color:var(--shadow);}
+.mc-opt:hover,.mc-opt:active{background:var(--cream-dark);}
+.mc-opt.correct{background:#d4ecd4;border-color:var(--green);color:var(--green);}
+.mc-opt.correct::before{content:'[✓] ';color:var(--green);}
+.mc-opt.wrong{background:#f0d0d0;border-color:var(--red);color:var(--red);}
+.mc-opt.wrong::before{content:'[✗] ';color:var(--red);}
+
+/* CONCEPT MAP — tap based */
+.cmap-instructions{font-size:12px;color:var(--ink-mid);padding:0.75rem 1rem;border-bottom:1px solid var(--shadow);line-height:1.6;background:var(--cream-dark);}
+.cmap-area{position:relative;width:100%;background:var(--cream-dark);border:1px solid var(--shadow);overflow:hidden;}
+.cmap-canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
+.cmap-node{position:absolute;background:var(--ink);color:var(--cream);font-family:'Special Elite',serif;font-size:11px;letter-spacing:1px;padding:8px 10px;text-align:center;min-width:80px;border:2px solid var(--ink);z-index:2;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;line-height:1.3;}
+.cmap-node.placed{border-color:#1D9E75;}
+.cmap-node.selected-node{border-color:var(--red);outline:2px solid var(--red);}
+.cmap-node.center-node{background:var(--red);border-color:var(--red);font-size:10px;letter-spacing:2px;cursor:default;}
+.cmap-pool-area{background:var(--paper2);border-top:1px solid var(--shadow);padding:1rem;}
+.cmap-pool-label{font-size:10px;letter-spacing:2px;color:var(--ink-mid);margin-bottom:8px;}
+.cmap-pool{display:flex;flex-wrap:wrap;gap:8px;}
+.cmap-pool-node{background:var(--ink);color:var(--cream);font-family:'Special Elite',serif;font-size:11px;padding:7px 12px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;transition:opacity 0.2s;}
+.cmap-pool-node.used{opacity:0.3;pointer-events:none;}
+.cmap-pool-node.selected-pool{background:var(--red);}
+.conn-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0.75rem 1rem;border-top:1px solid var(--shadow);background:var(--cream);}
+.connect-btn{background:transparent;border:1px solid var(--shadow);color:var(--ink-mid);font-size:11px;letter-spacing:1px;padding:6px 12px;cursor:pointer;font-family:'Courier Prime',monospace;-webkit-tap-highlight-color:transparent;}
+.connect-btn.active{background:var(--ink);color:var(--cream);border-color:var(--ink);}
+.conn-label-input{font-size:12px;border:1px solid var(--shadow);background:var(--cream);padding:5px 8px;font-family:'Courier Prime',monospace;color:var(--ink);flex:1;min-width:120px;-webkit-appearance:none;}
+.conn-status{font-size:11px;color:var(--ink-mid);width:100%;}
+.conn-list{font-size:12px;line-height:1.9;color:var(--ink-mid);min-height:24px;padding:0.5rem 1rem;border-top:1px solid var(--shadow);}
+
+/* WORD COUNT */
+.word-counter{font-size:11px;color:var(--shadow);text-align:right;margin-top:4px;letter-spacing:1px;}
+.word-counter.good{color:var(--green);}
+
+/* BUTTONS */
+.btn{background:var(--ink);color:var(--cream);border:none;padding:0.6rem 1.5rem;font-family:'Courier Prime',monospace;font-size:13px;letter-spacing:1px;cursor:pointer;transition:opacity 0.2s;margin-top:0.75rem;-webkit-tap-highlight-color:transparent;-webkit-appearance:none;}
+.btn:hover,.btn:active{opacity:0.8;}
+.btn-red{background:var(--red);}
+
+/* FEEDBACK */
+.feedback{margin-top:0.75rem;padding:0.75rem 1rem;font-size:13px;line-height:1.7;border-left:3px solid;display:none;}
+.feedback.good{background:#d4ecd4;color:var(--green);border-color:var(--green);display:block;}
+.feedback.bad{background:#f0d0d0;color:var(--red);border-color:var(--red);display:block;}
+.feedback.info{background:var(--cream-dark);color:var(--ink-mid);border-color:var(--shadow);display:block;}
+.feedback-stamp{display:inline-block;font-family:'Special Elite',serif;font-size:10px;letter-spacing:3px;border:2px solid currentColor;padding:1px 6px;margin-bottom:6px;}
+
+.complete-doc{background:var(--paper);border:1px solid var(--shadow);box-shadow:4px 4px 0 #0005,8px 8px 0 #0003;}
+.score-big{font-family:'Special Elite',serif;font-size:56px;color:var(--ink);line-height:1;margin:1rem 0 0.5rem;}
+.verdict-stamp{display:inline-block;border:3px solid var(--red);color:var(--red);font-family:'Special Elite',serif;font-size:22px;letter-spacing:5px;padding:6px 18px;transform:rotate(-3deg);margin-bottom:1.5rem;}
+.verdict-stamp.green{border-color:var(--green);color:var(--green);}
+
+@keyframes fadeSlide{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.animate-in{animation:fadeSlide 0.4s ease both;}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="doc animate-in">
+  <div class="doc-stripe"></div>
+  <div class="scanline"></div>
+  <div class="doc-inner">
+    <div class="stamp" style="top:2rem;right:1.5rem;">CLASSIFIED</div>
+    <div class="label">TOP SECRET // GENDER EQUALITY INTELLIGENCE UNIT</div>
+    <div class="title">OPERATION <span class="redact">&nbsp;PATRIARCHY&nbsp;</span><br>Extended Field Briefing</div>
+    <div class="body-text">Agent — you have been assigned an extended intelligence review. Five sections. Approximately 30 minutes. Complete all sections to earn full clearance.<br><br><strong>Cover your notebook. Work independently.</strong></div>
+  </div>
+  <div class="doc-stripe"></div>
+</div>
+
+<div class="progress-wrap animate-in">
+  <div class="label">MISSION PROGRESS</div>
+  <div class="section-pips" id="sec-pips">
+    <div class="sec-pip active" id="pip0"></div><div class="sec-pip" id="pip1"></div><div class="sec-pip" id="pip2"></div><div class="sec-pip" id="pip3"></div><div class="sec-pip" id="pip4"></div>
+  </div>
+  <div class="sec-labels">
+    <div class="sec-lbl active" id="lbl0">01 RECALL</div><div class="sec-lbl" id="lbl1">02 CLASSIFY</div><div class="sec-lbl" id="lbl2">03 SCENARIO</div><div class="sec-lbl" id="lbl3">04 SYSTEM</div><div class="sec-lbl" id="lbl4">05 JUDGEMENT</div>
+  </div>
+</div>
+
+<div id="section-container"></div>
+</div>
+
+<script>
+// ── AUDIO ──────────────────────────────────────────────────────────────────
+let audioCtx=null;
+function ga(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+function beep(f,d,t='square',v=0.07){try{const c=ga(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+d);o.start(c.currentTime);o.stop(c.currentTime+d);}catch(e){}}
+function playOk(){beep(440,0.08);setTimeout(()=>beep(554,0.08),90);setTimeout(()=>beep(659,0.18),180);}
+function playFail(){beep(280,0.15);setTimeout(()=>beep(210,0.22),140);}
+function playSection(){beep(523,0.07);setTimeout(()=>beep(659,0.07),80);setTimeout(()=>beep(784,0.07),160);setTimeout(()=>beep(1047,0.25),240);}
+function playTick(){beep(900,0.03,'sine',0.03);}
+
+// ── TIMER ──────────────────────────────────────────────────────────────────
+let timerInt=null,timeLeft=0;
+function startTimer(secs,elId){
+  clearInterval(timerInt);timeLeft=secs;updateTimerEl(elId);
+  timerInt=setInterval(()=>{timeLeft--;updateTimerEl(elId);if(timeLeft<=30)playTick();if(timeLeft<=0)clearInterval(timerInt);},1000);
+}
+function stopTimer(){clearInterval(timerInt);}
+function updateTimerEl(id){
+  const el=document.getElementById(id);if(!el)return;
+  const m=Math.floor(timeLeft/60).toString().padStart(2,'0'),s=(timeLeft%60).toString().padStart(2,'0');
+  el.textContent=m+':'+s;el.className='timer-display'+(timeLeft<=30?' urgent':'');
+}
+
+// ── PROGRESS ───────────────────────────────────────────────────────────────
+let currentSection=0;
+function updateProgress(){
+  for(let i=0;i<5;i++){
+    document.getElementById('pip'+i).className='sec-pip'+(i<currentSection?' done':i===currentSection?' active':'');
+    document.getElementById('lbl'+i).className='sec-lbl'+(i<currentSection?' done':i===currentSection?' active':'');
+  }
+}
+function nextSection(){
+  currentSection++;updateProgress();
+  const c=document.getElementById('section-container');
+  c.style.opacity='0';c.style.transition='opacity 0.3s';
+  setTimeout(()=>{c.style.opacity='1';renderSection();window.scrollTo({top:document.getElementById('section-container').offsetTop-80,behavior:'smooth'});},300);
+}
+function renderSection(){
+  if(currentSection===0)renderSection1();
+  else if(currentSection===1)renderSection2();
+  else if(currentSection===2)renderSection3();
+  else if(currentSection===3)renderSection4();
+  else if(currentSection===4)renderSection5();
+  else renderComplete();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SECTION 1 — MATCHING (tap-based)
+// ══════════════════════════════════════════════════════════════════
+const structures=[
+  {name:'Paid Work',def:'The systematic disadvantaging of women in the formal labour market through unequal wages, occupational segregation, and discriminatory hiring.'},
+  {name:'Household Production',def:'The unequal division of unpaid domestic labour — cooking, childcare, cleaning — systematically assigned to women, reproducing their subordination.'},
+  {name:'Culture',def:'The representation of women in narrow, limiting ways through media, religion, and popular culture that normalises gender inequality.'},
+  {name:'Sexuality',def:'The regulation of women\'s sexual behaviour through social norms, compulsory heterosexuality, and double standards that function as systemic control.'},
+  {name:'Male Violence',def:'The use of — and threat of — physical and sexual violence against women as a structural mechanism that restricts women\'s freedom.'},
+  {name:'The State',def:'The role of law, policy, and political institutions in historically reinforcing gender inequality through under-enforcement and exclusion from power.'},
+];
+let selectedStruct=null,selectedDef=null,matchedCount=0;
+
+function renderSection1(){
+  stopTimer();
+  const sOrd=[0,1,2,3,4,5].sort(()=>Math.random()-0.5);
+  const dOrd=[0,1,2,3,4,5].sort(()=>Math.random()-0.5);
+  window._sOrd=sOrd;window._dOrd=dOrd;
+  selectedStruct=null;selectedDef=null;matchedCount=0;
+  const c=document.getElementById('section-container');
+  c.innerHTML=`
+  <div class="doc animate-in"><div class="doc-stripe"></div><div class="doc-inner">
+    <div class="sec-header"><span class="sh-label">SECTION 01 // RAPID RECALL</span><span class="sh-time">~5 MIN</span></div>
+    <div class="timer-display" id="timer1">05:00</div>
+    <div class="body-text" style="margin-bottom:1rem;">Tap a structure name, then tap its matching definition. All six must be matched to proceed.</div>
+    <div class="match-grid">
+      <div>
+        <div class="match-col-label">STRUCTURES</div>
+        ${sOrd.map(i=>`<div class="match-item structure" id="struct-${i}" onclick="selectStruct(${i})">${structures[i].name}</div>`).join('')}
+      </div>
+      <div>
+        <div class="match-col-label">DEFINITIONS</div>
+        ${dOrd.map(i=>`<div class="match-item def-item" id="def-${i}" onclick="selectDef(${i})">${structures[i].def}</div>`).join('')}
+      </div>
+    </div>
+    <div class="feedback" id="fb1"></div>
+  </div><div class="doc-stripe"></div></div>`;
+  startTimer(300,'timer1');
+}
+
+function selectStruct(i){
+  if(document.getElementById('struct-'+i).classList.contains('matched'))return;
+  document.querySelectorAll('.match-item.structure').forEach(el=>{if(!el.classList.contains('matched'))el.className='match-item structure';});
+  selectedStruct=i;
+  document.getElementById('struct-'+i).className='match-item structure selected';
+  if(selectedDef!==null)tryMatch();
+}
+function selectDef(i){
+  if(document.getElementById('def-'+i).classList.contains('matched'))return;
+  document.querySelectorAll('.def-item').forEach(el=>{if(!el.classList.contains('matched'))el.className='match-item def-item';});
+  selectedDef=i;
+  document.getElementById('def-'+i).className='match-item def-item selected';
+  if(selectedStruct!==null)tryMatch();
+}
+function tryMatch(){
+  const s=selectedStruct,d=selectedDef;
+  selectedStruct=null;selectedDef=null;
+  if(s===d){
+    playOk();
+    document.getElementById('struct-'+s).className='match-item structure matched';
+    document.getElementById('def-'+d).className='match-item def-item matched';
+    matchedCount++;
+    if(matchedCount===6){
+      stopTimer();playSection();
+      const fb=document.getElementById('fb1');
+      fb.className='feedback good';
+      fb.innerHTML='<div class="feedback-stamp">ALL SIX CONFIRMED</div><br>All six structures matched correctly. Now let\'s apply the framework.<br><br><button class="btn" onclick="nextSection()">▶ NEXT SECTION</button>';
+    }
+  } else {
+    playFail();
+    const se=document.getElementById('struct-'+s),de=document.getElementById('def-'+d);
+    se.className='match-item structure wrong-flash';de.style.background='#f0d0d0';
+    setTimeout(()=>{se.className='match-item structure';de.className='match-item def-item';de.style.background='';},700);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SECTION 2 — CLASSIFY (tap-to-select, tap-zone-to-place)
+// ══════════════════════════════════════════════════════════════════
+const evidenceItems=[
+  {text:'In Taiwan, women perform an average of 4.5 hours of unpaid care work daily — more than twice the amount done by men.',correct:'Household Production'},
+  {text:'Taiwanese advertising regularly uses female beauty standards to sell unrelated products, from electronics to insurance.',correct:'Culture'},
+  {text:'Despite equal pay laws, Taiwan\'s gender pay gap remains around 14%, concentrated in management and professional roles.',correct:'Paid Work'},
+  {text:'A 2022 survey found that 1 in 3 Taiwanese women had experienced sexual harassment in the workplace.',correct:'Male Violence'},
+  {text:'Until 1998, Taiwanese law did not recognise marital rape as a crime.',correct:'The State'},
+  {text:'Social pressure in Taiwan often pushes women to be sexually conservative while men face few equivalent expectations.',correct:'Sexuality'},
+  {text:'In South Korea, the "escape the corset" movement challenged beauty norms imposed on women through media and culture.',correct:'Culture'},
+  {text:'In the UK, women are significantly underrepresented in parliament, comprising around 35% of MPs.',correct:'The State'},
+];
+const structureNames=['Paid Work','Household Production','Culture','Sexuality','Male Violence','The State'];
+let selectedChipId=null;
+let chipPlacements={};
+
+function renderSection2(){
+  stopTimer();
+  const shuffled=[...evidenceItems].sort(()=>Math.random()-0.5);
+  window._classifyItems=shuffled;
+  selectedChipId=null;chipPlacements={};
+  shuffled.forEach((_,i)=>chipPlacements[i]='pool');
+  const c=document.getElementById('section-container');
+  c.innerHTML=`
+  <div class="doc animate-in"><div class="doc-stripe"></div><div class="doc-inner">
+    <div class="sec-header"><span class="sh-label">SECTION 02 // CLASSIFY THE EVIDENCE</span><span class="sh-time">~7 MIN</span></div>
+    <div class="timer-display" id="timer2">07:00</div>
+    <div class="classify-instruction">
+      <strong>How to use:</strong> Tap an intercept to select it (it turns red). Then tap a structure zone below to place it there. Tap a placed chip to move it back to the pool.
+    </div>
+    <div class="classify-zones" id="classify-zones">
+      ${structureNames.map(s=>`
+        <div class="c-zone-wrap">
+          <div class="c-zone-label">${s.toUpperCase()}</div>
+          <div class="c-zone" id="zone-${s.replace(/\s/g,'-')}" onclick="placeChip('${s}')"></div>
+        </div>`).join('')}
+    </div>
+    <div class="match-col-label" style="margin-bottom:6px;">INTERCEPTS — tap to select</div>
+    <div class="c-pool" id="c-pool">
+      ${shuffled.map((item,i)=>`<div class="c-chip" id="cchip-${i}" onclick="selectChip(${i})">${item.text}</div>`).join('')}
+    </div>
+    <button class="btn" onclick="checkClassify()">SUBMIT CLASSIFICATION</button>
+    <div class="feedback" id="fb2"></div>
+  </div><div class="doc-stripe"></div></div>`;
+  startTimer(420,'timer2');
+}
+
+function selectChip(i){
+  // If chip is in a zone, move back to pool
+  if(chipPlacements[i]!=='pool'){
+    chipPlacements[i]='pool';
+    const chip=document.getElementById('cchip-'+i);
+    chip.classList.remove('selected-chip');
+    document.getElementById('c-pool').appendChild(chip);
+    if(selectedChipId===i)selectedChipId=null;
+    return;
+  }
+  // Deselect if already selected
+  if(selectedChipId===i){
+    document.getElementById('cchip-'+i).classList.remove('selected-chip');
+    selectedChipId=null;return;
+  }
+  // Select this chip
+  if(selectedChipId!==null)document.getElementById('cchip-'+selectedChipId).classList.remove('selected-chip');
+  selectedChipId=i;
+  document.getElementById('cchip-'+i).classList.add('selected-chip');
+}
+
+function placeChip(structure){
+  if(selectedChipId===null)return;
+  const i=selectedChipId;
+  const chip=document.getElementById('cchip-'+i);
+  chip.classList.remove('selected-chip');
+  chipPlacements[i]=structure;
+  const zone=document.getElementById('zone-'+structure.replace(/\s/g,'-'));
+  zone.appendChild(chip);
+  selectedChipId=null;
+}
+
+function checkClassify(){
+  const items=window._classifyItems;
+  let correct=0;
+  items.forEach((_,i)=>{
+    const chip=document.getElementById('cchip-'+i);
+    const placed=chipPlacements[i];
+    if(placed===items[i].correct){correct++;chip.classList.add('correct-placed');}
+    else if(placed!=='pool'){chip.classList.add('wrong-placed');}
+  });
+  stopTimer();
+  const fb=document.getElementById('fb2');
+  const good=correct>=6;
+  if(good)playOk();else playFail();
+  fb.className='feedback '+(good?'good':'info');
+  fb.innerHTML=`<div class="feedback-stamp">${correct}/${items.length} CORRECTLY CLASSIFIED</div><br>
+  Green chips are correctly placed. Review any red ones — consider which structure describes the primary mechanism, not just the topic.<br><br>
+  <strong>Key principle:</strong> Walby's structures often overlap. Always ask: <em>what is the primary structural mechanism at work?</em><br><br>
+  <button class="btn" onclick="nextSection()">▶ NEXT SECTION</button>`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SECTION 3 — SCENARIO
+// ══════════════════════════════════════════════════════════════════
+function renderSection3(){
+  stopTimer();
+  const c=document.getElementById('section-container');
+  c.innerHTML=`
+  <div class="doc animate-in"><div class="doc-stripe"></div><div class="doc-inner">
+    <div class="sec-header"><span class="sh-label">SECTION 03 // DECODE THE SCENARIO</span><span class="sh-time">~8 MIN</span></div>
+    <div class="timer-display" id="timer3">08:00</div>
+    <div class="body-text" style="margin-bottom:1rem;">Read the intelligence file. Answer the three questions using Walby's framework.</div>
+    <div class="scenario-box">
+      <strong>INTELLIGENCE FILE // CASE: SPAIN, 2004–PRESENT</strong><br><br>
+      In 2004, Spain passed the <em>Ley Orgánica de Medidas de Protección Integral contra la Violencia de Género</em> — the first national law in Europe to treat gender-based violence as a structural problem rather than a private family matter. The law created specialised courts, mandatory restraining orders, and funded a national network of shelters. Critics argued the law went too far; supporters argued that decades of treating domestic violence as private had allowed structural patterns to persist unchecked. Since 2004, official femicide data has been systematically collected for the first time. Rates of reported gender-based violence initially rose — analysts attribute this to increased reporting confidence, not increased violence. The law remains contested but is widely cited as evidence that the state can be a site of both patriarchal reproduction and feminist resistance.
+    </div>
+    <div class="q-block">
+      <div class="q-label">QUESTION 01 // IDENTIFY</div>
+      <div class="q-text">Which of Walby's six structures is most clearly illustrated by this case?</div>
+      <div class="mc-opts">
+        <button class="mc-opt" onclick="checkS3MC(this,false)">Paid Work — the law affected women's labour market position</button>
+        <button class="mc-opt" onclick="checkS3MC(this,false)">Culture — the law changed media representations of women</button>
+        <button class="mc-opt" onclick="checkS3MC(this,true)">The State — law and policy are used as sites of patriarchal control and feminist struggle</button>
+        <button class="mc-opt" onclick="checkS3MC(this,false)">Household Production — the law addressed domestic labour divisions</button>
+      </div>
+      <div class="feedback" id="fb3a"></div>
+    </div>
+    <div class="q-block" id="s3q2" style="display:none;">
+      <div class="q-label">QUESTION 02 // EXPLAIN</div>
+      <div class="q-text">Using Walby's framework, explain why treating domestic violence as a 'private family matter' reinforces patriarchy. Write 3–5 sentences.</div>
+      <textarea class="q-input" id="s3ans2" rows="4" placeholder="Type your analysis here..."></textarea>
+      <div class="feedback info" style="display:block;margin-top:0.5rem;"><strong>Think about:</strong> What does it mean for the state to stay silent? Who benefits? How does this connect to Walby's argument about male violence and the state working together?</div>
+      <button class="btn" onclick="checkS3Q2()">SUBMIT</button>
+      <div class="feedback" id="fb3b"></div>
+    </div>
+    <div class="q-block" id="s3q3" style="display:none;">
+      <div class="q-label">QUESTION 03 // EVALUATE</div>
+      <div class="q-text">The state changed its position over time. Does this strengthen or weaken Walby's argument? Explain in 3–5 sentences.</div>
+      <textarea class="q-input" id="s3ans3" rows="4" placeholder="Type your evaluation here..."></textarea>
+      <div class="feedback info" style="display:block;margin-top:0.5rem;"><strong>Think about:</strong> Walby argues the state is a 'site of struggle.' Does the Spain example support or complicate this? Does legal change mean structural change?</div>
+      <button class="btn" onclick="checkS3Q3()">SUBMIT</button>
+      <div class="feedback" id="fb3c"></div>
+    </div>
+  </div><div class="doc-stripe"></div></div>`;
+  startTimer(480,'timer3');
+}
+
+function checkS3MC(btn,correct){
+  document.querySelectorAll('.mc-opt').forEach(b=>{b.disabled=true;b.style.pointerEvents='none';});
+  btn.className='mc-opt '+(correct?'correct':'wrong');
+  if(!correct)document.querySelectorAll('.mc-opt').forEach(b=>{if(b.textContent.includes('The State'))b.className='mc-opt correct';});
+  const fb=document.getElementById('fb3a');
+  fb.className='feedback '+(correct?'good':'bad');
+  fb.innerHTML=correct
+    ?'<div class="feedback-stamp">CONFIRMED</div><br>Correct. The Spain case centres on the state — how law can both enforce and challenge patriarchal structures.'
+    :'<div class="feedback-stamp">INCORRECT</div><br>The primary structure is The State. The case is about law and policy — how the state previously ignored domestic violence, and how legislation changed that.';
+  if(correct)playOk();else playFail();
+  setTimeout(()=>{document.getElementById('s3q2').style.display='block';},700);
+}
+function checkS3Q2(){
+  const val=document.getElementById('s3ans2').value.trim();
+  if(val.length<40){alert('Please write at least 3 sentences.');return;}
+  stopTimer();
+  const fb=document.getElementById('fb3b');
+  fb.className='feedback good';
+  fb.innerHTML='<div class="feedback-stamp">SUBMITTED</div><br><strong>Strong answers include:</strong> When the state defines violence as private, it removes itself as a protective structure. This allows male violence to operate unchecked. Walby argues state inaction is itself a political choice that reproduces patriarchy — silence benefits perpetrators.';
+  playOk();document.getElementById('s3q3').style.display='block';
+}
+function checkS3Q3(){
+  const val=document.getElementById('s3ans3').value.trim();
+  if(val.length<40){alert('Please write at least 3 sentences.');return;}
+  stopTimer();
+  const fb=document.getElementById('fb3c');
+  fb.className='feedback good';
+  fb.innerHTML='<div class="feedback-stamp">SUBMITTED</div><br><strong>Strong answers include:</strong> Walby anticipates this — she argues the state is a "site of struggle," not permanently fixed. The Spain example could strengthen her argument: the state was initially patriarchal, then became a site of resistance. A critic might note that legal change does not automatically change the underlying structure if enforcement remains uneven.<br><br><button class="btn" onclick="nextSection()">▶ NEXT SECTION</button>';
+  playSection();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SECTION 4 — CONCEPT MAP (fully tap/click based)
+// ══════════════════════════════════════════════════════════════════
+const cmapStructs=['Paid Work','Household Production','Culture','Sexuality','Male Violence','The State'];
+let cmapPlaced={};       // name -> {x,y}
+let cmapConnecting=false;
+let cmapConnFrom=null;
+let cmapConnections=[];
+let cmapSelectedPool=null;
+
+function renderSection4(){
+  stopTimer();
+  cmapPlaced={};cmapConnecting=false;cmapConnFrom=null;cmapConnections=[];cmapSelectedPool=null;
+  const c=document.getElementById('section-container');
+  c.innerHTML=`
+  <div class="doc animate-in"><div class="doc-stripe"></div><div class="doc-inner">
+    <div class="sec-header"><span class="sh-label">SECTION 04 // BUILD THE SYSTEM</span><span class="sh-time">~8 MIN</span></div>
+    <div class="timer-display" id="timer4">08:00</div>
+    <div class="body-text" style="margin-bottom:1rem;">Walby argues patriarchy is a <em>system</em> — the six structures work together. Build your concept map.</div>
+  </div>
+  <div class="cmap-instructions">
+    <strong>Step 1:</strong> Tap a structure tile below to select it (turns red), then tap anywhere on the map to place it.<br>
+    <strong>Step 2:</strong> Tap CONNECT MODE, then tap two placed nodes to link them. Type a label and press Enter.<br>
+    <strong>Aim for at least 4 connections.</strong>
+  </div>
+  <div class="cmap-area" id="cmap-area" style="height:320px;" onclick="cmapAreaClick(event)">
+    <canvas class="cmap-canvas" id="cmap-canvas"></canvas>
+    <div class="cmap-node center-node" id="cmap-center" style="top:130px;left:calc(50% - 55px);width:110px;">PATRIARCHY<br><span style="font-size:9px;opacity:0.8;">as system</span></div>
+  </div>
+  <div class="conn-controls">
+    <button class="connect-btn" id="conn-btn" onclick="toggleConnect()">CONNECT MODE</button>
+    <input class="conn-label-input" id="conn-label" placeholder="Type link label, press Enter..." style="display:none;" onkeydown="connLabelKey(event)">
+    <div class="conn-status" id="conn-status">Place nodes first — tap a tile, then tap the map.</div>
+  </div>
+  <div class="cmap-pool-area">
+    <div class="cmap-pool-label">STRUCTURE TILES — tap to select, then tap map to place</div>
+    <div class="cmap-pool" id="cmap-pool">
+      ${cmapStructs.map((s,i)=>`<div class="cmap-pool-node" id="pool-node-${i}" onclick="selectPoolNode(${i})">${s}</div>`).join('')}
+    </div>
+  </div>
+  <div class="conn-list" id="conn-list">No connections yet.</div>
+  <div class="doc-inner" style="padding-top:0;">
+    <button class="btn" onclick="submitCmap()">SUBMIT MAP</button>
+    <div class="feedback" id="fb4"></div>
+  </div>
+  <div class="doc-stripe"></div></div>`;
+  startTimer(480,'timer4');
+  setTimeout(()=>drawCmapConnections(),100);
+}
+
+function selectPoolNode(i){
+  const name=cmapStructs[i];
+  if(cmapPlaced[name]){return;}
+  if(cmapConnecting)return;
+  // Deselect all
+  document.querySelectorAll('.cmap-pool-node').forEach(n=>n.classList.remove('selected-pool'));
+  if(cmapSelectedPool===i){cmapSelectedPool=null;return;}
+  cmapSelectedPool=i;
+  document.getElementById('pool-node-'+i).classList.add('selected-pool');
+  document.getElementById('conn-status').textContent='Tap the map to place: '+name;
+}
+
+function cmapAreaClick(e){
+  if(cmapConnecting)return;
+  if(cmapSelectedPool===null)return;
+  const name=cmapStructs[cmapSelectedPool];
+  if(cmapPlaced[name])return;
+  const area=document.getElementById('cmap-area');
+  const rect=area.getBoundingClientRect();
+  const x=e.clientX-rect.left;
+  const y=e.clientY-rect.top;
+  // Place node
+  const nodeEl=document.createElement('div');
+  nodeEl.className='cmap-node placed';
+  nodeEl.id='cmap-placed-'+cmapSelectedPool;
+  nodeEl.textContent=name;
+  nodeEl.style.left=Math.max(2,Math.min(rect.width-100,x-45))+'px';
+  nodeEl.style.top=Math.max(2,Math.min(rect.height-40,y-18))+'px';
+  nodeEl.onclick=cmapNodeTap;
+  area.appendChild(nodeEl);
+  cmapPlaced[name]={x:x,y:y,el:nodeEl};
+  // Mark pool tile used
+  document.getElementById('pool-node-'+cmapSelectedPool).classList.add('used');
+  document.getElementById('pool-node-'+cmapSelectedPool).classList.remove('selected-pool');
+  cmapSelectedPool=null;
+  document.getElementById('conn-status').textContent='Node placed. Select another tile or switch to Connect Mode.';
+  drawCmapConnections();
+}
+
+function cmapNodeTap(e){
+  if(!cmapConnecting)return;
+  e.stopPropagation();
+  const el=e.currentTarget;
+  const name=el.textContent.trim();
+  if(!cmapConnFrom){
+    cmapConnFrom=name;
+    el.classList.add('selected-node');
+    document.getElementById('conn-status').textContent='Now tap the second node to connect to.';
+  } else {
+    if(cmapConnFrom===name){el.classList.remove('selected-node');cmapConnFrom=null;document.getElementById('conn-status').textContent='Tap the first node.';return;}
+    // Show label input
+    document.querySelectorAll('.cmap-node.placed').forEach(n=>n.classList.remove('selected-node'));
+    const labelInput=document.getElementById('conn-label');
+    labelInput.style.display='inline-block';
+    labelInput.focus();
+    window._cmapPending={from:cmapConnFrom,to:name};
+    cmapConnFrom=null;
+    document.getElementById('conn-status').textContent='Type a label for this connection, then press Enter.';
+  }
+}
+
+function connLabelKey(e){
+  if(e.key!=='Enter')return;
+  const label=document.getElementById('conn-label').value.trim()||'connected';
+  const p=window._cmapPending;
+  if(p){cmapConnections.push({from:p.from,to:p.to,label});window._cmapPending=null;}
+  document.getElementById('conn-label').value='';
+  document.getElementById('conn-label').style.display='none';
+  document.getElementById('conn-status').textContent='Connection added. Tap two more nodes to connect.';
+  updateConnList();drawCmapConnections();playOk();
+}
+
+function toggleConnect(){
+  cmapConnecting=!cmapConnecting;cmapConnFrom=null;cmapSelectedPool=null;
+  document.querySelectorAll('.cmap-pool-node').forEach(n=>n.classList.remove('selected-pool'));
+  document.querySelectorAll('.cmap-node.placed').forEach(n=>n.classList.remove('selected-node'));
+  const btn=document.getElementById('conn-btn');
+  btn.className='connect-btn'+(cmapConnecting?' active':'');
+  document.getElementById('conn-label').style.display='none';
+  document.getElementById('conn-status').textContent=cmapConnecting?'Tap first node to connect.':'Drag mode. Select a tile to place.';
+}
+
+function updateConnList(){
+  const el=document.getElementById('conn-list');
+  if(cmapConnections.length===0){el.textContent='No connections yet.';return;}
+  el.innerHTML=cmapConnections.map((c,i)=>`${i+1}. <strong>${c.from}</strong> ↔ <strong>${c.to}</strong>: ${c.label}`).join('<br>');
+}
+
+function drawCmapConnections(){
+  const canvas=document.getElementById('cmap-canvas');if(!canvas)return;
+  const area=document.getElementById('cmap-area');
+  canvas.width=area.offsetWidth;canvas.height=area.offsetHeight;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle='#1a1209';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);
+  const getCenter=name=>{
+    const obj=cmapPlaced[name];if(!obj||!obj.el)return null;
+    const r=obj.el.getBoundingClientRect();
+    const ar=area.getBoundingClientRect();
+    return{x:r.left-ar.left+r.width/2,y:r.top-ar.top+r.height/2};
+  };
+  // Center node
+  const centerEl=document.getElementById('cmap-center');
+  const getCenterNode=()=>{
+    const r=centerEl.getBoundingClientRect();const ar=area.getBoundingClientRect();
+    return{x:r.left-ar.left+r.width/2,y:r.top-ar.top+r.height/2};
+  };
+  cmapConnections.forEach(conn=>{
+    const a=conn.from==='PATRIARCHY'?getCenterNode():getCenter(conn.from);
+    const b=conn.to==='PATRIARCHY'?getCenterNode():getCenter(conn.to);
+    if(!a||!b)return;
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+    ctx.fillStyle='#1a1209';ctx.font='10px Courier Prime,monospace';ctx.setLineDash([]);
+    ctx.fillText(conn.label.slice(0,22),(a.x+b.x)/2-30,(a.y+b.y)/2-4);
+    ctx.setLineDash([4,4]);
+  });
+}
+
+function submitCmap(){
+  const placed=Object.keys(cmapPlaced).length;
+  const conns=cmapConnections.length;
+  stopTimer();playSection();
+  const fb=document.getElementById('fb4');
+  fb.className='feedback '+(conns>=4?'good':'info');
+  fb.innerHTML=`<div class="feedback-stamp">${placed} NODES PLACED // ${conns} CONNECTIONS DRAWN</div><br>
+  ${conns>=4?'Strong work. Systems thinking requires showing how structures reinforce each other.':'Try adding more connections next time. Consider: how does Culture affect Paid Work? How does The State\'s response to violence shape women\'s freedom?'}
+  <br><br><strong>Key connections to consider:</strong><br>
+  • Paid Work ↔ Household Production: lower wages make it "rational" for women to do more unpaid work<br>
+  • Male Violence ↔ The State: under-enforcement allows violence to function as structural control<br>
+  • Culture ↔ Sexuality: media norms define and police "acceptable" female sexuality<br>
+  • The State ↔ Paid Work: policy on parental leave shapes who enters the formal labour market<br><br>
+  <button class="btn" onclick="nextSection()">▶ NEXT SECTION</button>`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SECTION 5 — EXTENDED RESPONSE
+// ══════════════════════════════════════════════════════════════════
+function renderSection5(){
+  stopTimer();
+  const c=document.getElementById('section-container');
+  c.innerHTML=`
+  <div class="doc animate-in"><div class="doc-stripe"></div><div class="doc-inner">
+    <div class="sec-header"><span class="sh-label">SECTION 05 // FINAL JUDGEMENT</span><span class="sh-time">~7 MIN</span></div>
+    <div class="timer-display" id="timer5">07:00</div>
+    <div class="body-text" style="margin-bottom:1rem;">Read the scenario. Write your extended analysis below.</div>
+    <div class="scenario-box">
+      <strong>INTELLIGENCE FILE // CASE: TAIWAN</strong><br><br>
+      In Taiwan, the care economy is largely invisible. Women in their 40s and 50s frequently leave paid employment to care for aging parents or in-laws — described in Mandarin as <em>jiātíng zhàogù</em> (family caring). This exit from the workforce is rarely described as a structural issue. Government statistics categorise these women as "economically inactive." Social media platforms in Taiwan frequently celebrate women who "sacrifice" their careers for family as embodying ideal Taiwanese femininity. Legal protections for care leave exist but are rarely used by women, partly due to workplace culture and partly because women report feeling that using such leave would damage their professional reputation. Men in equivalent situations rarely face the same expectation to leave employment.
+    </div>
+    <div class="q-label" style="margin-bottom:6px;">YOUR TASK</div>
+    <div class="q-text" style="margin-bottom:1rem;font-family:'Special Elite',serif;font-size:15px;line-height:1.6;border-left:3px solid var(--ink);padding-left:1rem;">
+      Using Walby's framework, argue which of her six structures <em>most powerfully</em> explains the situation described. Identify your chosen structure, explain how it operates in this case, and acknowledge which other structure(s) also play a role. Write 150–250 words.
+    </div>
+    <div class="feedback info" style="display:block;margin-bottom:1rem;">
+      <strong>Thinking scaffold:</strong> Multiple structures are visible here. Which one is doing the most structural work? Is it primarily Culture (norms of femininity), Household Production (who does unpaid care), The State (how law fails women), or Paid Work (how the labour market is structured)?
+    </div>
+    <textarea class="q-input" id="s5ans" rows="10" placeholder="Write your extended analysis here..." oninput="updateWordCount()"></textarea>
+    <div class="word-counter" id="word-count">0 / 150–250 words</div>
+    <button class="btn btn-red" onclick="submitFinal()">SUBMIT FINAL REPORT</button>
+    <div class="feedback" id="fb5"></div>
+  </div><div class="doc-stripe"></div></div>`;
+  startTimer(420,'timer5');
+}
+
+function updateWordCount(){
+  const val=document.getElementById('s5ans').value.trim();
+  const words=val?val.split(/\s+/).filter(w=>w.length>0).length:0;
+  const el=document.getElementById('word-count');
+  el.textContent=words+' / 150–250 words';
+  el.className='word-counter'+(words>=150&&words<=260?' good':'');
+}
+
+function submitFinal(){
+  const val=document.getElementById('s5ans').value.trim();
+  const words=val?val.split(/\s+/).filter(w=>w.length>0).length:0;
+  if(words<80){alert('Please write a more complete response — aim for at least 150 words.');return;}
+  stopTimer();playSection();
+  const fb=document.getElementById('fb5');
+  fb.className='feedback good';
+  fb.innerHTML=`<div class="feedback-stamp">REPORT SUBMITTED</div><br>
+  <strong>Strong responses will have:</strong><br><br>
+  <strong>Strong argument for Household Production:</strong> The expectation that women perform <em>jiātíng zhàogù</em> is the foundational mechanism — it directly removes women from paid work.<br><br>
+  <strong>Strong argument for Culture:</strong> The celebration of women who "sacrifice" careers as ideal Taiwanese femininity is the ideological mechanism that makes the expectation feel natural — without culture, the structure cannot reproduce itself.<br><br>
+  <strong>What to avoid:</strong> Simply listing all six structures without arguing which is primary. Walby's framework requires you to identify which structure is doing the most work in this specific context.<br><br>
+  <button class="btn btn-red" onclick="nextSection()">▶ COMPLETE MISSION</button>`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// COMPLETE
+// ══════════════════════════════════════════════════════════════════
+function renderComplete(){
+  stopTimer();updateProgress();playSection();
+  document.getElementById('section-container').innerHTML=`
+  <div class="complete-doc animate-in">
+    <div class="doc-stripe"></div>
+    <div style="padding:2.5rem 2rem;text-align:center;">
+      <div class="label">MISSION DEBRIEF // OPERATION PATRIARCHY</div>
+      <div class="score-big">CLEARED</div>
+      <div style="margin-bottom:1rem;"></div>
+      <div class="verdict-stamp green">MISSION COMPLETE</div>
+      <div class="body-text" style="max-width:460px;margin:0 auto 2rem;">
+        All five sections complete. You have demonstrated recall, classification, scenario analysis, systems thinking, and extended argument. You are cleared for the Walby quiz.<br><br>
+        <strong>Before the quiz, review:</strong> any structures you misclassified in Section 2, and the connection between The State and Male Violence.
+      </div>
+      <button class="btn btn-red" onclick="location.reload()">↺ RESTART BRIEFING</button>
+    </div>
+    <div class="doc-stripe"></div>
+  </div>`;
+  for(let i=0;i<5;i++){
+    document.getElementById('pip'+i).className='sec-pip done';
+    document.getElementById('lbl'+i).className='sec-lbl done';
+  }
+}
+
+renderSection();
+</script>
+</body>
+</html>
