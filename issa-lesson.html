@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bashō Looks Out. Issa Looks In.</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Noto+Sans+JP:wght@300;400&display=swap');
+
+  :root {
+    --ink: #1a1208;
+    --paper: #f5f0e8;
+    --aged: #e8dfc8;
+    --sumi: #2c2416;
+    --vermillion: #c0392b;
+    --gold: #9a7d2e;
+    --mist: #8a9a8a;
+    --moss: #4a5e3a;
+    --shadow: rgba(26,18,8,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Crimson Pro', Georgia, serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Washi paper texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* Vertical rule decoration */
+  .page-rule {
+    position: fixed;
+    top: 0; bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, var(--gold) 20%, var(--gold) 80%, transparent);
+    opacity: 0.3;
+  }
+  .page-rule.left { left: 40px; }
+  .page-rule.right { right: 40px; }
+
+  /* NAVIGATION */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: linear-gradient(to bottom, var(--sumi) 0%, rgba(44,36,22,0.95) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 60px;
+    height: 56px;
+    border-bottom: 2px solid var(--gold);
+    box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+  }
+
+  nav .logo {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 11px;
+    font-weight: 300;
+    color: var(--gold);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  nav .progress-dots {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  nav .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    border: 1px solid rgba(154,125,46,0.5);
+    background: transparent;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  nav .dot.active { background: var(--gold); }
+  nav .dot.done { background: rgba(154,125,46,0.5); }
+
+  /* SECTIONS */
+  .section {
+    min-height: 100vh;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 120px 60px;
+    max-width: 1100px;
+    margin: 0 auto;
+    animation: fadeIn 0.6s ease;
+  }
+  .section.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Section label */
+  .section-label {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 10px;
+    font-weight: 300;
+    letter-spacing: 4px;
+    color: var(--vermillion);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  /* Headings */
+  h1 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--sumi);
+    margin-bottom: 20px;
+  }
+
+  h2 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: clamp(22px, 3vw, 34px);
+    font-weight: 400;
+    color: var(--sumi);
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    font-family: 'Crimson Pro', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--moss);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  p {
+    font-size: 18px;
+    line-height: 1.8;
+    color: #3a2e1a;
+    max-width: 640px;
+    margin-bottom: 16px;
+  }
+
+  /* Divider */
+  .brush-line {
+    width: 80px;
+    height: 2px;
+    background: linear-gradient(to right, var(--vermillion), transparent);
+    margin: 20px 0;
+  }
+
+  /* HAIKU display */
+  .haiku-block {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 22px;
+    font-weight: 300;
+    line-height: 2.2;
+    color: var(--sumi);
+    padding: 32px 40px;
+    border-left: 3px solid var(--gold);
+    background: rgba(232,223,200,0.4);
+    margin: 24px 0;
+    position: relative;
+    font-style: italic;
+  }
+
+  .haiku-block .attribution {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    color: var(--mist);
+    margin-top: 16px;
+    font-style: normal;
+  }
+
+  /* TWO-COLUMN grid */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin: 24px 0;
+  }
+
+  .col-card {
+    padding: 28px 32px;
+    background: rgba(232,223,200,0.35);
+    border-top: 2px solid var(--gold);
+    position: relative;
+  }
+
+  .col-card::before {
+    content: '';
+    position: absolute;
+    top: -2px; left: 0;
+    width: 30px;
+    height: 2px;
+    background: var(--vermillion);
+  }
+
+  /* BIOGRAPHY stats */
+  .bio-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px;
+    margin: 24px 0;
+  }
+
+  .bio-item {
+    padding: 20px 24px;
+    background: rgba(44,36,22,0.04);
+    border-bottom: 1px solid rgba(154,125,46,0.2);
+  }
+
+  .bio-label {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--vermillion);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .bio-value {
+    font-size: 17px;
+    color: var(--sumi);
+    line-height: 1.5;
+  }
+
+  /* INTERACTIVE: Claim Builder */
+  .claim-builder {
+    background: rgba(232,223,200,0.5);
+    border: 1px solid rgba(154,125,46,0.3);
+    padding: 32px;
+    margin: 24px 0;
+  }
+
+  .claim-sentence {
+    font-size: 20px;
+    line-height: 2;
+    color: var(--sumi);
+    margin-bottom: 20px;
+    font-style: italic;
+  }
+
+  .claim-fill {
+    display: inline-block;
+    min-width: 200px;
+    border-bottom: 2px solid var(--vermillion);
+    padding: 0 8px;
+    color: var(--moss);
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 80px;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid rgba(154,125,46,0.4);
+    border-left: 3px solid var(--gold);
+    padding: 16px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 17px;
+    color: var(--ink);
+    resize: vertical;
+    margin: 8px 0;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus {
+    border-color: var(--gold);
+    background: rgba(255,255,255,0.8);
+  }
+
+  textarea::placeholder { color: var(--mist); font-style: italic; }
+
+  label {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    text-transform: uppercase;
+    display: block;
+    margin-top: 16px;
+  }
+
+  /* DEBATE CARDS */
+  .debate-card {
+    padding: 24px 28px;
+    border: 1px solid rgba(154,125,46,0.25);
+    background: rgba(245,240,232,0.7);
+    cursor: pointer;
+    transition: all 0.25s;
+    margin-bottom: 12px;
+    position: relative;
+  }
+
+  .debate-card:hover {
+    border-color: var(--vermillion);
+    background: rgba(192,57,43,0.05);
+    transform: translateX(4px);
+  }
+
+  .debate-card.selected {
+    border-color: var(--vermillion);
+    border-left: 4px solid var(--vermillion);
+    background: rgba(192,57,43,0.07);
+  }
+
+  .claim-tag {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--vermillion);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .claim-text {
+    font-size: 18px;
+    color: var(--sumi);
+    font-style: italic;
+  }
+
+  .rebuttal-area {
+    display: none;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(154,125,46,0.3);
+  }
+
+  .rebuttal-area.open { display: block; }
+
+  /* REFLECTION section */
+  .reflection-prompt {
+    font-size: 24px;
+    font-style: italic;
+    color: var(--sumi);
+    line-height: 1.7;
+    border-left: 4px solid var(--gold);
+    padding-left: 24px;
+    margin: 24px 0;
+    max-width: 580px;
+  }
+
+  /* UNIT REVIEW */
+  .review-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .review-card {
+    border: 1px solid rgba(154,125,46,0.3);
+    background: rgba(245,240,232,0.6);
+    overflow: hidden;
+    transition: all 0.25s;
+    cursor: pointer;
+  }
+
+  .review-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px var(--shadow); }
+
+  .review-card-header {
+    background: var(--sumi);
+    color: var(--gold);
+    padding: 14px 18px;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  .review-card-body {
+    padding: 16px 18px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #3a2e1a;
+  }
+
+  .review-card-body .key-idea {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  /* QUIZ section */
+  .quiz-q {
+    margin-bottom: 28px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid rgba(154,125,46,0.2);
+  }
+
+  .quiz-q:last-child { border-bottom: none; }
+
+  .q-text {
+    font-size: 18px;
+    color: var(--sumi);
+    margin-bottom: 14px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  .q-options { display: flex; flex-direction: column; gap: 8px; }
+
+  .q-option {
+    padding: 12px 18px;
+    border: 1px solid rgba(154,125,46,0.3);
+    background: rgba(255,255,255,0.4);
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--ink);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .q-option:hover { border-color: var(--gold); background: rgba(154,125,46,0.08); }
+  .q-option.correct { border-color: var(--moss); background: rgba(74,94,58,0.12); color: var(--moss); }
+  .q-option.wrong { border-color: var(--vermillion); background: rgba(192,57,43,0.08); color: var(--vermillion); }
+  .q-option.revealed { pointer-events: none; }
+
+  .q-letter {
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--gold);
+    min-width: 20px;
+  }
+
+  .q-feedback {
+    margin-top: 10px;
+    padding: 12px 16px;
+    font-size: 15px;
+    line-height: 1.6;
+    display: none;
+    background: rgba(232,223,200,0.5);
+    border-left: 3px solid var(--moss);
+    color: #3a2e1a;
+  }
+
+  .q-feedback.show { display: block; }
+  .q-feedback.wrong-fb { border-left-color: var(--vermillion); }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 32px;
+    background: var(--sumi);
+    color: var(--gold);
+    border: 1px solid var(--gold);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.25s;
+    margin-top: 16px;
+  }
+
+  .btn:hover {
+    background: var(--gold);
+    color: var(--sumi);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--sumi);
+    border-color: rgba(154,125,46,0.4);
+  }
+  .btn-ghost:hover { background: rgba(154,125,46,0.1); color: var(--sumi); }
+
+  .btn-row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  /* SCORE display */
+  .score-display {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 48px;
+    color: var(--gold);
+    text-align: center;
+    padding: 24px;
+    display: none;
+  }
+
+  .score-display.show { display: block; }
+  .score-display span { font-size: 20px; color: var(--mist); display: block; margin-top: 4px; font-family: 'Crimson Pro', serif; }
+
+  /* Vertical Japanese decoration */
+  .jp-deco {
+    position: fixed;
+    right: 60px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Noto Serif JP', serif;
+    font-size: 13px;
+    font-weight: 300;
+    color: rgba(154,125,46,0.25);
+    writing-mode: vertical-rl;
+    letter-spacing: 4px;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Section progress indicator */
+  .section-num {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 80px;
+    font-weight: 700;
+    color: rgba(154,125,46,0.08);
+    position: absolute;
+    right: 120px;
+    bottom: 60px;
+    line-height: 1;
+  }
+
+  /* Tooltip */
+  .tooltip {
+    display: inline-block;
+    position: relative;
+    border-bottom: 1px dotted var(--gold);
+    cursor: help;
+  }
+
+  .tooltip::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--sumi);
+    color: var(--paper);
+    padding: 8px 14px;
+    font-size: 13px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    font-family: 'Crimson Pro', serif;
+    font-style: normal;
+    border: 1px solid var(--gold);
+  }
+  .tooltip:hover::after { opacity: 1; }
+
+  /* Prose excerpt */
+  .prose-block {
+    background: rgba(232,223,200,0.45);
+    border: 1px solid rgba(154,125,46,0.2);
+    padding: 28px 36px;
+    margin: 20px 0;
+    max-height: 260px;
+    overflow-y: auto;
+    font-size: 16px;
+    line-height: 1.9;
+    color: #3a2e1a;
+    scroll-behavior: smooth;
+  }
+
+  .prose-block::-webkit-scrollbar { width: 4px; }
+  .prose-block::-webkit-scrollbar-track { background: transparent; }
+  .prose-block::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
+
+  /* Accordion for review */
+  .accordion-item {
+    border-bottom: 1px solid rgba(154,125,46,0.2);
+  }
+
+  .accordion-header {
+    padding: 16px 0;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 17px;
+    color: var(--sumi);
+    transition: color 0.2s;
+  }
+
+  .accordion-header:hover { color: var(--gold); }
+
+  .accordion-arrow {
+    color: var(--gold);
+    font-size: 18px;
+    transition: transform 0.3s;
+  }
+
+  .accordion-header.open .accordion-arrow { transform: rotate(180deg); }
+
+  .accordion-body {
+    display: none;
+    padding: 0 0 20px 0;
+    font-size: 16px;
+    line-height: 1.8;
+    color: #3a2e1a;
+  }
+
+  .accordion-body.open { display: block; }
+
+  /* Score tracking */
+  .score-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 60px;
+    background: rgba(44,36,22,0.85);
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 50;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 11px;
+    color: rgba(154,125,46,0.7);
+    letter-spacing: 2px;
+  }
+
+  .score-bar-fill {
+    height: 3px;
+    background: var(--gold);
+    transition: width 0.5s ease;
+  }
+
+  .score-bar-track {
+    flex: 1;
+    height: 3px;
+    background: rgba(154,125,46,0.2);
+    position: relative;
+  }
+
+  /* Kigo tag */
+  .kigo {
+    display: inline-block;
+    background: var(--moss);
+    color: var(--paper);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 3px 10px;
+    text-transform: uppercase;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  /* Comparison table */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 16px;
+  }
+  .compare-table th {
+    background: var(--sumi);
+    color: var(--gold);
+    padding: 14px 20px;
+    font-family: 'Noto Serif JP', serif;
+    font-weight: 400;
+    text-align: left;
+    font-size: 15px;
+  }
+  .compare-table td {
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(154,125,46,0.2);
+    vertical-align: top;
+    line-height: 1.6;
+  }
+  .compare-table tr:nth-child(even) td { background: rgba(232,223,200,0.3); }
+  .compare-table .dim { color: var(--mist); font-style: italic; font-size: 14px; }
+
+</style>
+</head>
+<body>
+
+<div class="page-rule left"></div>
+<div class="page-rule right"></div>
+<div class="jp-deco" id="jpDeco">俳句　・　芭蕉　・　一茶</div>
+
+<!-- NAVIGATION -->
+<nav>
+  <div class="logo">Japanese Literature · Unit 29</div>
+  <div class="progress-dots" id="progressDots"></div>
+</nav>
+
+<!-- SCORE BAR -->
+<div class="score-bar">
+  <span id="scoreLabel">Section —</span>
+  <div class="score-bar-track"><div class="score-bar-fill" id="scoreFill" style="width:0%"></div></div>
+  <span id="scoreCount">0 pts</span>
+</div>
+
+<!-- =========== SECTION 0: TITLE =========== -->
+<div class="section active" id="s0">
+  <div class="section-label">Japanese Literature · Lesson 29.2</div>
+  <h1>Bashō Looks Out.<br>Issa Looks In.</h1>
+  <div class="brush-line"></div>
+  <p>Last lesson: Bashō turns a helmet and a cricket into a meditation on mortality. The world is the subject. Bashō is the witness.</p>
+  <p><strong>Today:</strong> What happens when the poet becomes the subject?</p>
+  <div class="btn-row">
+    <button class="btn" onclick="goTo(1)">Begin →</button>
+  </div>
+  <div class="section-num">一</div>
+</div>
+
+<!-- =========== SECTION 1: BIO =========== -->
+<div class="section" id="s1">
+  <div class="section-label">Background</div>
+  <h2>Kobayashi Issa (1763–1828)</h2>
+  <div class="brush-line"></div>
+  <div class="bio-grid">
+    <div class="bio-item"><span class="bio-label">Origins</span><span class="bio-value">Son of a farmer. Rural Japan — not the literary capitals.</span></div>
+    <div class="bio-item"><span class="bio-label">Loss</span><span class="bio-value">Lost his mother as an infant. Lost three children. Lost a wife.</span></div>
+    <div class="bio-item"><span class="bio-label">Struggle</span><span class="bio-value">Spent decades in legal disputes over his father's estate.</span></div>
+    <div class="bio-item"><span class="bio-label">Legacy</span><span class="bio-value">Wrote over <strong>20,000 haiku</strong>. More than any other major poet.</span></div>
+  </div>
+  <p style="font-style:italic; color:var(--mist); font-size:16px;">What might a life of grief and ordinary hardship do to a poet's eye?</p>
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goTo(0)">← Back</button>
+    <button class="btn" onclick="goTo(2)">Two Poets →</button>
+  </div>
+  <div class="section-num">二</div>
+</div>
+
+<!-- =========== SECTION 2: COMPARISON =========== -->
+<div class="section" id="s2">
+  <div class="section-label">The Distinction</div>
+  <h2>Two Poets. Two Directions.</h2>
+  <div class="brush-line"></div>
+  <table class="compare-table">
+    <tr>
+      <th></th>
+      <th>Bashō (1644–1694)</th>
+      <th>Issa (1763–1828)</th>
+    </tr>
+    <tr>
+      <td style="color:var(--gold); font-family:'Noto Sans JP'; font-size:11px; letter-spacing:2px; text-transform:uppercase;">Gaze</td>
+      <td>Outward — the world is the subject</td>
+      <td>Inward and downward — the self is in the poem</td>
+    </tr>
+    <tr>
+      <td style="color:var(--gold); font-family:'Noto Sans JP'; font-size:11px; letter-spacing:2px; text-transform:uppercase;">Scale</td>
+      <td>Battles, mountains, the season's turning</td>
+      <td>Frogs. Children. Flies. Dreams.</td>
+    </tr>
+    <tr>
+      <td style="color:var(--gold); font-family:'Noto Sans JP'; font-size:11px; letter-spacing:2px; text-transform:uppercase;">Tone</td>
+      <td>Austere, impersonal, transcendent</td>
+      <td>Tender, comic, grief-inflected</td>
+    </tr>
+    <tr>
+      <td style="color:var(--gold); font-family:'Noto Sans JP'; font-size:11px; letter-spacing:2px; text-transform:uppercase;">Universality</td>
+      <td>Seeks the universal in nature</td>
+      <td>Finds the universal in the personal and the small</td>
+    </tr>
+  </table>
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goTo(1)">← Back</button>
+    <button class="btn" onclick="goTo(3)">Read Issa →</button>
+  </div>
+  <div class="section-num">三</div>
+</div>
+
+<!-- =========== SECTION 3: READ THE PROSE =========== -->
+<div class="section" id="s3">
+  <div class="section-label">Before the Haiku</div>
+  <h2>Read the Prose First</h2>
+  <div class="brush-line"></div>
+  <p>Turn to <strong>page 545</strong> in your course reader. Read the excerpt from <em>The Spring of My Life</em> — Issa's diary entry about his infant daughter Sato.</p>
+  <p>Keep this in mind: you are reading a portrait of someone who is no longer alive when Issa writes the haiku.</p>
+  <div class="prose-block">
+    <p><em>Last summer, around the day for bamboo planting, a daughter was born to us in this world so full of sad events...</em></p>
+    <p>Once, when she saw a child her age with what is called a pinwheel, she wanted it for herself badly and fussed so much that we hurriedly got one for her. But soon she was chewing on it noisily and then she threw it away. Without showing a drop of regret, she turned her attention to something else, and began breaking the bowls that happened to be at hand. Soon bored with that too, she started tearing the thin paper off the sliding door. We said, "Well done! well done!" as though praising her. She thought we meant it and, cackling, went on tearing away intently. <em>Not a speck of dust in her heart, she seemed as bright and pure as the full moon of autumn.</em> As if witnessing a superb actor, I felt the wrinkles being smoothed out of my heart.</p>
+    <p>Again, when someone came along and said to her, "Where's the bow-wow?" she'd point at a dog, and when asked, "Where's the caw-caw?" she'd point at a crow. From her mouth to the tips of her fingers she brimmed with charm and lovableness...</p>
+    <p style="font-family:'Noto Sans JP'; font-size:12px; color:var(--mist); margin-top:16px;">— Kobayashi Issa, trans. Hiroaki Sato · p. 545</p>
+  </div>
+  <p>Now go back to <strong>page 544</strong> and read the four Issa haiku.</p>
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goTo(2)">← Back</button>
+    <button class="btn" onclick="goTo(4)">I've read both →</button>
+  </div>
+  <div class="section-num">四</div>
+</div>
+
+<!-- =========== SECTION 4: DAUGHTER HAIKU =========== -->
+<div class="section" id="s4">
+  <div class="section-label">Close Reading</div>
+  <h2>The Prose Does Not Explain the Haiku. It Deepens It.</h2>
+  <div class="brush-line"></div>
+  <div class="haiku-block">
+    In a dream<br>
+    my daughter lifts a melon<br>
+    to her soft cheek.
+    <div class="attribution">— Kobayashi Issa · trans. Robert Hass · p. 544</div>
+  </div>
+  <p>Sato died at one year old. This haiku is not labelled. It gives no explanation.</p>
+  <p>Consider: What does the word <em>dream</em> do in line one? What would change if it were <em>memory</em> instead?</p>
+
+  <label>Your response:</label>
+  <textarea id="s4Response" placeholder="What is the haiku doing that the prose cannot?"></textarea>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goTo(3)">← Back</button>
+    <button class="btn" onclick="goTo(5)">The Frog →</button>
+  </div>
+  <div class="section-num">五</div>
+</div>
+
+<!-- =========== SECTION 5: FROG HAIKU =========== -->
+<div class="section" id="s5">
+  <div class="section-label">Close Reading</div>
+  <h2>A Different Kind of Gap</h2>
+  <div class="brush-line"></div>
+  <div class="haiku-block">
+    A huge frog and I,<br>
+    staring at each other,<br>
+    neither of us moves.
+    <div class="attribution">— Kobayashi Issa · trans. Robert Hass · p. 544</div>
+  </div>
+  <div class="two-col">
+    <div class="col-card">
+      <h3>Bashō</h3>
+      <p>Would never put himself in the poem like this. The "I" does not appear. He is the camera, not the subject.</p>
+    </div>
+    <div class="col-card">
+      <h3>Issa</h3>
+      <p>Puts himself in the same sentence as the frog. Eye-level with the smallest, most undignified creature.</p>
+      <p><strong>What does that do?</strong></p>
+    </div>
+  </div>
+  <p>Issa's world is smaller. That is the point. He is not standing before mountains or battlefields. He is watching a five-year-old count on his fingers. Dreaming of his dead daughter. The small is where his grief lives.</p>
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goTo(4)">← Back</button>
+    <button class="btn" onclick="goTo(6)">Pair Task →</button>
+  </div>
+  <div class="section-num">六</div>
+</div>
+
+<!-- =========== SECTION 6: PAIR TASK =========== -->
+<div class="section" id="s6">
+  <div class="section-label">Comparative Task · Pairs · 10 Minutes</div>
+  <h2>Build Your Claim</h2>
+  <div class="brush-line"></div>
+  <div class="claim-builder">
+    <div class="claim-sentence">
+      "Bashō and Issa are both haiku masters, but while Bashō <span class="claim-fill" id="bashoFill">__________</span>, Issa <span class="claim-fill" id="issaFill">__________</span>."
+    </div>
+  </div>
+
+  <label>Complete the Bashō half:</label>
+  <textarea id="bashoHalf" placeholder="e.g. seeks the universal in the natural world..." rows="2" oninput="updateClaim()"></textarea>
+
+  <label>Complete the Issa half:</label>
+  <textarea id="issaHalf" placeholder="e.g. finds it in the grief of the individual..." rows="2" oninput="updateClaim()"></textarea>
+
+  <label>One haiku from Bashō that proves this (title or first line):</label>
+  <textarea id="bashoEvidence" placeholder="Which Bashō haiku supports your claim?" rows="2"></textarea>
+
+  <label>One haiku from Issa that proves this (title or first line):</label>
+  <textarea id="issaEvidence" placeholder="Which Issa haiku supports your claim?" rows="2"></textarea>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goTo(5)">← Back</button>
+    <button class="btn" onclick="goTo(7)">Challenge Claims →</button>
+  </div>
+  <div class="section-num">七</div>
+</div>
+
+<!-- =========== SECTION 7: DEBATE =========== -->
+<div class="section" id="s7">
+  <div class="section-label">Critical Thinking</div>
+  <h2>Some Claims to Challenge</h2>
+  <div class="brush-line"></div>
+  <p>Choose the claim you think is <strong>most wrong</strong>. Write the strongest argument against it.</p>
+
+  <div class="debate-card" id="dc-A" onclick="selectDebate('A')">
+    <span class="claim-tag">Claim A</span>
+    <div class="claim-text">"Issa is more emotional, so his haiku are more powerful."</div>
+    <div class="rebuttal-area" id="rb-A">
+      <label>Your rebuttal against Claim A:</label>
+      <textarea placeholder="Why is this claim wrong or too simple?"></textarea>
+    </div>
+  </div>
+
+  <div class="debate-card" id="dc-B" onclick="selectDebate('B')">
+    <span class="claim-tag">Claim B</span>
+    <div class="claim-text">"Bashō is more disciplined, so his haiku are more universal."</div>
+    <div class="rebuttal-area" id="rb-B">
+      <label>Your rebuttal against Claim B:</label>
+      <textarea placeholder="Why is this claim wrong or too simple?"></textarea>
+    </div>
+  </div>
+
+  <div class="debate-card" id="dc-C" onclick="selectDebate('C')">
+    <span class="claim-tag">Claim C</span>
+    <div class="claim-text">"Both poets are really doing the same thing — just with different images."</div>
+    <div class="rebuttal-area" id="rb-C">
+      <label>Your rebuttal against Claim C:</label>
+      <textarea placeholder="Why is this claim wrong or too simple?"></textarea>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goTo(6)">← Back</button>
+    <button class="btn" onclick="goTo(8)">Write →</button>
+  </div>
+  <div class="section-num">八</div>
+</div>
+
+<!-- =========== SECTION 8: REFLECTION =========== -->
+<div class="section" id="s8">
+  <div class="section-label">Individual Reflection</div>
+  <h2>Write</h2>
+  <div class="brush-line"></div>
+  <div class="reflection-prompt">
+    Choose one image or moment from Issa's work that stays with you — and what do you think it is doing?
+  </div>
+  <textarea id="reflectionText" placeholder="Write here. There is no minimum length. There is a minimum depth." style="min-height: 140px;"></textarea>
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goTo(7)">← Back</button>
+    <button class="btn" onclick="goTo(9)">Unit Review →</button>
+  </div>
+  <div class="section-num">九</div>
+</div>
+
+<!-- =========== SECTION 9: UNIT REVIEW =========== -->
+<div class="section" id="s9">
+  <div class="section-label">Unit Review · Japanese Literature</div>
+  <h2>Where We Have Been</h2>
+  <div class="brush-line"></div>
+  <p>Three major texts. Three different answers to the question: <em>what is the relationship between the self and the world?</em></p>
+
+  <div class="review-grid">
+    <div class="review-card">
+      <div class="review-card-header">The Pillow Book</div>
+      <div class="review-card-body">
+        <span class="key-idea">Sei Shōnagon · c. 996</span>
+        The self constructs itself through taste and attention. The list is not decoration — it is identity. What you notice defines who you are.
+      </div>
+    </div>
+    <div class="review-card">
+      <div class="review-card-header">Zen Parables</div>
+      <div class="review-card-body">
+        <span class="key-idea">Musō Soseki · Bankei · Shaseki-shū</span>
+        The self must be dissolved. Ego blocks wisdom. Virtue must be unconscious. Action is right only when it is not performed <em>for</em> virtue.
+      </div>
+    </div>
+    <div class="review-card">
+      <div class="review-card-header">Haiku</div>
+      <div class="review-card-body">
+        <span class="key-idea">Bashō · Buson · Issa</span>
+        The self witnesses (Bashō) or participates (Issa). Seventeen syllables carry a whole world — or a whole grief.
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 24px;">
+    <div class="accordion-item">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        The Pillow Book — Key Concepts
+        <span class="accordion-arrow">▾</span>
+      </div>
+      <div class="accordion-body">
+        <p><strong>Zuihitsu</strong> ("following the brush"): a genre of fragmentary, associative writing. Not argument — accumulation.</p>
+        <p><strong>Shōnagon's method</strong>: She constructs a persona through her preferences. The lists tell us what she values; the self is revealed through categories. Her lists are never neutral — they are social and aesthetic judgments.</p>
+        <p><strong>Core question</strong>: How does attention shape social identity? The answer: it <em>is</em> social identity, for Shōnagon. To have taste is to have a self.</p>
+        <p><strong>Exam note</strong>: Compare with Zen — where Shōnagon curates the self, the Zen masters want to erase it.</p>
+      </div>
+    </div>
+    <div class="accordion-item">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        Zen Teachings & Parables — Key Concepts
+        <span class="accordion-arrow">▾</span>
+      </div>
+      <div class="accordion-body">
+        <p><strong>Three teachings (Musō Soseki)</strong>: "Aim in Life" — anything gained can be lost; "Contamination of Virtue" — performed virtue isn't; "Hypocritical Scholars" — reading about wisdom isn't wisdom.</p>
+        <p><strong>Two parables</strong>: "Publishing the Sutras" — right action requires the right motive; "Right and Wrong" — the ego-mind cannot adjudicate its own rightness.</p>
+        <p><strong>The Zen paradox</strong>: The teaching that destroys the need for the teaching. Wisdom literature that makes wisdom literature unnecessary.</p>
+        <p><strong>Exam note</strong>: "Publishing the Sutras" and "Right and Wrong" share a method — a challenge to received wisdom framed as narrative. Compare their techniques.</p>
+      </div>
+    </div>
+    <div class="accordion-item">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        Haiku — Key Concepts
+        <span class="accordion-arrow">▾</span>
+      </div>
+      <div class="accordion-body">
+        <p><strong>Kigo</strong> (season word): haiku traditionally contains an implicit seasonal reference. The kigo situates the poem in the natural cycle even when its subject is personal.</p>
+        <p><strong>The gap</strong>: Haiku is built on juxtaposition — two images placed in relation, with the connection left for the reader. The <em>kireji</em> (cutting word) signals the gap.</p>
+        <p><strong>Bashō</strong>: The poet as detached witness. Universality through impersonality. The "I" is absent or implied.</p>
+        <p><strong>Issa</strong>: The poet as participant. The "I" appears. Small creatures, private grief, domestic moments. Universality through intimacy.</p>
+        <p><strong>Buson</strong>: The poet as painter. Visual precision, sensory detail, atmospheric distance. Less personal than Issa, less austere than Bashō.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row" style="margin-top:24px;">
+    <button class="btn btn-ghost" onclick="goTo(8)">← Back</button>
+    <button class="btn" onclick="goTo(10)">Unit Quiz →</button>
+  </div>
+  <div class="section-num">十</div>
+</div>
+
+<!-- =========== SECTION 10: QUIZ =========== -->
+<div class="section" id="s10">
+  <div class="section-label">Unit Review Quiz · Japanese Literature</div>
+  <h2>Test Your Understanding</h2>
+  <div class="brush-line"></div>
+
+  <div id="quizContainer">
+
+    <div class="quiz-q" id="q1">
+      <div class="q-text">1. The Pillow Book belongs to a Japanese genre called:</div>
+      <div class="q-options">
+        <div class="q-option" onclick="answer(this, 'q1', false)"><span class="q-letter">A</span> Haiku</div>
+        <div class="q-option" onclick="answer(this, 'q1', true)"><span class="q-letter">B</span> Zuihitsu ("following the brush")</div>
+        <div class="q-option" onclick="answer(this, 'q1', false)"><span class="q-letter">C</span> Mono no aware</div>
+        <div class="q-option" onclick="answer(this, 'q1', false)"><span class="q-letter">D</span> Satori literature</div>
+      </div>
+      <div class="q-feedback" id="fb-q1">Correct. <em>Zuihitsu</em> means "following the brush" — fragmentary, associative writing that follows the writer's attention rather than a structured argument. It's the form Shōnagon essentially invented.</div>
+    </div>
+
+    <div class="quiz-q" id="q2">
+      <div class="q-text">2. In the Zen parable "Contamination of Virtue," the master's point is that:</div>
+      <div class="q-options">
+        <div class="q-option" onclick="answer(this, 'q2', false)"><span class="q-letter">A</span> Virtue requires daily practice to become habit</div>
+        <div class="q-option" onclick="answer(this, 'q2', false)"><span class="q-letter">B</span> Monks should avoid worldly contact to preserve their purity</div>
+        <div class="q-option" onclick="answer(this, 'q2', true)"><span class="q-letter">C</span> Virtue performed for recognition is not virtue at all</div>
+        <div class="q-option" onclick="answer(this, 'q2', false)"><span class="q-letter">D</span> The sutras contain all the wisdom a monk needs</div>
+      </div>
+      <div class="q-feedback" id="fb-q2">Correct. Once a virtuous act is performed in order to be seen as virtuous, it becomes contaminated — it serves the ego, not the principle. This is the paradox at the heart of Zen ethics.</div>
+    </div>
+
+    <div class="quiz-q" id="q3">
+      <div class="q-text">3. Which of the following best describes the structural difference between Bashō and Issa?</div>
+      <div class="q-options">
+        <div class="q-option" onclick="answer(this, 'q3', false)"><span class="q-letter">A</span> Bashō uses longer poems; Issa stays strictly within 5-7-5</div>
+        <div class="q-option" onclick="answer(this, 'q3', true)"><span class="q-letter">B</span> Bashō removes himself from the poem; Issa places himself inside it</div>
+        <div class="q-option" onclick="answer(this, 'q3', false)"><span class="q-letter">C</span> Bashō focuses on grief; Issa focuses on nature's transcendence</div>
+        <div class="q-option" onclick="answer(this, 'q3', false)"><span class="q-letter">D</span> Issa uses kigo; Bashō avoids seasonal references</div>
+      </div>
+      <div class="q-feedback" id="fb-q3">Correct. In "A huge frog and I" — the "I" appears directly. Bashō's poems rarely include the poet's presence so explicitly; he is the eye behind the image, not a subject within it.</div>
+    </div>
+
+    <div class="quiz-q" id="q4">
+      <div class="q-text">4. Shōnagon's lists in <em>The Pillow Book</em> are primarily a tool for:</div>
+      <div class="q-options">
+        <div class="q-option" onclick="answer(this, 'q4', false)"><span class="q-letter">A</span> Satirising the imperial court from a safe distance</div>
+        <div class="q-option" onclick="answer(this, 'q4', false)"><span class="q-letter">B</span> Documenting historical facts about Heian Japan</div>
+        <div class="q-option" onclick="answer(this, 'q4', true)"><span class="q-letter">C</span> Constructing and performing a social identity through aesthetic judgment</div>
+        <div class="q-option" onclick="answer(this, 'q4', false)"><span class="q-letter">D</span> Practising the Zen discipline of attention to ordinary things</div>
+      </div>
+      <div class="q-feedback" id="fb-q4">Correct. The lists are not random — they reveal Shōnagon's hierarchy of value and taste, which <em>is</em> her identity at court. Her preferences are social acts, not private ones. This is the central argument around the core question: how does attention shape social identity?</div>
+    </div>
+
+    <div class="quiz-q" id="q5">
+      <div class="q-text">5. The Issa haiku "In a dream / my daughter lifts a melon / to her soft cheek" gains its power primarily from:</div>
+      <div class="q-options">
+        <div class="q-option" onclick="answer(this, 'q5', false)"><span class="q-letter">A</span> Its unusually strict adherence to the 5-7-5 syllable form</div>
+        <div class="q-option" onclick="answer(this, 'q5', false)"><span class="q-letter">B</span> The comic contrast between the melon and the infant</div>
+        <div class="q-option" onclick="answer(this, 'q5', true)"><span class="q-letter">C</span> What the reader brings to it from the prose portrait — Sato's death</div>
+        <div class="q-option" onclick="answer(this, 'q5', false)"><span class="q-letter">D</span> The kigo word "melon" which signals summer and life</div>
+      </div>
+      <div class="q-feedback" id="fb-q5">Correct. Without the prose, this is a gentle dream image. Knowing Sato died at one year old transforms it: the dream is all that remains. The prose does not explain the haiku — it deepens it. This is why sequence matters.</div>
+    </div>
+
+    <div class="quiz-q" id="q6">
+      <div class="q-text">6. Which of the following best captures the Zen paradox found across the parables?</div>
+      <div class="q-options">
+        <div class="q-option" onclick="answer(this, 'q6', false)"><span class="q-letter">A</span> Wisdom must be earned through suffering and sacrifice</div>
+        <div class="q-option" onclick="answer(this, 'q6', true)"><span class="q-letter">B</span> The pursuit of wisdom through conscious effort may be the obstacle to wisdom</div>
+        <div class="q-option" onclick="answer(this, 'q6', false)"><span class="q-letter">C</span> Reading sacred texts is the surest path to enlightenment</div>
+        <div class="q-option" onclick="answer(this, 'q6', false)"><span class="q-letter">D</span> Wisdom can only be found in isolation from other people</div>
+      </div>
+      <div class="q-feedback" id="fb-q6">Correct. "Hypocritical Scholars," "Contamination of Virtue," and "Publishing the Sutras" all dramatise the same trap: the ego turns the quest for wisdom into a performance. The trying is the problem. This is what makes Zen teaching so structurally interesting — it teaches the limits of teaching.</div>
+    </div>
+
+  </div>
+
+  <div class="score-display" id="finalScore">
+    <span id="finalScoreNum">0/6</span>
+    <span id="finalScoreMsg"></span>
+  </div>
+
+  <div class="btn-row" style="margin-top: 20px;">
+    <button class="btn btn-ghost" onclick="goTo(9)">← Back</button>
+    <button class="btn" id="showScoreBtn" onclick="showFinalScore()" style="display:none;">See Score →</button>
+    <button class="btn" id="paragraphBtn" onclick="goTo(11)" style="display:none;">Paragraph Task →</button>
+  </div>
+  <div class="section-num">十一</div>
+</div>
+
+<!-- =========== SECTION 11: PARAGRAPH WRITING =========== -->
+<div class="section" id="s11">
+  <div class="section-label">Paragraph Writing Task · Unit Review</div>
+  <h2>Write a Paragraph</h2>
+  <div class="brush-line"></div>
+
+  <p>Choose <strong>one</strong> of the three prompts below. Write a focused analytical paragraph: one clear argument, supported by specific textual evidence, with a sentence that explains what the evidence shows.</p>
+  <p style="font-style:italic; color:var(--mist); font-size:16px;">Aim for 8–12 sentences. Quality of argument over quantity of words.</p>
+
+  <div style="margin: 24px 0;">
+
+    <div class="debate-card" id="pp-A" onclick="selectPrompt('A')" style="cursor:pointer;">
+      <span class="claim-tag">Prompt A · Haiku</span>
+      <div class="claim-text">"Bashō and Issa both achieve universality in their haiku — but by opposite methods." Argue for this claim using at least one haiku from each poet.</div>
+    </div>
+
+    <div class="debate-card" id="pp-B" onclick="selectPrompt('B')" style="cursor:pointer;">
+      <span class="claim-tag">Prompt B · Zen & Pillow Book</span>
+      <div class="claim-text">Both <em>The Pillow Book</em> and the Zen parables are concerned with how one ought to pay attention — but they reach opposite conclusions. Explain the difference.</div>
+    </div>
+
+    <div class="debate-card" id="pp-C" onclick="selectPrompt('C')" style="cursor:pointer;">
+      <span class="claim-tag">Prompt C · Across the Unit</span>
+      <div class="claim-text">Shōnagon, the Zen masters, and Issa each present a different relationship between the self and the world. Choose any two and show how they differ.</div>
+    </div>
+
+  </div>
+
+  <div id="paragraphWorkspace" style="display:none;">
+    <div class="claim-builder" style="margin-bottom: 20px;">
+      <label>Selected prompt:</label>
+      <div id="selectedPromptText" style="font-style:italic; font-size:17px; color:var(--sumi); margin-top:8px; line-height:1.6;"></div>
+    </div>
+
+    <label>Your argument (one sentence — what are you going to prove?):</label>
+    <textarea id="paragraphArgument" placeholder="State your central claim clearly before you write anything else." rows="2"></textarea>
+
+    <label>Your evidence (quote or close reference — what text are you using?):</label>
+    <textarea id="paragraphEvidence" placeholder="Which specific text, image, or moment supports your argument? Be precise." rows="3"></textarea>
+
+    <label>Your analysis (what does the evidence show — and why does it matter?):</label>
+    <textarea id="paragraphAnalysis" placeholder="This is the most important part. Don't describe — interpret." rows="3"></textarea>
+
+    <label>Full paragraph (put it together here):</label>
+    <textarea id="paragraphFull" placeholder="Write the complete paragraph. Argument → Evidence → Analysis → Significance." style="min-height: 180px;"></textarea>
+
+    <div style="margin-top: 20px; padding: 20px 24px; background: rgba(74,94,58,0.08); border-left: 3px solid var(--moss);">
+      <div style="font-family:'Noto Sans JP'; font-size:10px; letter-spacing:2px; color:var(--moss); text-transform:uppercase; margin-bottom:10px;">Checklist before you finish</div>
+      <div style="font-size:15px; line-height:2; color:#3a2e1a;">
+        <label style="display:flex; align-items:center; gap:10px; text-transform:none; letter-spacing:0; font-family:'Crimson Pro'; font-size:16px; color:#3a2e1a; cursor:pointer;"><input type="checkbox" style="width:14px; height:14px; accent-color:var(--moss);"> My first sentence makes a clear, arguable claim.</label>
+        <label style="display:flex; align-items:center; gap:10px; text-transform:none; letter-spacing:0; font-family:'Crimson Pro'; font-size:16px; color:#3a2e1a; cursor:pointer;"><input type="checkbox" style="width:14px; height:14px; accent-color:var(--moss);"> I refer to a specific text, image, or moment — not a general summary.</label>
+        <label style="display:flex; align-items:center; gap:10px; text-transform:none; letter-spacing:0; font-family:'Crimson Pro'; font-size:16px; color:#3a2e1a; cursor:pointer;"><input type="checkbox" style="width:14px; height:14px; accent-color:var(--moss);"> I explain what the evidence shows — I don't just quote it.</label>
+        <label style="display:flex; align-items:center; gap:10px; text-transform:none; letter-spacing:0; font-family:'Crimson Pro'; font-size:16px; color:#3a2e1a; cursor:pointer;"><input type="checkbox" style="width:14px; height:14px; accent-color:var(--moss);"> My final sentence says something about why the distinction matters.</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row" style="margin-top: 24px;">
+    <button class="btn btn-ghost" onclick="goTo(10)">← Back</button>
+  </div>
+  <div class="section-num">十二</div>
+</div>
+
+<script>
+  // ---- STATE ----
+  let currentSection = 0;
+  const totalSections = 12;
+  let scores = {};
+  let quizAnswers = 0;
+
+  const sectionTitles = [
+    '', 'Background', 'Comparison', 'Prose', 'Haiku: Dream',
+    'Haiku: Frog', 'Pair Task', 'Debate', 'Reflection',
+    'Unit Review', 'Quiz', 'Paragraph'
+  ];
+
+  // ---- NAV DOTS ----
+  function buildDots() {
+    const container = document.getElementById('progressDots');
+    for (let i = 0; i < totalSections; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      dot.title = sectionTitles[i] || '';
+      dot.onclick = () => goTo(i);
+      container.appendChild(dot);
+    }
+    updateDots();
+  }
+
+  function updateDots() {
+    const dots = document.querySelectorAll('.dot');
+    dots.forEach((d, i) => {
+      d.className = 'dot';
+      if (i === currentSection) d.classList.add('active');
+      else if (i < currentSection) d.classList.add('done');
+    });
+    document.getElementById('scoreLabel').textContent = sectionTitles[currentSection] || '—';
+    updateScoreBar();
+  }
+
+  // ---- NAVIGATION ----
+  function goTo(n) {
+    document.getElementById('s' + currentSection).classList.remove('active');
+    currentSection = n;
+    document.getElementById('s' + n).classList.add('active');
+    updateDots();
+    window.scrollTo(0,0);
+    updateJpDeco();
+  }
+
+  const jpTexts = [
+    '俳句　・　芭蕉　・　一茶',
+    '一茶　小林　江戸',
+    '芭蕉　・　一茶　・　蕪村',
+    '春　・　夢　・　心',
+    '夢の中に　・　柔らかい頬',
+    '蛙　・　沈黙　・　一茶',
+    '比較　・　主張　・　証拠',
+    '議論　・　反論　・　考察',
+    '思索　・　一つの瞬間',
+    '日本文学　全体',
+    '復習　・　理解　・　試験',
+    '論証　・　証拠　・　分析'
+  ];
+
+  function updateJpDeco() {
+    document.getElementById('jpDeco').textContent = jpTexts[currentSection] || jpTexts[0];
+  }
+
+  // ---- CLAIM BUILDER ----
+  function updateClaim() {
+    const b = document.getElementById('bashoHalf').value || '__________';
+    const i = document.getElementById('issaHalf').value || '__________';
+    document.getElementById('bashoFill').textContent = b.slice(0, 60);
+    document.getElementById('issaFill').textContent = i.slice(0, 60);
+  }
+
+  // ---- DEBATE ----
+  function selectDebate(letter) {
+    ['A','B','C'].forEach(l => {
+      const card = document.getElementById('dc-' + l);
+      const rb = document.getElementById('rb-' + l);
+      if (l === letter) {
+        card.classList.toggle('selected');
+        rb.classList.toggle('open');
+      } else {
+        card.classList.remove('selected');
+        rb.classList.remove('open');
+      }
+    });
+  }
+
+  // ---- QUIZ ----
+  let quizCorrect = 0;
+  let quizTotal = 6;
+  let questionsAnswered = 0;
+
+  function answer(el, qId, isCorrect) {
+    const qEl = document.getElementById(qId);
+    const options = qEl.querySelectorAll('.q-option');
+    if (qEl.dataset.answered) return;
+    qEl.dataset.answered = '1';
+
+    options.forEach(opt => {
+      opt.classList.add('revealed');
+      if (opt === el) {
+        opt.classList.add(isCorrect ? 'correct' : 'wrong');
+      }
+    });
+
+    const fb = document.getElementById('fb-' + qId);
+    fb.classList.add('show');
+    if (!isCorrect) fb.classList.add('wrong-fb');
+
+    if (isCorrect) quizCorrect++;
+    questionsAnswered++;
+
+    if (questionsAnswered === quizTotal) {
+      document.getElementById('showScoreBtn').style.display = 'inline-flex';
+    }
+  }
+
+  function showFinalScore() {
+    const display = document.getElementById('finalScore');
+    display.classList.add('show');
+    document.getElementById('finalScoreNum').textContent = quizCorrect + ' / ' + quizTotal;
+    const msgs = ['Keep reviewing the unit notes.', 'Good — revisit the weaker areas.', 'Solid. Almost there.', 'Strong. Well prepared.', 'Excellent work.', 'Outstanding.', 'Perfect.'];
+    document.getElementById('finalScoreMsg').textContent = msgs[quizCorrect] || '';
+    document.getElementById('showScoreBtn').style.display = 'none';
+    document.getElementById('paragraphBtn').style.display = 'inline-flex';
+  }
+
+  // ---- PROMPT SELECTION ----
+  const promptTexts = {
+    A: '"Bashō and Issa both achieve universality in their haiku — but by opposite methods." Argue for this claim using at least one haiku from each poet.',
+    B: 'Both The Pillow Book and the Zen parables are concerned with how one ought to pay attention — but they reach opposite conclusions. Explain the difference.',
+    C: 'Shōnagon, the Zen masters, and Issa each present a different relationship between the self and the world. Choose any two and show how they differ.'
+  };
+
+  function selectPrompt(letter) {
+    ['A','B','C'].forEach(l => {
+      document.getElementById('pp-' + l).classList.remove('selected');
+    });
+    document.getElementById('pp-' + letter).classList.add('selected');
+    document.getElementById('selectedPromptText').textContent = promptTexts[letter];
+    document.getElementById('paragraphWorkspace').style.display = 'block';
+    document.getElementById('paragraphWorkspace').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ---- SCORE BAR ----
+  function updateScoreBar() {
+    const pct = Math.round((currentSection / (totalSections - 1)) * 100);
+    document.getElementById('scoreFill').style.width = pct + '%';
+    document.getElementById('scoreCount').textContent = pct + '%';
+  }
+
+  // ---- ACCORDION ----
+  function toggleAccordion(header) {
+    header.classList.toggle('open');
+    const body = header.nextElementSibling;
+    body.classList.toggle('open');
+  }
+
+  // ---- INIT ----
+  buildDots();
+</script>
+</body>
+</html>
