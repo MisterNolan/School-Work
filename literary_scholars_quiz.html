@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Literary Scholars Challenge</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1a0f00;
+  --red:#8B1A1A;
+  --gold:#C8991A;
+  --cream:#FDF6E3;
+  --paper:#F5ECD7;
+  --team1:#8B1A1A;
+  --team2:#1A3A5C;
+}
+body{background:var(--cream);font-family:'Georgia',serif;color:var(--ink);min-height:100vh}
+.kanji-bg{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;flex-wrap:wrap;align-content:flex-start;opacity:0.04;pointer-events:none;z-index:0;overflow:hidden}
+.kanji-bg span{font-size:42px;line-height:1;color:#000;margin:2px}
+.content{position:relative;z-index:1;max-width:760px;margin:0 auto;min-height:100vh}
+
+/* SETUP SCREEN */
+#setup-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:30px}
+.setup-box{background:var(--paper);border:2px solid var(--gold);border-radius:8px;padding:36px 40px;max-width:420px;width:100%;text-align:center}
+.setup-kanji{font-size:56px;color:var(--gold);display:block;margin-bottom:10px}
+.setup-title{font-size:22px;font-weight:700;color:var(--red);margin-bottom:4px}
+.setup-sub{font-size:13px;color:#888;margin-bottom:28px}
+.setup-label{display:block;text-align:left;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
+.setup-label.t1{color:var(--team1)}
+.setup-label.t2{color:var(--team2)}
+.setup-input{width:100%;padding:10px 14px;border-radius:4px;font-size:15px;font-family:Georgia,serif;margin-bottom:18px;border:1.5px solid rgba(200,153,26,0.4);background:#fff;color:var(--ink);outline:none}
+.setup-input:focus{border-color:var(--gold)}
+.start-game-btn{width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:4px;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:1px;font-family:Georgia,serif;margin-top:4px;transition:background 0.15s}
+.start-game-btn:hover{background:#6B1010}
+.setup-divider{height:1px;background:rgba(200,153,26,0.3);margin:20px 0}
+.setup-note{font-size:12px;color:#999;margin-top:12px}
+
+/* GAME SCREEN */
+#game-screen{display:none}
+.deco-border{height:6px;background:repeating-linear-gradient(90deg,var(--red) 0,var(--red) 8px,var(--gold) 8px,var(--gold) 16px)}
+.bottom-deco{height:4px;background:repeating-linear-gradient(90deg,var(--gold) 0,var(--gold) 8px,var(--red) 8px,var(--red) 16px)}
+
+.header{background:var(--red);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--gold)}
+.header-left{display:flex;align-items:center;gap:8px}
+.header-kanji{color:var(--gold);font-size:24px}
+.header-title{color:#fff;font-size:17px;font-weight:700;letter-spacing:1px}
+.header-right{display:flex;align-items:center;gap:10px}
+.round-badge{background:var(--gold);color:var(--ink);font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px}
+.rename-btn{background:transparent;border:1px solid rgba(255,255,255,0.4);color:rgba(255,255,255,0.8);font-size:11px;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:Georgia,serif;transition:all 0.15s}
+.rename-btn:hover{border-color:#fff;color:#fff}
+
+.scoreboard{display:grid;grid-template-columns:1fr auto 1fr;background:var(--paper);border-bottom:2px solid var(--gold)}
+.team-panel{padding:14px 16px;text-align:center}
+.team1-panel{border-right:1px solid var(--gold)}
+.team2-panel{border-left:1px solid var(--gold)}
+.team-name{font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.team1-panel .team-name{color:var(--team1)}
+.team2-panel .team-name{color:var(--team2)}
+.score-display{font-size:42px;font-weight:700;line-height:1}
+.team1-panel .score-display{color:var(--team1)}
+.team2-panel .score-display{color:var(--team2)}
+.score-controls{display:flex;gap:6px;justify-content:center;margin-top:6px}
+.score-btn{width:30px;height:30px;border-radius:50%;border:1.5px solid;font-size:17px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.1s,background 0.1s;background:transparent;line-height:1}
+.score-btn:active{transform:scale(0.88)}
+.t1-btn{border-color:var(--team1);color:var(--team1)}
+.t1-btn:hover{background:var(--team1);color:#fff}
+.t2-btn{border-color:var(--team2);color:var(--team2)}
+.t2-btn:hover{background:var(--team2);color:#fff}
+.vs-col{display:flex;align-items:center;justify-content:center;padding:10px 14px}
+.vs-seal{width:54px;height:54px;border-radius:50%;border:2px solid var(--gold);background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gold);text-align:center;line-height:1.3;letter-spacing:1px}
+
+.timer-area{display:flex;align-items:center;justify-content:center;padding:12px 16px;gap:16px;background:var(--cream);border-bottom:1px solid rgba(200,153,26,0.3);flex-wrap:wrap}
+.timer-ring{position:relative;width:80px;height:80px;flex-shrink:0}
+.timer-ring svg{transform:rotate(-90deg)}
+.timer-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.timer-text.urgent{color:var(--red);animation:pulse 0.5s ease infinite alternate}
+@keyframes pulse{from{opacity:1}to{opacity:0.4}}
+.timer-controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.ctrl-btn{padding:8px 18px;border-radius:4px;border:1.5px solid;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.5px;transition:background 0.15s,color 0.15s;font-family:Georgia,serif}
+.btn-start{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-start:hover{background:#6B1010}
+.btn-start:disabled{opacity:0.6;cursor:not-allowed}
+.btn-reset{background:transparent;color:var(--ink);border-color:rgba(0,0,0,0.3)}
+.btn-reset:hover{background:var(--paper)}
+.btn-next{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.btn-next:hover{background:#A07810}
+.btn-bonus{background:transparent;color:var(--team2);border-color:var(--team2)}
+.btn-bonus:hover{background:var(--team2);color:#fff}
+
+.opp-banner{display:none;padding:9px 16px;text-align:center;font-size:13px;font-weight:700;letter-spacing:1px}
+.progress-bar{height:3px;background:rgba(200,153,26,0.2)}
+.progress-fill{height:100%;background:var(--gold);transition:width 0.4s}
+
+.question-area{padding:18px 20px;background:var(--cream)}
+.q-category{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.q-category::before,.q-category::after{content:'';flex:1;height:1px;background:rgba(200,153,26,0.3)}
+.q-number{font-size:12px;color:var(--ink);opacity:0.5;margin-bottom:6px}
+.q-text{font-size:16px;line-height:1.65;font-weight:700;color:var(--ink);background:var(--paper);border:1px solid rgba(200,153,26,0.4);border-radius:4px;padding:14px 16px;margin-bottom:12px;border-left:4px solid var(--gold)}
+.answer-area{display:none;background:#fff;border:1px solid rgba(74,124,74,0.4);border-radius:4px;padding:10px 14px;font-size:14px;line-height:1.6;color:#333;border-left:4px solid #4A7C4A;margin-bottom:10px}
+.answer-label{font-size:11px;letter-spacing:1px;color:#4A7C4A;font-weight:700;margin-bottom:5px;text-transform:uppercase}
+.show-answer-btn{background:transparent;border:1px solid rgba(0,0,0,0.18);color:var(--ink);font-size:12px;padding:6px 14px;border-radius:4px;cursor:pointer;font-family:Georgia,serif;transition:all 0.15s}
+.show-answer-btn:hover{background:var(--paper);border-color:rgba(0,0,0,0.35)}
+
+.q-dots{display:flex;gap:4px;flex-wrap:wrap;padding:10px 20px;background:var(--paper);border-top:1px solid rgba(200,153,26,0.2)}
+.q-dot{width:10px;height:10px;border-radius:50%;background:rgba(0,0,0,0.1);transition:background 0.3s;cursor:pointer;flex-shrink:0}
+.q-dot:hover{background:rgba(0,0,0,0.2)}
+.q-dot.done{background:var(--gold)}
+.q-dot.active{background:var(--red)}
+
+/* RENAME MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--paper);border:2px solid var(--gold);border-radius:8px;padding:28px 32px;max-width:380px;width:90%;text-align:center}
+.modal-kanji{font-size:40px;color:var(--gold);display:block;margin-bottom:8px}
+.modal-title{font-size:17px;font-weight:700;color:var(--red);margin-bottom:20px}
+.modal-field-label{display:block;text-align:left;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px}
+.modal-field-label.t1{color:var(--team1)}
+.modal-field-label.t2{color:var(--team2)}
+.modal-input{width:100%;padding:10px 14px;border-radius:4px;font-size:15px;font-family:Georgia,serif;margin-bottom:10px;border:1.5px solid rgba(200,153,26,0.4);background:#fff;color:var(--ink);outline:none;text-align:center}
+.modal-input:focus{border-color:var(--gold)}
+.modal-btns{display:flex;gap:10px;justify-content:center;margin-top:14px}
+.modal-save{padding:9px 24px;background:var(--red);color:#fff;border:none;border-radius:4px;font-size:14px;font-weight:700;cursor:pointer;font-family:Georgia,serif;transition:background 0.15s}
+.modal-save:hover{background:#6B1010}
+.modal-cancel{padding:9px 24px;background:transparent;color:var(--ink);border:1.5px solid rgba(0,0,0,0.2);border-radius:4px;font-size:14px;cursor:pointer;font-family:Georgia,serif}
+.modal-cancel:hover{background:rgba(0,0,0,0.06)}
+
+/* CELEBRATION */
+.celebration{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;align-items:center;justify-content:center}
+.celebration.show{display:flex}
+.cel-box{background:var(--paper);border:3px solid var(--gold);border-radius:8px;padding:36px 44px;text-align:center;max-width:380px;width:90%}
+.cel-kanji{font-size:60px;color:var(--gold);display:block;margin-bottom:10px}
+.cel-title{font-size:24px;font-weight:700;color:var(--red);margin-bottom:8px}
+.cel-sub{font-size:15px;color:#666;margin-bottom:22px;line-height:1.5}
+.cel-close{padding:10px 28px;background:var(--red);color:#fff;border:none;border-radius:4px;font-size:15px;font-weight:700;cursor:pointer;font-family:Georgia,serif}
+.cel-close:hover{background:#6B1010}
+
+@media(max-width:500px){
+  .header-title{font-size:14px}
+  .q-text{font-size:14px}
+  .setup-box{padding:24px 20px}
+}
+</style>
+</head>
+<body>
+
+<div class="kanji-bg" id="kanjibg"></div>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen">
+  <div class="setup-box">
+    <span class="setup-kanji">文</span>
+    <div class="setup-title">Literary Scholars Challenge</div>
+    <div class="setup-sub">G12 Honours English Literature — Midterm Review</div>
+    <div class="setup-divider"></div>
+    <label class="setup-label t1">Team 1 Name</label>
+    <input class="setup-input" id="setup-t1" type="text" value="Red Dragon" maxlength="24" placeholder="Team 1 name...">
+    <label class="setup-label t2">Team 2 Name</label>
+    <input class="setup-input" id="setup-t2" type="text" value="Blue Phoenix" maxlength="24" placeholder="Team 2 name...">
+    <button class="start-game-btn" onclick="startGame()">Begin the Challenge ›</button>
+    <div class="setup-note">30 questions · 60 seconds each · Opportunity rule included</div>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen">
+  <div class="content">
+    <div class="deco-border"></div>
+
+    <div class="header">
+      <div class="header-left">
+        <span class="header-kanji">文</span>
+        <span class="header-title">Literary Scholars Challenge</span>
+      </div>
+      <div class="header-right">
+        <span class="round-badge" id="round-badge">Q 1 / 30</span>
+        <button class="rename-btn" onclick="openRename()">✎ Rename Teams</button>
+      </div>
+    </div>
+
+    <div class="scoreboard">
+      <div class="team-panel team1-panel">
+        <div class="team-name" id="t1name">Red Dragon</div>
+        <div class="score-display" id="score1">0</div>
+        <div class="score-controls">
+          <button class="score-btn t1-btn" onclick="changeScore(1,1)" title="Add point">+</button>
+          <button class="score-btn t1-btn" onclick="changeScore(1,-1)" title="Remove point">−</button>
+        </div>
+      </div>
+      <div class="vs-col">
+        <div class="vs-seal">対<br>VS</div>
+      </div>
+      <div class="team-panel team2-panel">
+        <div class="team-name" id="t2name">Blue Phoenix</div>
+        <div class="score-display" id="score2">0</div>
+        <div class="score-controls">
+          <button class="score-btn t2-btn" onclick="changeScore(2,1)" title="Add point">+</button>
+          <button class="score-btn t2-btn" onclick="changeScore(2,-1)" title="Remove point">−</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="timer-area">
+      <div class="timer-ring">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="6"/>
+          <circle id="timer-arc" cx="40" cy="40" r="34" fill="none" stroke="#C8991A" stroke-width="6"
+            stroke-dasharray="213.6" stroke-dashoffset="0" stroke-linecap="round"/>
+        </svg>
+        <div class="timer-text" id="timer-display">1:00</div>
+      </div>
+      <div class="timer-controls">
+        <button class="ctrl-btn btn-start" id="start-btn" onclick="startTimer()">▶ Start</button>
+        <button class="ctrl-btn btn-reset" onclick="resetTimer()">↺ Reset</button>
+        <button class="ctrl-btn btn-bonus" id="opp-btn" onclick="giveOpportunity()" style="display:none">Opportunity →</button>
+        <button class="ctrl-btn btn-next" onclick="nextQuestion()">Next Q ›</button>
+      </div>
+    </div>
+
+    <div class="opp-banner" id="opp-banner"></div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill" style="width:3.33%"></div>
+    </div>
+
+    <div class="question-area">
+      <div class="q-category" id="q-category">Confucius &amp; Lao-tzu</div>
+      <div class="q-number" id="q-number">Question 1 of 30</div>
+      <div class="q-text" id="q-text"></div>
+      <button class="show-answer-btn" onclick="toggleAnswer()">Show answer</button>
+      <div class="answer-area" id="answer-area">
+        <div class="answer-label">Answer</div>
+        <div id="answer-text"></div>
+      </div>
+    </div>
+
+    <div class="q-dots" id="q-dots"></div>
+    <div class="bottom-deco"></div>
+  </div>
+</div>
+
+<!-- RENAME MODAL -->
+<div class="modal-overlay" id="rename-modal">
+  <div class="modal-box">
+    <span class="modal-kanji">名</span>
+    <div class="modal-title">Rename Teams</div>
+    <label class="modal-field-label t1">Team 1</label>
+    <input class="modal-input" id="rename-t1" type="text" maxlength="24">
+    <label class="modal-field-label t2" style="margin-top:8px">Team 2</label>
+    <input class="modal-input" id="rename-t2" type="text" maxlength="24">
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeRename()">Cancel</button>
+      <button class="modal-save" onclick="saveRename()">Save Names</button>
+    </div>
+  </div>
+</div>
+
+<!-- CELEBRATION -->
+<div class="celebration" id="celebration">
+  <div class="cel-box">
+    <span class="cel-kanji" id="cel-kanji">勝</span>
+    <div class="cel-title" id="cel-title">Victory!</div>
+    <div class="cel-sub" id="cel-sub"></div>
+    <button class="cel-close" onclick="closeCelebration()">Continue</button>
+  </div>
+</div>
+
+<script>
+// ─── KANJI BACKGROUND ───
+const KANJI='文学詩道禅俳句自然月花鳥風雅美徳仁義礼智信';
+const bg=document.getElementById('kanjibg');
+for(let i=0;i<80;i++){const s=document.createElement('span');s.textContent=KANJI[Math.floor(Math.random()*KANJI.length)];bg.appendChild(s);}
+
+// ─── WEB AUDIO CONTEXT ───
+let audioCtx=null;
+function getAudio(){
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+
+// Synthesised sounds — no external files needed
+function playTick(){
+  try{
+    const ctx=getAudio();
+    const o=ctx.createOscillator();
+    const g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);
+    o.type='sine';
+    o.frequency.setValueAtTime(880,ctx.currentTime);
+    g.gain.setValueAtTime(0.06,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.08);
+    o.start(ctx.currentTime);o.stop(ctx.currentTime+0.08);
+  }catch(e){}
+}
+
+function playUrgentTick(){
+  try{
+    const ctx=getAudio();
+    const o=ctx.createOscillator();
+    const g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);
+    o.type='square';
+    o.frequency.setValueAtTime(660,ctx.currentTime);
+    g.gain.setValueAtTime(0.09,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.1);
+    o.start(ctx.currentTime);o.stop(ctx.currentTime+0.1);
+  }catch(e){}
+}
+
+function playTimeUp(){
+  try{
+    const ctx=getAudio();
+    // Three descending tones — gong-like
+    [0,0.22,0.44].forEach((delay,i)=>{
+      const o=ctx.createOscillator();
+      const g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.type='sine';
+      const freq=[220,196,165][i];
+      o.frequency.setValueAtTime(freq,ctx.currentTime+delay);
+      g.gain.setValueAtTime(0.35,ctx.currentTime+delay);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+delay+0.9);
+      o.start(ctx.currentTime+delay);
+      o.stop(ctx.currentTime+delay+0.95);
+    });
+  }catch(e){}
+}
+
+function playOpportunity(){
+  try{
+    const ctx=getAudio();
+    // Rising two-note fanfare
+    [0,0.18].forEach((delay,i)=>{
+      const o=ctx.createOscillator();
+      const g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.type='triangle';
+      o.frequency.setValueAtTime([440,660][i],ctx.currentTime+delay);
+      g.gain.setValueAtTime(0.22,ctx.currentTime+delay);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+delay+0.35);
+      o.start(ctx.currentTime+delay);o.stop(ctx.currentTime+delay+0.38);
+    });
+  }catch(e){}
+}
+
+function playScore(){
+  try{
+    const ctx=getAudio();
+    // Pentatonic ascending — C D E G A
+    const notes=[523,587,659,784,880];
+    notes.forEach((freq,i)=>{
+      const o=ctx.createOscillator();
+      const g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.type='sine';
+      o.frequency.setValueAtTime(freq,ctx.currentTime+i*0.1);
+      g.gain.setValueAtTime(0.18,ctx.currentTime+i*0.1);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+i*0.1+0.3);
+      o.start(ctx.currentTime+i*0.1);o.stop(ctx.currentTime+i*0.1+0.32);
+    });
+  }catch(e){}
+}
+
+function playNextQuestion(){
+  try{
+    const ctx=getAudio();
+    const o=ctx.createOscillator();
+    const g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);
+    o.type='sine';
+    o.frequency.setValueAtTime(440,ctx.currentTime);
+    o.frequency.setValueAtTime(550,ctx.currentTime+0.1);
+    g.gain.setValueAtTime(0.15,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.25);
+    o.start(ctx.currentTime);o.stop(ctx.currentTime+0.27);
+  }catch(e){}
+}
+
+function playVictory(){
+  try{
+    const ctx=getAudio();
+    // Celebratory fanfare — 5 ascending notes with harmony
+    const melody=[523,659,784,1047,1319];
+    melody.forEach((freq,i)=>{
+      const o=ctx.createOscillator();
+      const g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);
+      o.type='triangle';
+      o.frequency.setValueAtTime(freq,ctx.currentTime+i*0.14);
+      g.gain.setValueAtTime(0.2,ctx.currentTime+i*0.14);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+i*0.14+0.5);
+      o.start(ctx.currentTime+i*0.14);o.stop(ctx.currentTime+i*0.14+0.55);
+      // Harmony a third below
+      if(i>0){
+        const o2=ctx.createOscillator();
+        const g2=ctx.createGain();
+        o2.connect(g2);g2.connect(ctx.destination);
+        o2.type='sine';
+        o2.frequency.setValueAtTime(freq*0.8,ctx.currentTime+i*0.14);
+        g2.gain.setValueAtTime(0.08,ctx.currentTime+i*0.14);
+        g2.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+i*0.14+0.45);
+        o2.start(ctx.currentTime+i*0.14);o2.stop(ctx.currentTime+i*0.14+0.48);
+      }
+    });
+  }catch(e){}
+}
+
+// ─── QUESTIONS ───
+const questions=[
+  {cat:"Confucius & Lao-tzu",q:"What does Confucius mean when he says a ruler who governs by virtue is like the polestar?",a:"The polestar does not move — others orbit around it. Moral authority commands without force; it attracts rather than compels."},
+  {cat:"Confucius & Lao-tzu",q:"Confucius names 'reciprocity' as the one word that could guide a life. What is his precise definition?",a:"Do not do to others what you would not wish done to yourself. This is the negative formulation of the Golden Rule — shu."},
+  {cat:"Confucius & Lao-tzu",q:"What is the rhetorical function of Lao-tzu's series of questions — 'Fame or integrity: which is more important?'",a:"They expose the futility of chasing external goods. Not invitations to debate — they lead the reader to an obvious conclusion through apparent choice."},
+  {cat:"Confucius & Lao-tzu",q:"How does Lao-tzu describe the ideal leader, and what concept does this embody?",a:"The best leader achieves without competing, does not claim credit, and results come naturally. This embodies wu wei — effortless, non-coercive action."},
+  {cat:"Confucius & Lao-tzu",q:"What is the essential difference between how Confucius and Lao-tzu relate to society?",a:"Confucius works within society — through ritual, relationships, cultivated virtue. Lao-tzu steps outside it — toward nature, withdrawal, and non-action."},
+  {cat:"Confucius & Lao-tzu",q:"What does the Confucian concept of ren mean, and why is it central to the Analects?",a:"Ren means humaneness or benevolence — it is the foundation of all ethical conduct and the quality the superior person (junzi) cultivates above all else."},
+  {cat:"Chuang Tzu",q:"In 'The Fish Rejoice,' what is the central philosophical disagreement between Chuang Tzu and Hui Tzu?",a:"Whether one being can truly know another's inner experience. Chuang Tzu argues for intuitive/empathic knowledge; Hui Tzu for rational, bounded knowledge."},
+  {cat:"Chuang Tzu",q:"How does Chuang Tzu respond to Hui Tzu's challenge that he cannot know the fish are happy?",a:"He turns the argument back: 'You are not me — you cannot know that I don't know.' He doesn't win the argument; he shifts the ground of it entirely."},
+  {cat:"Li Po",q:"In 'Still Night Thoughts,' what triggers Li Po's homesickness, and what is the perceptual mistake that initiates it?",a:"He sees light on the ground and mistakes moonlight for frost. Looking up at the moon then triggers homesickness — the perceptual slip becomes the emotional revelation."},
+  {cat:"Li Po",q:"In 'Gazing at the Lu Mountain Waterfall,' what does the comparison to the 'celestial Star River' primarily convey?",a:"A sense of supernatural, overwhelming scale and power — not merely beauty. It elevates the waterfall to cosmic proportions."},
+  {cat:"Li Po",q:"What is the significance of Li Po's final declaration in 'Gazing at the Lu Mountain Waterfall' — that he will 'leave that peopled world forever'?",a:"It is explicitly Taoist: withdrawal from human society toward harmony with nature. This is the culminating philosophical gesture of the poem."},
+  {cat:"Li Po",q:"Describe the emotional arc of 'The River-Merchant's Wife: A Letter' from opening to close.",a:"Childhood indifference → timid acceptance in marriage → deepening longing in absence → fully expressed love (the offer to travel to Cho-fu-Sa). Love grew without being chosen."},
+  {cat:"Li Po",q:"What does the moss 'grown too deep to clear away' at the gate most likely represent in 'The River-Merchant's Wife'?",a:"The passage of time and the depth of her longing — accumulated feeling made physical. Time in the natural world mirrors her interior state."},
+  {cat:"Tu Fu",q:"What makes 'Song of P'eng-ya' unusual among Tu Fu's poems?",a:"It tells Tu Fu's own family story of fleeing the An Lushan Rebellion — autobiographical and personal, with Sun Tsai's hospitality as its emotional centre, not the battle."},
+  {cat:"Tu Fu",q:"What is the central feeling created by 'Jade Flower Palace,' and what does the ruined palace represent?",a:"Sadness — not anger or nostalgia — at how completely power and beauty fade. The ruin inspires mourning, not rebellion."},
+  {cat:"Tu Fu",q:"Why is Tu Fu more pained by Li Po's absence than by the deaths of others, in 'Dreaming of Li Po'?",a:"Li Po is alive but unreachable — exile makes the loss unresolvable. A death can be grieved and closed; a living absence cannot."},
+  {cat:"Tu Fu",q:"What is the essential distinction between Li Po and Tu Fu as poets?",a:"Li Po seeks transcendence — he escapes the human world toward the cosmic. Tu Fu is a witness — he stays inside history and records its cost on ordinary people."},
+  {cat:"The Pillow Book",q:"What genre does The Pillow Book belong to, and what does that term literally mean?",a:"Zuihitsu — 'following the brush.' Random notes or occasional writings: free, associative, impressionistic, unapologetically personal."},
+  {cat:"The Pillow Book",q:"What is the primary literary effect of the catalogue form in sections like 'Hateful Things' and 'Embarrassing Things'?",a:"It mimics the randomness of thought while asserting the narrator's refined judgment. The randomness is performed — the judgment is always in control."},
+  {cat:"The Pillow Book",q:"What does Shōnagon's reaction when others are unimpressed by beauty she finds moving reveal about her self-construction as narrator?",a:"She positions herself as more perceptive than those around her — a narrator who prizes depth of attention in a world that rewards surface."},
+  {cat:"The Pillow Book",q:"What does Shōnagon claim the dog Okinamaro's behaviour demonstrates?",a:"That even a dog possesses feelings and a kind of understanding. It reveals her belief that inner experience is more real than social performance."},
+  {cat:"Zen Teachings",q:"According to 'Contamination of Virtue,' when does a good deed become contaminated?",a:"When the person performing it wants credit or reward. The desire for recognition cancels the virtue — the deed and the desire for praise cannot coexist."},
+  {cat:"Zen Teachings",q:"In 'Publishing the Sutras,' what does the claim that 'the first two invisible sets surpass even the last' mean?",a:"Tetsugen's acts of compassionate self-sacrifice — giving the money to disaster victims — were themselves the highest teaching, surpassing the printed text."},
+  {cat:"Zen Teachings",q:"How does the parable 'Right and Wrong' demonstrate Zen's approach to transmitting wisdom?",a:"The master refuses to adjudicate or explain directly. Wisdom cannot be transmitted by being told — it must be realised. The parable's method is the lesson."},
+  {cat:"Zen Teachings",q:"What is the key difference between Shōnagon's and the Zen writers' understanding of attention?",a:"Shōnagon: attention toward beauty and social refinement — it cultivates and distinguishes the self. Zen: non-attached attention that dissolves the self rather than constructing it."},
+  {cat:"Haiku",q:"What is a kigo, and what function does it serve in haiku?",a:"A seasonal word that grounds the poem in the natural world's cycle. It anchors the haiku in time and connects the moment to the larger pattern of nature."},
+  {cat:"Haiku",q:"In Bashō's death poem, what does the journey image suggest?",a:"His creative spirit continues even as his body is dying — the journey is not over. It reframes death as continuation rather than termination."},
+  {cat:"Haiku",q:"What are the two images in Bashō's 'Pitifully — under the helmet, a cricket sings,' and how do they function together?",a:"The soldier's helmet (death, war — empty) and the singing cricket (continuing life). In tension: the reader must make the connection between mortality and persistence."},
+  {cat:"Haiku",q:"What distinguishes Issa's haiku from Bashō's in terms of voice and temperament?",a:"Bashō is cosmic, austere, impersonal — the poet disappears. Issa is intimate, tender, often gently comic — the poet stays visible, and personal feeling shapes the image."},
+  {cat:"Essay Thinking",q:"For the Section C essay on attention: both Shōnagon and the Zen writers concern themselves with it. What is the REAL question the essay must answer?",a:"Not just 'what do they pay attention to?' but: what KIND of attention, directed toward what, and to what END? What does each writer believe good attention makes possible?"},
+];
+
+// ─── STATE ───
+const FULL_TIME=60;
+const OPP_TIME=30;
+const CIRC=213.6;
+let cur=0,scores=[0,0],timer=FULL_TIME,totalTime=FULL_TIME,interval=null,running=false,oppMode=false,answerShown=false;
+let lastTickSecond=-1;
+
+// ─── SETUP ───
+function startGame(){
+  const t1=document.getElementById('setup-t1').value.trim()||'Red Dragon';
+  const t2=document.getElementById('setup-t2').value.trim()||'Blue Phoenix';
+  document.getElementById('t1name').textContent=t1;
+  document.getElementById('t2name').textContent=t2;
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('game-screen').style.display='block';
+  loadQuestion();
+}
+
+// ─── DOTS ───
+function renderDots(){
+  const d=document.getElementById('q-dots');d.innerHTML='';
+  for(let i=0;i<questions.length;i++){
+    const dot=document.createElement('div');
+    dot.className='q-dot'+(i===cur?' active':i<cur?' done':'');
+    dot.title='Jump to Q'+(i+1);
+    dot.onclick=(()=>{const idx=i;return()=>jumpTo(idx);})();
+    d.appendChild(dot);
+  }
+}
+
+function jumpTo(idx){clearInterval(interval);running=false;cur=idx;loadQuestion();}
+
+// ─── LOAD QUESTION ───
+function loadQuestion(){
+  answerShown=false;
+  document.getElementById('answer-area').style.display='none';
+  oppMode=false;
+  document.getElementById('opp-banner').style.display='none';
+  document.getElementById('opp-btn').style.display='none';
+  const q=questions[cur];
+  document.getElementById('q-category').textContent=q.cat;
+  document.getElementById('q-text').textContent=q.q;
+  document.getElementById('answer-text').textContent=q.a;
+  document.getElementById('q-number').textContent='Question '+(cur+1)+' of '+questions.length;
+  document.getElementById('round-badge').textContent='Q '+(cur+1)+' / '+questions.length;
+  document.getElementById('progress-fill').style.width=((cur+1)/questions.length*100)+'%';
+  resetTimer();
+  renderDots();
+}
+
+function toggleAnswer(){
+  answerShown=!answerShown;
+  document.getElementById('answer-area').style.display=answerShown?'block':'none';
+}
+
+// ─── TIMER ───
+function formatTime(s){
+  const m=Math.floor(s/60);const sec=s%60;
+  return m+':'+(sec<10?'0':'')+sec;
+}
+
+function startTimer(){
+  if(running)return;
+  // Unlock AudioContext on first user interaction
+  try{getAudio().resume();}catch(e){}
+  running=true;lastTickSecond=-1;
+  const btn=document.getElementById('start-btn');
+  btn.textContent='⏱ Running';btn.disabled=true;
+  const arc=document.getElementById('timer-arc');
+
+  interval=setInterval(()=>{
+    timer--;
+    const pct=timer/totalTime;
+    arc.setAttribute('stroke-dashoffset',(1-pct)*CIRC);
+
+    // Colour transitions: gold → orange → red
+    let strokeColor='#C8991A';
+    if(timer<=10) strokeColor='#8B1A1A';
+    else if(timer<=20) strokeColor='#CC6600';
+    arc.setAttribute('stroke',strokeColor);
+
+    const td=document.getElementById('timer-display');
+    td.textContent=formatTime(timer);
+    td.className='timer-text'+(timer<=10?' urgent':'');
+
+    // Tick sounds
+    if(timer<=10 && timer!==lastTickSecond){
+      lastTickSecond=timer;
+      if(timer<=5) playUrgentTick();
+      else playTick();
+    }
+
+    if(timer<=0){
+      clearInterval(interval);running=false;
+      btn.textContent='▶ Start';btn.disabled=false;
+      playTimeUp();
+      if(!oppMode){
+        document.getElementById('opp-btn').style.display='inline-block';
+        showBanner('⏰ Time up! Grant opportunity to the other team?','#555','#fff');
+      }
+    }
+  },1000);
+}
+
+function resetTimer(){
+  clearInterval(interval);running=false;
+  timer=FULL_TIME;totalTime=FULL_TIME;lastTickSecond=-1;
+  document.getElementById('timer-display').textContent=formatTime(FULL_TIME);
+  document.getElementById('timer-display').className='timer-text';
+  document.getElementById('timer-arc').setAttribute('stroke-dashoffset','0');
+  document.getElementById('timer-arc').setAttribute('stroke','#C8991A');
+  const btn=document.getElementById('start-btn');
+  btn.textContent='▶ Start';btn.disabled=false;
+}
+
+function showBanner(msg,bgColor,color){
+  const b=document.getElementById('opp-banner');
+  b.textContent=msg;b.style.background=bgColor;b.style.color=color;b.style.display='block';
+}
+
+function giveOpportunity(){
+  oppMode=true;
+  document.getElementById('opp-btn').style.display='none';
+  // Alternate which team gets opportunity
+  const activeT=cur%2===0?2:1;
+  const tname=document.getElementById('t'+activeT+'name').textContent;
+  const bgColor=activeT===1?'#8B1A1A':'#1A3A5C';
+  showBanner('🔔 '+tname+' — 30 seconds to answer!',bgColor,'#fff');
+  playOpportunity();
+  clearInterval(interval);running=false;
+  timer=OPP_TIME;totalTime=OPP_TIME;lastTickSecond=-1;
+  document.getElementById('timer-display').textContent=formatTime(OPP_TIME);
+  document.getElementById('timer-display').className='timer-text';
+  document.getElementById('timer-arc').setAttribute('stroke-dashoffset','0');
+  document.getElementById('timer-arc').setAttribute('stroke','#C8991A');
+  const btn=document.getElementById('start-btn');
+  btn.textContent='▶ Start';btn.disabled=false;
+  startTimer();
+}
+
+function nextQuestion(){
+  clearInterval(interval);running=false;
+  playNextQuestion();
+  if(cur<questions.length-1){cur++;loadQuestion();}
+  else{showFinalScore();}
+}
+
+// ─── SCORES ───
+function changeScore(team,delta){
+  scores[team-1]=Math.max(0,scores[team-1]+delta);
+  document.getElementById('score'+team).textContent=scores[team-1];
+  if(delta>0) playScore();
+}
+
+// ─── RENAME ───
+function openRename(){
+  document.getElementById('rename-t1').value=document.getElementById('t1name').textContent;
+  document.getElementById('rename-t2').value=document.getElementById('t2name').textContent;
+  document.getElementById('rename-modal').classList.add('show');
+  document.getElementById('rename-t1').focus();
+}
+function closeRename(){document.getElementById('rename-modal').classList.remove('show');}
+function saveRename(){
+  const t1=document.getElementById('rename-t1').value.trim();
+  const t2=document.getElementById('rename-t2').value.trim();
+  if(t1)document.getElementById('t1name').textContent=t1;
+  if(t2)document.getElementById('t2name').textContent=t2;
+  closeRename();
+}
+
+// ─── FINAL SCORE ───
+function showFinalScore(){
+  const cel=document.getElementById('celebration');
+  cel.classList.add('show');
+  playVictory();
+  const t1=document.getElementById('t1name').textContent;
+  const t2=document.getElementById('t2name').textContent;
+  const s1=scores[0],s2=scores[1];
+  if(s1>s2){
+    document.getElementById('cel-kanji').textContent='勝';
+    document.getElementById('cel-title').textContent=t1+' Wins!';
+    document.getElementById('cel-sub').textContent=s1+' — '+s2+'. Well contested!';
+  } else if(s2>s1){
+    document.getElementById('cel-kanji').textContent='勝';
+    document.getElementById('cel-title').textContent=t2+' Wins!';
+    document.getElementById('cel-sub').textContent=s2+' — '+s1+'. Well contested!';
+  } else {
+    document.getElementById('cel-kanji').textContent='和';
+    document.getElementById('cel-title').textContent='Equal Scholars!';
+    document.getElementById('cel-sub').textContent='Both teams: '+s1+' points. A draw worthy of the masters.';
+  }
+}
+function closeCelebration(){document.getElementById('celebration').classList.remove('show');}
+
+// ─── KEYBOARD & EVENT LISTENERS ───
+document.getElementById('rename-modal').addEventListener('click',function(e){if(e.target===this)closeRename();});
+document.getElementById('rename-t2').addEventListener('keydown',function(e){if(e.key==='Enter')saveRename();});
+document.getElementById('rename-t1').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('rename-t2').focus();});
+document.getElementById('setup-t1').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('setup-t2').focus();});
+document.getElementById('setup-t2').addEventListener('keydown',function(e){if(e.key==='Enter')startGame();});
+
+document.addEventListener('keydown',function(e){
+  if(document.getElementById('setup-screen').style.display!=='none')return;
+  if(document.getElementById('rename-modal').classList.contains('show'))return;
+  if(e.key===' '||e.key==='Enter'){e.preventDefault();if(!running)startTimer();}
+  if(e.key==='ArrowRight'){nextQuestion();}
+  if(e.key==='r'||e.key==='R'){resetTimer();}
+});
+</script>
+</body>
+</html>
