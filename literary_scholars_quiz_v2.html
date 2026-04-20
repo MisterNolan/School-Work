@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Literary Scholars Challenge</title>
+<style>
+:root {
+  --ink:#1a0f00; --red:#8B1A1A; --red2:#6B1010;
+  --gold:#C8991A; --gold2:#A07810;
+  --cream:#FDF6E3; --paper:#F5ECD7; --paper2:#EDE0C4;
+  --team1:#8B1A1A; --team2:#1A3A5C;
+  --green:#2D6A2D; --green-bg:#EDF7ED; --green-border:#7CB97C;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Georgia',serif;background:var(--cream);color:var(--ink);min-height:100vh;}
+
+/* KANJI BG */
+.kanji-bg{position:fixed;inset:0;display:flex;flex-wrap:wrap;align-content:flex-start;opacity:.04;pointer-events:none;z-index:0;overflow:hidden;}
+.kanji-bg span{font-size:44px;line-height:1;color:#000;margin:2px;}
+
+/* LAYOUT */
+#app{position:relative;z-index:1;max-width:860px;margin:0 auto;}
+
+/* SETUP */
+#setup{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:30px;}
+.setup-box{background:var(--paper);border:2px solid var(--gold);border-radius:8px;padding:40px;max-width:440px;width:100%;text-align:center;}
+.setup-seal{font-size:60px;color:var(--gold);display:block;margin-bottom:10px;}
+.setup-title{font-size:24px;font-weight:700;color:var(--red);margin-bottom:4px;}
+.setup-sub{font-size:13px;color:#888;margin-bottom:26px;}
+.setup-hr{height:1px;background:rgba(200,153,26,.3);margin:20px 0;}
+.field-label{display:block;text-align:left;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
+.field-label.c1{color:var(--team1);}
+.field-label.c2{color:var(--team2);}
+.setup-input{width:100%;padding:10px 14px;border-radius:4px;font-size:15px;font-family:Georgia,serif;margin-bottom:18px;border:1.5px solid rgba(200,153,26,.4);background:#fff;color:var(--ink);outline:none;}
+.setup-input:focus{border-color:var(--gold);}
+.setup-btn{width:100%;padding:13px;background:var(--red);color:#fff;border:none;border-radius:4px;font-size:16px;font-weight:700;cursor:pointer;font-family:Georgia,serif;letter-spacing:1px;transition:background .15s;}
+.setup-btn:hover{background:var(--red2);}
+.setup-note{font-size:12px;color:#999;margin-top:12px;}
+
+/* DECO STRIPES */
+.stripe-top{height:6px;background:repeating-linear-gradient(90deg,var(--red) 0,var(--red) 8px,var(--gold) 8px,var(--gold) 16px);}
+.stripe-bot{height:4px;background:repeating-linear-gradient(90deg,var(--gold) 0,var(--gold) 8px,var(--red) 8px,var(--red) 16px);}
+
+/* HEADER */
+.hdr{background:var(--red);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--gold);}
+.hdr-left{display:flex;align-items:center;gap:8px;}
+.hdr-kanji{color:var(--gold);font-size:26px;}
+.hdr-title{color:#fff;font-size:17px;font-weight:700;letter-spacing:1px;}
+.hdr-right{display:flex;align-items:center;gap:10px;}
+.q-badge{background:var(--gold);color:var(--ink);font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;}
+.rename-btn{background:transparent;border:1px solid rgba(255,255,255,.4);color:rgba(255,255,255,.8);font-size:11px;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:Georgia,serif;}
+.rename-btn:hover{border-color:#fff;color:#fff;}
+
+/* SCOREBOARD — permanent, never rebuilt */
+.scoreboard{display:grid;grid-template-columns:1fr auto 1fr;background:var(--paper);border-bottom:2px solid var(--gold);}
+.team-card{padding:14px 16px;text-align:center;transition:box-shadow .25s,background .25s;}
+.team-card.t1{border-right:1px solid var(--gold);}
+.team-card.t2{border-left:1px solid var(--gold);}
+.team-card.answering.t1{background:#fff5f5;box-shadow:inset 0 0 0 3px var(--team1);}
+.team-card.answering.t2{background:#f5f8ff;box-shadow:inset 0 0 0 3px var(--team2);}
+.team-card.stealing{animation:pulse-gold .7s ease-in-out infinite alternate;}
+@keyframes pulse-gold{from{box-shadow:inset 0 0 0 3px var(--gold);}to{box-shadow:inset 0 0 0 3px var(--gold),0 0 18px rgba(200,153,26,.5);}}
+.team-name{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+.t1 .team-name{color:var(--team1);}
+.t2 .team-name{color:var(--team2);}
+.team-score{font-size:48px;font-weight:700;line-height:1;margin-bottom:2px;}
+.t1 .team-score{color:var(--team1);}
+.t2 .team-score{color:var(--team2);}
+.team-status{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;height:16px;margin-bottom:8px;color:var(--gold);}
+.score-btns{display:flex;gap:6px;justify-content:center;}
+.sc-btn{width:30px;height:30px;border-radius:50%;border:1.5px solid;font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;background:transparent;transition:background .12s,color .12s;line-height:1;}
+.sc-btn:active{transform:scale(.88);}
+.t1 .sc-btn{border-color:var(--team1);color:var(--team1);}
+.t1 .sc-btn:hover{background:var(--team1);color:#fff;}
+.t2 .sc-btn{border-color:var(--team2);color:var(--team2);}
+.t2 .sc-btn:hover{background:var(--team2);color:#fff;}
+
+/* VS / TIMER COLUMN */
+.vs-col{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 16px;gap:6px;}
+.vs-seal{width:52px;height:52px;border-radius:50%;border:2px solid var(--gold);background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--gold);text-align:center;line-height:1.3;letter-spacing:1px;}
+.timer-num{font-size:30px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1;}
+.timer-num.low{color:var(--red);animation:tblink .5s ease-in-out infinite alternate;}
+@keyframes tblink{from{opacity:1;}to{opacity:.35;};}
+.timer-bar-track{width:56px;height:4px;background:rgba(0,0,0,.1);border-radius:2px;overflow:hidden;}
+.timer-bar-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 1s linear,background .3s;}
+.timer-bar-fill.low{background:var(--red);}
+.timer-toggle{font-size:10px;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;color:#999;font-family:Georgia,serif;cursor:pointer;padding:1px 4px;}
+.timer-toggle:hover{color:var(--ink);}
+
+/* PROGRESS */
+.prog-wrap{padding:8px 20px 0;background:var(--paper);}
+.prog-track{background:rgba(200,153,26,.2);border-radius:4px;height:4px;}
+.prog-fill{height:4px;border-radius:4px;background:linear-gradient(90deg,var(--red),var(--gold));transition:width .4s;}
+.prog-label{font-size:11px;color:#aaa;text-align:right;margin-top:3px;padding-bottom:8px;}
+
+/* MAIN CONTENT */
+#main{padding:16px 20px 20px;}
+
+/* STATUS BAR */
+.status-bar{background:var(--paper);border:1px solid rgba(200,153,26,.3);border-radius:6px;padding:9px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.status-msg{font-size:14px;font-weight:700;}
+.cat-tag{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:rgba(200,153,26,.15);color:var(--gold2);padding:3px 10px;border-radius:4px;}
+
+/* QUESTION CARD */
+.q-card{background:var(--paper);border:1px solid rgba(200,153,26,.4);border-radius:6px;padding:18px 18px;margin-bottom:14px;border-left:4px solid var(--gold);position:relative;}
+.q-num{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#bbb;margin-bottom:8px;}
+.q-text{font-size:18px;font-weight:700;line-height:1.55;color:var(--ink);}
+
+/* ANSWER BOX */
+.answer-box{background:var(--green-bg);border:1px solid var(--green-border);border-left:4px solid var(--green);border-radius:6px;padding:12px 16px;margin-bottom:14px;animation:fadein .3s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+.answer-lbl{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);margin-bottom:5px;}
+.answer-text{font-size:15px;line-height:1.6;color:#1a3a1a;}
+
+/* ACTION BUTTONS */
+.phase-lbl{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#bbb;margin-bottom:8px;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+button.act{padding:11px 20px;border-radius:6px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:Georgia,serif;letter-spacing:.4px;transition:transform .1s,opacity .1s;}
+button.act:hover{opacity:.88;}
+button.act:active{transform:scale(.97);}
+button.act:disabled{opacity:.3;cursor:default;transform:none;}
+button.correct{background:#2D6A2D;color:#fff;}
+button.correct:hover{opacity:1;background:#1a4d1a;}
+button.wrong{background:var(--red);color:#fff;}
+button.wrong:hover{opacity:1;background:var(--red2);}
+button.steal-correct{background:#8B5E00;color:#fff;}
+button.steal-correct:hover{opacity:1;background:#6a4800;}
+button.no-pt{background:#555;color:#fff;}
+button.nxt{background:var(--gold);color:var(--ink);font-size:15px;padding:11px 28px;}
+button.nxt:hover{opacity:1;background:var(--gold2);color:#fff;}
+button.play-again{background:var(--red);color:#fff;font-size:16px;padding:14px 40px;border-radius:6px;border:none;cursor:pointer;font-family:Georgia,serif;font-weight:700;letter-spacing:1px;}
+button.play-again:hover{background:var(--red2);}
+
+/* POINT FLASH */
+.flash{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:80px;font-weight:700;pointer-events:none;z-index:200;animation:popfade .9s ease forwards;}
+@keyframes popfade{0%{opacity:0;transform:translate(-50%,-50%) scale(.3);}30%{opacity:1;transform:translate(-50%,-50%) scale(1.1);}60%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.15);}}
+.flash-1{color:var(--team1);}
+.flash-2{color:var(--team2);}
+.flash-gold{color:var(--gold);}
+
+/* END SCREEN */
+.end-wrap{text-align:center;padding:60px 20px;}
+.end-kanji{font-size:64px;color:var(--gold);display:block;margin-bottom:10px;}
+.end-title{font-size:26px;font-weight:700;color:var(--red);margin-bottom:8px;}
+.end-scores{font-size:16px;color:#777;margin-bottom:30px;}
+.end-s1{color:var(--team1);font-weight:700;}
+.end-s2{color:var(--team2);font-weight:700;}
+
+/* RENAME MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal-box{background:var(--paper);border:2px solid var(--gold);border-radius:8px;padding:30px 36px;max-width:380px;width:90%;text-align:center;}
+.modal-kanji{font-size:44px;color:var(--gold);display:block;margin-bottom:8px;}
+.modal-title{font-size:17px;font-weight:700;color:var(--red);margin-bottom:18px;}
+.modal-lbl{display:block;text-align:left;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
+.modal-lbl.c1{color:var(--team1);}
+.modal-lbl.c2{color:var(--team2);}
+.modal-input{width:100%;padding:10px 14px;border-radius:4px;font-size:15px;font-family:Georgia,serif;margin-bottom:12px;border:1.5px solid rgba(200,153,26,.4);background:#fff;color:var(--ink);outline:none;text-align:center;}
+.modal-input:focus{border-color:var(--gold);}
+.modal-btns{display:flex;gap:10px;justify-content:center;margin-top:12px;}
+.modal-save{padding:9px 24px;background:var(--red);color:#fff;border:none;border-radius:4px;font-size:14px;font-weight:700;cursor:pointer;font-family:Georgia,serif;}
+.modal-save:hover{background:var(--red2);}
+.modal-cancel{padding:9px 24px;background:transparent;color:var(--ink);border:1.5px solid rgba(0,0,0,.2);border-radius:4px;font-size:14px;cursor:pointer;font-family:Georgia,serif;}
+.modal-cancel:hover{background:rgba(0,0,0,.06);}
+
+@media(max-width:520px){
+  .hdr-title{font-size:13px;}
+  .q-text{font-size:15px;}
+  .setup-box{padding:24px 18px;}
+  .team-score{font-size:38px;}
+}
+</style>
+</head>
+<body>
+
+<div class="kanji-bg" id="kbg"></div>
+
+<!-- SETUP -->
+<div id="setup">
+  <div class="setup-box">
+    <span class="setup-seal">文</span>
+    <div class="setup-title">Literary Scholars Challenge</div>
+    <div class="setup-sub">G12 Honours English Literature — Midterm Review</div>
+    <div class="setup-hr"></div>
+    <label class="field-label c1">Team 1 Name</label>
+    <input class="setup-input" id="s-t1" type="text" value="Red Dragon" maxlength="24">
+    <label class="field-label c2">Team 2 Name</label>
+    <input class="setup-input" id="s-t2" type="text" value="Blue Phoenix" maxlength="24">
+    <button class="setup-btn" onclick="startGame()">Begin the Challenge ›</button>
+    <div class="setup-note">30 questions · 60 seconds each · steal opportunity on wrong answer</div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game" style="display:none;">
+  <div class="stripe-top"></div>
+  <div class="hdr">
+    <div class="hdr-left">
+      <span class="hdr-kanji">文</span>
+      <span class="hdr-title">Literary Scholars Challenge</span>
+    </div>
+    <div class="hdr-right">
+      <span class="q-badge" id="q-badge">Q 1 / 30</span>
+      <button class="rename-btn" onclick="openRename()">✎ Rename</button>
+    </div>
+  </div>
+
+  <!-- PERMANENT SCOREBOARD -->
+  <div class="scoreboard">
+    <div class="team-card t1" id="card-1">
+      <div class="team-name" id="tn1">Red Dragon</div>
+      <div class="team-score" id="sc1">0</div>
+      <div class="team-status" id="st1">&nbsp;</div>
+      <div class="score-btns">
+        <button class="sc-btn" id="btn1m">−</button>
+        <button class="sc-btn" id="btn1p">+</button>
+      </div>
+    </div>
+    <div class="vs-col">
+      <div class="vs-seal">対<br>VS</div>
+      <div class="timer-num" id="tnum">1:00</div>
+      <div class="timer-bar-track"><div class="timer-bar-fill" id="tbar" style="width:100%"></div></div>
+      <button class="timer-toggle" id="ttoggle">Start</button>
+    </div>
+    <div class="team-card t2" id="card-2">
+      <div class="team-name" id="tn2">Blue Phoenix</div>
+      <div class="team-score" id="sc2">0</div>
+      <div class="team-status" id="st2">&nbsp;</div>
+      <div class="score-btns">
+        <button class="sc-btn" id="btn2m">−</button>
+        <button class="sc-btn" id="btn2p">+</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="prog-wrap">
+    <div class="prog-track"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+    <div class="prog-label" id="prog-lbl">Q1 of 30</div>
+  </div>
+
+  <!-- DYNAMIC CONTENT -->
+  <div id="main"></div>
+
+  <div class="stripe-bot"></div>
+</div>
+
+<!-- RENAME MODAL -->
+<div class="modal-bg" id="modal">
+  <div class="modal-box">
+    <span class="modal-kanji">名</span>
+    <div class="modal-title">Rename Teams</div>
+    <label class="modal-lbl c1">Team 1</label>
+    <input class="modal-input" id="m-t1" type="text" maxlength="24">
+    <label class="modal-lbl c2" style="margin-top:6px">Team 2</label>
+    <input class="modal-input" id="m-t2" type="text" maxlength="24">
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeRename()">Cancel</button>
+      <button class="modal-save" onclick="saveRename()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── KANJI BG ───
+const KJ='文学詩道禅俳句自然月花鳥風雅美徳仁義礼智信';
+const kb=document.getElementById('kbg');
+for(let i=0;i<90;i++){const s=document.createElement('span');s.textContent=KJ[Math.floor(Math.random()*KJ.length)];kb.appendChild(s);}
+
+// ─── AUDIO ───
+let actx=null;
+function getACtx(){if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();return actx;}
+function beep(freq,dur,type='sine',vol=0.25,delay=0){
+  try{
+    const ctx=getACtx();
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);
+    o.type=type;o.frequency.setValueAtTime(freq,ctx.currentTime+delay);
+    g.gain.setValueAtTime(vol,ctx.currentTime+delay);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+delay+dur);
+    o.start(ctx.currentTime+delay);o.stop(ctx.currentTime+delay+dur+0.01);
+  }catch(e){}
+}
+function playCorrect(){beep(523,.09);beep(659,.09,undefined,undefined,.1);beep(784,.25,undefined,undefined,.2);}
+function playWrong(){beep(220,.12,'sawtooth',.2);beep(180,.25,'sawtooth',.2,.15);}
+function playSteal(){beep(440,.12,'triangle',.2);beep(660,.3,'triangle',.2,.15);}
+function playTick(){beep(880,.05,'square',.06);}
+function playUrgent(){beep(660,.08,'square',.1);}
+function playTimeUp(){beep(220,.15,'sawtooth',.3);beep(180,.3,'sawtooth',.25,.18);}
+function playNext(){beep(440,.09);beep(550,.2,undefined,undefined,.1);}
+function playVictory(){
+  [523,659,784,1047,1319].forEach((f,i)=>{beep(f,'triangle',.18,.15,i*.13);});
+}
+
+// ─── DATA ───
+const TIMER_FULL=60;
+const TIMER_STEAL=30;
+
+const questions=[
+  {cat:"Confucius & Lao-tzu",q:"What does Confucius mean when he says a ruler who governs by virtue is like the polestar?",a:"The polestar does not move — others orbit around it. Moral authority commands without force; it attracts rather than compels."},
+  {cat:"Confucius & Lao-tzu",q:"Confucius names 'reciprocity' as the one word that could guide a life. What is his precise definition?",a:"Do not do to others what you would not wish done to yourself. This is the negative formulation of the Golden Rule — shu."},
+  {cat:"Confucius & Lao-tzu",q:"What is the rhetorical function of Lao-tzu's series of questions — 'Fame or integrity: which is more important?'",a:"They expose the futility of chasing external goods. Not invitations to debate — they lead the reader to an obvious conclusion through apparent choice."},
+  {cat:"Confucius & Lao-tzu",q:"How does Lao-tzu describe the ideal leader, and what concept does this embody?",a:"The best leader achieves without competing, does not claim credit, and results come naturally. This embodies wu wei — effortless, non-coercive action."},
+  {cat:"Confucius & Lao-tzu",q:"What is the essential difference between how Confucius and Lao-tzu relate to society?",a:"Confucius works within society — through ritual, relationships, cultivated virtue. Lao-tzu steps outside it — toward nature, withdrawal, and non-action."},
+  {cat:"Confucius & Lao-tzu",q:"What does the Confucian concept of ren mean, and why is it central to the Analects?",a:"Ren means humaneness or benevolence — it is the foundation of all ethical conduct and the quality the superior person (junzi) cultivates above all else."},
+  {cat:"Chuang Tzu",q:"In 'The Fish Rejoice,' what is the central philosophical disagreement between Chuang Tzu and Hui Tzu?",a:"Whether one being can truly know another's inner experience. Chuang Tzu argues for intuitive/empathic knowledge; Hui Tzu for rational, bounded knowledge."},
+  {cat:"Chuang Tzu",q:"How does Chuang Tzu respond to Hui Tzu's challenge that he cannot know the fish are happy?",a:"He turns the argument back: 'You are not me — you cannot know that I don't know.' He doesn't win the argument; he shifts the ground of it entirely."},
+  {cat:"Li Po",q:"In 'Still Night Thoughts,' what triggers Li Po's homesickness, and what is the perceptual mistake that initiates it?",a:"He sees light on the ground and mistakes moonlight for frost. Looking up at the moon then triggers homesickness — the perceptual slip becomes the emotional revelation."},
+  {cat:"Li Po",q:"In 'Gazing at the Lu Mountain Waterfall,' what does the comparison to the 'celestial Star River' primarily convey?",a:"A sense of supernatural, overwhelming scale and power — not merely beauty. It elevates the waterfall to cosmic proportions."},
+  {cat:"Li Po",q:"What is the significance of Li Po's final declaration in 'Gazing at the Lu Mountain Waterfall' — that he will 'leave that peopled world forever'?",a:"It is explicitly Taoist: withdrawal from human society toward harmony with nature. This is the culminating philosophical gesture of the poem."},
+  {cat:"Li Po",q:"Describe the emotional arc of 'The River-Merchant's Wife: A Letter' from opening to close.",a:"Childhood indifference → timid acceptance in marriage → deepening longing in absence → fully expressed love (offer to travel to Cho-fu-Sa). Love grew without being chosen."},
+  {cat:"Li Po",q:"What does the moss 'grown too deep to clear away' at the gate most likely represent in 'The River-Merchant's Wife'?",a:"The passage of time and the depth of her longing — accumulated feeling made physical. Time in the natural world mirrors her interior state."},
+  {cat:"Tu Fu",q:"What makes 'Song of P\u2019eng-ya' unusual among Tu Fu's poems?",a:"It tells Tu Fu's own family story of fleeing the An Lushan Rebellion — autobiographical, with Sun Tsai's hospitality as its emotional centre, not the battle."},
+  {cat:"Tu Fu",q:"What is the central feeling created by 'Jade Flower Palace,' and what does the ruined palace represent?",a:"Sadness — not anger or nostalgia — at how completely power and beauty fade. The ruin inspires mourning, not rebellion."},
+  {cat:"Tu Fu",q:"Why is Tu Fu more pained by Li Po's absence than by the deaths of others, in 'Dreaming of Li Po'?",a:"Li Po is alive but unreachable — exile makes the loss unresolvable. A death can be grieved and closed; a living absence cannot."},
+  {cat:"Tu Fu",q:"What is the essential distinction between Li Po and Tu Fu as poets?",a:"Li Po seeks transcendence — he escapes the human world toward the cosmic. Tu Fu is a witness — he stays inside history and records its cost on ordinary people."},
+  {cat:"The Pillow Book",q:"What genre does The Pillow Book belong to, and what does that term literally mean?",a:"Zuihitsu — 'following the brush.' Random notes or occasional writings: free, associative, impressionistic, unapologetically personal."},
+  {cat:"The Pillow Book",q:"What is the primary literary effect of the catalogue form in sections like 'Hateful Things' and 'Embarrassing Things'?",a:"It mimics the randomness of thought while asserting the narrator's refined judgment. The randomness is performed — the judgment is always in control."},
+  {cat:"The Pillow Book",q:"What does Shōnagon's reaction when others are unimpressed by beauty she finds moving reveal about her self-construction as narrator?",a:"She positions herself as more perceptive than those around her — a narrator who prizes depth of attention in a world that rewards surface."},
+  {cat:"The Pillow Book",q:"What does Shōnagon claim the dog Okinamaro's behaviour demonstrates?",a:"That even a dog possesses feelings and a kind of understanding. It reveals her belief that inner experience is more real than social performance."},
+  {cat:"Zen Teachings",q:"According to 'Contamination of Virtue,' when does a good deed become contaminated?",a:"When the person performing it wants credit or reward. The desire for recognition cancels the virtue — the deed and the desire for praise cannot coexist."},
+  {cat:"Zen Teachings",q:"In 'Publishing the Sutras,' what does the claim that 'the first two invisible sets surpass even the last' mean?",a:"Tetsugen's acts of compassionate self-sacrifice — giving the money to disaster victims — were themselves the highest teaching, surpassing the printed text."},
+  {cat:"Zen Teachings",q:"How does the parable 'Right and Wrong' demonstrate Zen's approach to transmitting wisdom?",a:"The master refuses to adjudicate or explain directly. Wisdom cannot be transmitted by being told — it must be realised. The parable's method is the lesson."},
+  {cat:"Zen Teachings",q:"What is the key difference between Shōnagon's and the Zen writers' understanding of attention?",a:"Shōnagon: attention toward beauty and social refinement — it cultivates and distinguishes the self. Zen: non-attached attention that dissolves the self rather than constructing it."},
+  {cat:"Haiku",q:"What is a kigo, and what function does it serve in haiku?",a:"A seasonal word that grounds the poem in the natural world's cycle. It anchors the haiku in time and connects the moment to the larger pattern of nature."},
+  {cat:"Haiku",q:"In Bashō's death poem, what does the journey image suggest?",a:"His creative spirit continues even as his body is dying — the journey is not over. It reframes death as continuation rather than termination."},
+  {cat:"Haiku",q:"What are the two images in Bashō's 'Pitifully — under the helmet, a cricket sings,' and how do they function together?",a:"The soldier's helmet (death, war — empty) and the singing cricket (continuing life). In tension: the reader must connect mortality and persistence."},
+  {cat:"Haiku",q:"What distinguishes Issa's haiku from Bashō's in terms of voice and temperament?",a:"Bashō is cosmic, austere, impersonal — the poet disappears. Issa is intimate, tender, often gently comic — the poet stays visible, personal feeling shapes the image."},
+  {cat:"Essay Thinking",q:"For the Section C essay on attention: both Shōnagon and the Zen writers concern themselves with it. What is the REAL question the essay must answer?",a:"Not just 'what do they pay attention to?' but: what KIND of attention, directed toward what, and to what END? What does each writer believe good attention makes possible?"},
+];
+
+// ─── STATE ───
+let scores=[0,0];
+let curTeam=0; // 0=team1, 1=team2
+let curQ=0;
+let phase='judge'; // judge | steal | reveal
+let stealOn=false;
+let timerVal=TIMER_FULL;
+let timerTotal=TIMER_FULL;
+let timerRunning=false;
+let timerIv=null;
+
+// ─── SETUP ───
+function startGame(){
+  try{getACtx().resume();}catch(e){}
+  const t1=document.getElementById('s-t1').value.trim()||'Red Dragon';
+  const t2=document.getElementById('s-t2').value.trim()||'Blue Phoenix';
+  document.getElementById('tn1').textContent=t1;
+  document.getElementById('tn2').textContent=t2;
+  document.getElementById('setup').style.display='none';
+  document.getElementById('game').style.display='block';
+  render();
+  startTimer();
+}
+
+// ─── TIMER ───
+function fmt(s){const m=Math.floor(s/60);const sec=s%60;return m+':'+(sec<10?'0':'')+sec;}
+
+function startTimer(){
+  stopTimer();
+  timerRunning=true;
+  document.getElementById('ttoggle').textContent='Pause';
+  timerIv=setInterval(()=>{
+    timerVal--;
+    updateTimerDOM();
+    if(timerVal<=10&&timerVal>0){if(timerVal<=5)playUrgent();else playTick();}
+    if(timerVal<=0){stopTimer();playTimeUp();}
+  },1000);
+}
+
+function stopTimer(){
+  clearInterval(timerIv);timerRunning=false;
+  document.getElementById('ttoggle').textContent='Start';
+}
+
+function resetTimerTo(t){
+  stopTimer();timerVal=t;timerTotal=t;updateTimerDOM();
+}
+
+function updateTimerDOM(){
+  const v=Math.max(0,timerVal);
+  const tn=document.getElementById('tnum');
+  const tb=document.getElementById('tbar');
+  tn.textContent=fmt(v);
+  tn.className='timer-num'+(v<=10?' low':'');
+  tb.style.width=((v/timerTotal)*100)+'%';
+  tb.className='timer-bar-fill'+(v<=10?' low':'');
+}
+
+document.getElementById('ttoggle').addEventListener('click',()=>{
+  try{getACtx().resume();}catch(e){}
+  if(timerRunning)stopTimer();else startTimer();
+});
+
+// ─── SCORE BUTTONS (attached once) ───
+function updateScoreDom(){
+  document.getElementById('sc1').textContent=scores[0];
+  document.getElementById('sc2').textContent=scores[1];
+}
+document.getElementById('btn1m').addEventListener('click',()=>{scores[0]=Math.max(0,scores[0]-1);updateScoreDom();});
+document.getElementById('btn1p').addEventListener('click',()=>{scores[0]++;updateScoreDom();playCorrect();});
+document.getElementById('btn2m').addEventListener('click',()=>{scores[1]=Math.max(0,scores[1]-1);updateScoreDom();});
+document.getElementById('btn2p').addEventListener('click',()=>{scores[1]++;updateScoreDom();playCorrect();});
+
+// ─── SCOREBOARD STATE ───
+function updateCards(){
+  const c1=document.getElementById('card-1');
+  const c2=document.getElementById('card-2');
+  const s1=document.getElementById('st1');
+  const s2=document.getElementById('st2');
+  c1.className='team-card t1';c2.className='team-card t2';
+  s1.innerHTML='&nbsp;';s2.innerHTML='&nbsp;';
+
+  if(phase==='reveal')return;
+
+  const answering=stealOn?1-curTeam:curTeam;
+  const isSteal=stealOn;
+  if(answering===0){
+    c1.className='team-card t1 '+(isSteal?'stealing':'answering');
+    s1.textContent=isSteal?'⚡ STEAL!':'▶ Answering';
+  } else {
+    c2.className='team-card t2 '+(isSteal?'stealing':'answering');
+    s2.textContent=isSteal?'⚡ STEAL!':'▶ Answering';
+  }
+}
+
+// ─── FLASH ───
+function flash(team,steal){
+  const el=document.createElement('div');
+  el.className='flash '+(steal?'flash-gold':team===0?'flash-1':'flash-2');
+  el.textContent=steal?'STEAL! +1':'+1';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),900);
+}
+
+// ─── RENDER ───
+function render(){
+  if(curQ>=questions.length){renderEnd();return;}
+  const q=questions[curQ];
+  const answering=stealOn?1-curTeam:curTeam;
+  const tname=document.getElementById('tn'+(answering+1)).textContent;
+  const pct=Math.round((curQ/questions.length)*100);
+
+  document.getElementById('q-badge').textContent='Q '+(curQ+1)+' / '+questions.length;
+  document.getElementById('prog').style.width=pct+'%';
+  document.getElementById('prog-lbl').textContent='Q'+(curQ+1)+' of '+questions.length;
+
+  let statusMsg='',phaseLbl='',btns='';
+
+  if(phase==='judge'){
+    statusMsg=tname+' — answer out loud, then judge';
+    phaseLbl='Judge '+tname+'\'s answer';
+    btns=`<button class="act correct" id="b-correct">✓ Correct — +1 to ${tname}</button>
+          <button class="act wrong" id="b-wrong">✗ Wrong — steal chance</button>`;
+  } else if(phase==='steal'){
+    const sname=document.getElementById('tn'+(answering+1)).textContent;
+    statusMsg=sname+' — STEAL opportunity!';
+    phaseLbl='Judge '+sname+'\'s steal';
+    btns=`<button class="act steal-correct" id="b-steal">✓ Correct — STEAL +1 to ${sname}</button>
+          <button class="act no-pt" id="b-nopt">✗ Wrong — no point</button>`;
+  } else if(phase==='reveal'){
+    statusMsg='Round complete — check the answer';
+  }
+
+  const answerHtml=phase==='reveal'?`
+    <div class="answer-box">
+      <div class="answer-lbl">Answer</div>
+      <div class="answer-text">${q.a}</div>
+    </div>`:'';
+
+  const nextHtml=phase==='reveal'?
+    `<div class="btn-row"><button class="act nxt" id="b-next">Next Question ›</button></div>`:'';
+
+  document.getElementById('main').innerHTML=`
+    <div class="status-bar">
+      <span class="status-msg">${statusMsg}</span>
+      <span class="cat-tag">${q.cat}</span>
+    </div>
+    <div class="q-card">
+      <div class="q-num">Question ${curQ+1}</div>
+      <div class="q-text">${q.q}</div>
+    </div>
+    ${answerHtml}
+    ${btns?`<div class="phase-lbl">${phaseLbl}</div><div class="btn-row">${btns}</div>`:''}
+    ${nextHtml}
+  `;
+
+  // attach listeners
+  const bc=document.getElementById('b-correct');
+  const bw=document.getElementById('b-wrong');
+  const bs=document.getElementById('b-steal');
+  const bn=document.getElementById('b-nopt');
+  const bnxt=document.getElementById('b-next');
+
+  if(bc)bc.addEventListener('click',()=>awardPoint(curTeam,false));
+  if(bw)bw.addEventListener('click',()=>markWrong());
+  if(bs)bs.addEventListener('click',()=>awardPoint(1-curTeam,true));
+  if(bn)bn.addEventListener('click',()=>noPoint());
+  if(bnxt)bnxt.addEventListener('click',()=>nextQ());
+
+  updateCards();
+}
+
+function awardPoint(team,steal){
+  stopTimer();
+  scores[team]++;updateScoreDom();
+  flash(team,steal);
+  playCorrect();
+  phase='reveal';render();updateCards();
+}
+
+function markWrong(){
+  stopTimer();playWrong();
+  stealOn=true;phase='steal';
+  render();updateCards();
+  resetTimerTo(TIMER_STEAL);startTimer();
+  playSteal();
+}
+
+function noPoint(){
+  stopTimer();playWrong();
+  phase='reveal';render();updateCards();
+}
+
+function nextQ(){
+  curTeam=1-curTeam;curQ++;
+  phase='judge';stealOn=false;
+  render();updateCards();
+  resetTimerTo(TIMER_FULL);startTimer();
+  playNext();
+}
+
+function renderEnd(){
+  stopTimer();updateCards();
+  const t1=document.getElementById('tn1').textContent;
+  const t2=document.getElementById('tn2').textContent;
+  const s1=scores[0],s2=scores[1];
+  let kanji='和',title='A Draw!',sub=`Both teams: ${s1} pts — equal scholars.`;
+  if(s1>s2){kanji='勝';title=t1+' Wins!';sub=`${s1} — ${s2}. Well contested!`;}
+  else if(s2>s1){kanji='勝';title=t2+' Wins!';sub=`${s2} — ${s1}. Well contested!`;}
+  playVictory();
+  document.getElementById('main').innerHTML=`
+    <div class="end-wrap">
+      <span class="end-kanji">${kanji}</span>
+      <div class="end-title">${title}</div>
+      <div class="end-scores">
+        <span class="end-s1">${t1}: ${s1}</span> &nbsp;·&nbsp; <span class="end-s2">${t2}: ${s2}</span>
+      </div>
+      <button class="play-again" id="b-again">Play Again</button>
+    </div>`;
+  document.getElementById('b-again').addEventListener('click',resetGame);
+}
+
+function resetGame(){
+  scores=[0,0];curTeam=0;curQ=0;phase='judge';stealOn=false;
+  updateScoreDom();render();resetTimerTo(TIMER_FULL);startTimer();
+}
+
+// ─── RENAME ───
+function openRename(){
+  document.getElementById('m-t1').value=document.getElementById('tn1').textContent;
+  document.getElementById('m-t2').value=document.getElementById('tn2').textContent;
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('m-t1').focus();
+}
+function closeRename(){document.getElementById('modal').classList.remove('open');}
+function saveRename(){
+  const v1=document.getElementById('m-t1').value.trim();
+  const v2=document.getElementById('m-t2').value.trim();
+  if(v1)document.getElementById('tn1').textContent=v1;
+  if(v2)document.getElementById('tn2').textContent=v2;
+  closeRename();
+}
+
+// ─── EVENT LISTENERS ───
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeRename();});
+document.getElementById('m-t1').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('m-t2').focus();});
+document.getElementById('m-t2').addEventListener('keydown',e=>{if(e.key==='Enter')saveRename();});
+document.getElementById('s-t1').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('s-t2').focus();});
+document.getElementById('s-t2').addEventListener('keydown',e=>{if(e.key==='Enter')startGame();});
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('setup').style.display!=='none')return;
+  if(document.getElementById('modal').classList.contains('open'))return;
+  if(e.key==='ArrowRight'){const bn=document.getElementById('b-next');if(bn)bn.click();}
+  if(e.key==='r'||e.key==='R'){resetTimerTo(stealOn?TIMER_STEAL:TIMER_FULL);startTimer();}
+});
+</script>
+</body>
+</html>
