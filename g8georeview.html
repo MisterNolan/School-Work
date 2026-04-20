@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GeoShowdown</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --a:#00c2ff; --b:#ff3e6c; --gold:#ffd700;
+  --bg:#0a0a14; --surface:#13131f; --surface2:#1c1c2e;
+  --text:#fff; --muted:rgba(255,255,255,0.45);
+  --green:#00e676; --red:#ff3e6c;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(1px 1px at 20% 30%,rgba(255,255,255,.15) 0%,transparent 100%),radial-gradient(1px 1px at 60% 70%,rgba(255,255,255,.1) 0%,transparent 100%),radial-gradient(1px 1px at 80% 20%,rgba(255,255,255,.12) 0%,transparent 100%);pointer-events:none;z-index:0;}
+#app{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:1rem 1.25rem 2rem;}
+.game-title{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:.06em;text-align:center;background:linear-gradient(135deg,var(--a) 0%,var(--gold) 50%,var(--b) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.25rem;line-height:1;}
+.game-subtitle{text-align:center;font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:1.25rem;}
+
+/* SCOREBOARD - permanent, never rebuilt */
+.scoreboard{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;margin-bottom:1rem;align-items:stretch;}
+.team-card{background:var(--surface);border-radius:16px;padding:1.25rem 1rem;text-align:center;border:2px solid transparent;position:relative;overflow:hidden;transition:border-color .2s;}
+.team-card.active.team-a{border-color:var(--a);}
+.team-card.active.team-b{border-color:var(--b);}
+.team-card.steal{border-color:var(--gold);animation:pulse-gold .8s ease-in-out infinite alternate;}
+@keyframes pulse-gold{from{box-shadow:0 0 0 var(--gold);}to{box-shadow:0 0 20px var(--gold);}}
+.team-label{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;}
+.team-a .team-label{color:var(--a);} .team-b .team-label{color:var(--b);}
+.team-score{font-family:'Bebas Neue',sans-serif;font-size:72px;line-height:1;margin-bottom:4px;}
+.team-a .team-score{color:var(--a);} .team-b .team-score{color:var(--b);}
+.team-status{font-size:11px;height:16px;color:var(--gold);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+.score-edit-row{display:flex;justify-content:center;gap:6px;}
+.score-btn{width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:background .15s;}
+.score-btn:hover{background:rgba(255,255,255,.22);}
+.vs-col{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
+.vs-text{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--muted);letter-spacing:.1em;}
+.timer-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.timer-display{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--green);transition:color .3s;line-height:1;}
+.timer-display.low{color:var(--red);animation:blink .5s ease-in-out infinite alternate;}
+@keyframes blink{from{opacity:1;}to{opacity:.4;}}
+.timer-bar-track{width:60px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;}
+.timer-bar-fill{height:100%;border-radius:2px;background:var(--green);transition:width 1s linear,background .3s;}
+.timer-bar-fill.low{background:var(--red);}
+.timer-toggle{font-size:10px;color:var(--muted);cursor:pointer;letter-spacing:.08em;text-transform:uppercase;background:none;border:none;color:var(--muted);font-family:inherit;padding:2px 6px;}
+.timer-toggle:hover{color:#fff;}
+
+/* PROGRESS */
+.progress-wrap{margin-bottom:1rem;}
+.progress-track{background:rgba(255,255,255,.08);border-radius:4px;height:5px;}
+.progress-fill{height:5px;border-radius:4px;background:linear-gradient(90deg,var(--a),var(--gold));transition:width .4s;}
+.progress-label{font-size:11px;color:var(--muted);text-align:right;margin-top:4px;}
+
+/* STATUS */
+.status-bar{background:var(--surface);border-radius:10px;padding:10px 16px;font-size:13px;display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;border:1px solid rgba(255,255,255,.07);}
+.status-turn{font-weight:700;font-size:14px;}
+.status-meta{color:var(--muted);font-size:12px;}
+.unit-tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;margin-right:6px;letter-spacing:.06em;text-transform:uppercase;}
+.unit-5-tag{background:rgba(0,194,255,.15);color:var(--a);}
+.unit-6-tag{background:rgba(0,230,118,.15);color:var(--green);}
+
+/* QUESTION */
+.q-card{background:var(--surface);border-radius:16px;padding:2rem 1.75rem;margin-bottom:1rem;border:1px solid rgba(255,255,255,.07);position:relative;overflow:hidden;}
+.q-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--a),var(--gold),var(--b));}
+.q-num{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;}
+.q-text{font-size:22px;font-weight:700;line-height:1.4;color:#fff;}
+
+/* ANSWER */
+.answer-box{background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.3);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1rem;animation:slide-in .3s ease;}
+@keyframes slide-in{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+.answer-label{font-size:10px;font-weight:700;color:var(--green);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;}
+.answer-text{font-size:16px;color:#b9ffd8;line-height:1.6;}
+
+/* BUTTONS */
+.phase-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1rem;}
+button.action{padding:12px 22px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.03em;transition:transform .1s,opacity .1s;}
+button.action:hover{opacity:.88;} button.action:active{transform:scale(.97);}
+button.action:disabled{opacity:.3;cursor:default;transform:none;}
+button.correct{background:linear-gradient(135deg,#00c853,#00e676);color:#003300;box-shadow:0 4px 20px rgba(0,230,118,.3);}
+button.wrong{background:linear-gradient(135deg,#c62828,#ff3e6c);color:#fff;box-shadow:0 4px 20px rgba(255,62,108,.3);}
+button.next{background:linear-gradient(135deg,var(--a),#0077ff);color:#fff;box-shadow:0 4px 20px rgba(0,194,255,.3);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.08em;padding:12px 32px;}
+button.reset-btn{background:linear-gradient(135deg,var(--gold),#ff9800);color:#1a0a00;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.1em;padding:14px 40px;box-shadow:0 4px 24px rgba(255,215,0,.35);border:none;border-radius:10px;cursor:pointer;}
+
+/* FLASH */
+.point-flash{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Bebas Neue',sans-serif;font-size:96px;pointer-events:none;z-index:100;animation:pop-fade .9s ease forwards;}
+@keyframes pop-fade{0%{opacity:0;transform:translate(-50%,-50%) scale(.4);}30%{opacity:1;transform:translate(-50%,-50%) scale(1.1);}60%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.2);}}
+.flash-a{color:var(--a);text-shadow:0 0 40px var(--a);}
+.flash-b{color:var(--b);text-shadow:0 0 40px var(--b);}
+.flash-steal{color:var(--gold);text-shadow:0 0 40px var(--gold);}
+
+/* END */
+.end-screen{text-align:center;padding:4rem 1rem;}
+.end-title{font-family:'Bebas Neue',sans-serif;font-size:64px;background:linear-gradient(135deg,var(--gold),#ff9800);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;}
+.end-scores{font-size:18px;color:var(--muted);margin-bottom:2.5rem;}
+.end-score-a{color:var(--a);font-weight:700;} .end-score-b{color:var(--b);font-weight:700;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="game-title">GeoShowdown</div>
+  <div class="game-subtitle">Units 5 &amp; 6 &nbsp;&middot;&nbsp; Review Challenge</div>
+
+  <!-- PERMANENT SCOREBOARD - never rebuilt by render() -->
+  <div class="scoreboard">
+    <div class="team-card team-a" id="card-a">
+      <div class="team-label">Team A</div>
+      <div class="team-score" id="score-a">0</div>
+      <div class="team-status" id="status-a">&nbsp;</div>
+      <div class="score-edit-row">
+        <button class="score-btn" id="btn-a-minus">−</button>
+        <button class="score-btn" id="btn-a-plus">+</button>
+      </div>
+    </div>
+    <div class="vs-col">
+      <div class="vs-text">VS</div>
+      <div class="timer-wrap">
+        <div class="timer-display" id="timer-disp">30</div>
+        <div class="timer-bar-track"><div class="timer-bar-fill" id="timer-bar"></div></div>
+        <button class="timer-toggle" id="timer-toggle-btn">Pause</button>
+      </div>
+    </div>
+    <div class="team-card team-b" id="card-b">
+      <div class="team-label">Team B</div>
+      <div class="team-score" id="score-b">0</div>
+      <div class="team-status" id="status-b">&nbsp;</div>
+      <div class="score-edit-row">
+        <button class="score-btn" id="btn-b-minus">−</button>
+        <button class="score-btn" id="btn-b-plus">+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DYNAMIC CONTENT -->
+  <div id="main"></div>
+</div>
+
+<script>
+const TIMER_START = 30;
+
+const questions = [
+  {unit:5,q:"What does 'quality of life' mean?",a:"A person's overall well-being and satisfaction with daily life, including health, education, safety, and access to resources."},
+  {unit:5,q:"What is the difference between a need and a want?",a:"A need is essential for survival (food, shelter, water). A want is desired but not required to survive."},
+  {unit:5,q:"Name THREE quality of life indicators.",a:"Any three: literacy rate, life expectancy, access to safe water, income, education level, access to healthcare."},
+  {unit:5,q:"What does life expectancy measure?",a:"The average number of years a person born today is expected to live."},
+  {unit:5,q:"What are Blue Zones?",a:"Regions where people live significantly longer than average, linked to healthy lifestyle and strong community habits."},
+  {unit:5,q:"What does HDI stand for?",a:"Human Development Index."},
+  {unit:5,q:"What are the three components of the HDI?",a:"Life expectancy, education (literacy and school enrolment), and income (GNI per capita)."},
+  {unit:5,q:"What is the difference between an indicator and an index?",a:"An indicator measures one factor; an index combines multiple indicators into a single score."},
+  {unit:5,q:"What does a positive relationship on a scatter graph mean?",a:"As one variable increases, the other also increases — they move in the same direction."},
+  {unit:5,q:"What does a negative relationship on a scatter graph mean?",a:"As one variable increases, the other decreases — they move in opposite directions."},
+  {unit:5,q:"What does a random pattern on a scatter graph show?",a:"There is no clear relationship between the two variables."},
+  {unit:5,q:"Name one factor that affects life expectancy.",a:"Any valid: access to healthcare, diet, lifestyle, education, income, clean water."},
+  {unit:5,q:"What is the difference between equality and inequality?",a:"Equality means equal access to resources and opportunities; inequality means some groups have significantly more than others."},
+  {unit:5,q:"Give one example of a basic human need.",a:"Any of: food, clean water, shelter, clothing, healthcare."},
+  {unit:5,q:"What is the HPI?",a:"The Happy Planet Index — measures well-being and environmental sustainability together."},
+  {unit:5,q:"Why do geographers use multiple indicators rather than just one?",a:"One indicator cannot capture the full picture — combining them gives a more complete and accurate view of quality of life."},
+  {unit:5,q:"How can environmental damage reduce quality of life?",a:"It can harm health, contaminate water, reduce food production, and damage living conditions."},
+  {unit:5,q:"Give one reason why quality of life inequalities persist.",a:"Any valid: gender inequality, environmental damage, rural-urban gaps, poor governance, limited education access."},
+  {unit:5,q:"How does access to education affect quality of life?",a:"Education increases earning potential, improves health literacy, and enables people to make better life decisions."},
+  {unit:5,q:"Why might two countries with the same GDP per capita have very different HDI scores?",a:"GDP only measures income; HDI also includes life expectancy and education, which may differ significantly."},
+  {unit:5,q:"Why do rural areas often have lower quality of life than urban areas?",a:"Rural areas typically have less access to healthcare, education, clean water, and economic opportunities."},
+  {unit:5,q:"How does gender inequality affect a country's quality of life?",a:"When women are excluded from education or work, a country loses half its human capital, lowering overall development."},
+  {unit:5,q:"Give one limitation of using the HDI to compare countries.",a:"It only uses three components and may miss other factors like inequality, happiness, or environmental quality."},
+  {unit:5,q:"Why might life expectancy be higher in developed countries?",a:"Better access to healthcare, clean water, nutritious food, and higher incomes allow people to live longer, healthier lives."},
+  {unit:5,q:"What does a scatter graph with points clustered close to a line of best fit tell us?",a:"There is a strong relationship between the two variables — they are closely correlated."},
+  {unit:5,q:"A country has high GDP but low life expectancy and literacy. What does this suggest?",a:"Wealth is not being invested in healthcare or education — growth is not improving quality of life for most citizens."},
+  {unit:5,q:"Explain why using only literacy rate to measure quality of life is limited.",a:"Literacy rate only measures one aspect of education. It tells us nothing about income, health, or access to services."},
+  {unit:5,q:"How can improving access to clean water raise a country's HDI score?",a:"Clean water reduces disease, improves health, raises life expectancy, and frees time for education and work."},
+  {unit:5,q:"A Blue Zone community has no gym but high life expectancy. What might explain this?",a:"Natural physical activity, plant-based diet, strong social connections, and low stress levels contribute to longevity."},
+  {unit:5,q:"Why might a happiness index give a different result than the HDI for the same country?",a:"Happiness is subjective — people in poorer countries may report high happiness due to culture, while wealthier countries may have high HDI but lower life satisfaction."},
+  {unit:6,q:"What is GDP?",a:"Gross Domestic Product — the total value of all goods and services produced in a country in one year."},
+  {unit:6,q:"What is GDP per capita?",a:"A country's GDP divided by its population — shows average wealth per person."},
+  {unit:6,q:"What is a market economy?",a:"An economic system where prices and production are determined by supply and demand, with little government control."},
+  {unit:6,q:"What is a command economy?",a:"An economic system where the government controls what is produced, how it is produced, and the prices charged."},
+  {unit:6,q:"What is a mixed economy?",a:"A system combining market and command features — some government control alongside private enterprise."},
+  {unit:6,q:"Name the four economic sectors in order.",a:"Primary (extract), Secondary (manufacture), Tertiary (services), Quaternary (knowledge and research)."},
+  {unit:6,q:"Give an example of a secondary sector job.",a:"Any of: factory worker, car manufacturer, food processing, construction, textile production."},
+  {unit:6,q:"Give an example of a tertiary sector job.",a:"Any of: teacher, doctor, retail worker, banker, truck driver, nurse."},
+  {unit:6,q:"Give an example of a quaternary sector job.",a:"Any of: software developer, research scientist, university professor, AI engineer, consultant."},
+  {unit:6,q:"What is fair trade?",a:"A system ensuring producers in developing countries receive a fair price for their goods and safe working conditions."},
+  {unit:6,q:"What is outsourcing?",a:"When a company hires workers or moves production to another country, usually to reduce labour costs."},
+  {unit:6,q:"What are human resources?",a:"The skills, education, training, and labour that people contribute to an economy."},
+  {unit:6,q:"Name TWO geographic factors that affect a country's wealth.",a:"Any two: natural resources, location or access to trade routes, climate, coastal access, fertile land."},
+  {unit:6,q:"What is a supply chain?",a:"The sequence of steps involved in producing and delivering a product, from raw materials to the final consumer."},
+  {unit:6,q:"Give one example of a natural resource that can drive economic development.",a:"Any of: oil, natural gas, diamonds, fertile farmland, timber, fish stocks, minerals."},
+  {unit:6,q:"Why is GDP per capita more useful than total GDP when comparing countries?",a:"It accounts for population size, showing average wealth per person rather than total national wealth."},
+  {unit:6,q:"Give ONE limitation of using GDP per capita to measure quality of life.",a:"It does not show how wealth is distributed — a country can have high GDP per capita but still have extreme inequality."},
+  {unit:6,q:"How does education improve a country's economy?",a:"It develops a skilled workforce, raises productivity, attracts foreign investment, and enables innovation."},
+  {unit:6,q:"How do employment patterns change as a country develops?",a:"Workers shift from primary to secondary, and eventually to tertiary and quaternary sectors as the economy grows."},
+  {unit:6,q:"Why might a landlocked country struggle to develop economically?",a:"Without sea access, trade is more expensive and slower, limiting the country's ability to export goods and attract investment."},
+  {unit:6,q:"How does fair trade aim to improve quality of life in developing countries?",a:"By guaranteeing a minimum fair price and better conditions, allowing communities to invest in schools and healthcare."},
+  {unit:6,q:"Why do companies outsource to other countries?",a:"To reduce labour costs, access larger workforces, and increase profit margins."},
+  {unit:6,q:"Name one benefit AND one drawback of global trade.",a:"Benefit: economic growth, access to goods, job creation. Drawback: unequal profits, worker exploitation, environmental damage."},
+  {unit:6,q:"Why might a country rich in natural resources still have a low HDI?",a:"Resource wealth may be controlled by a small elite, or corruption may prevent reinvestment in education and health."},
+  {unit:6,q:"How does location near a major trade route improve a country's economy?",a:"It allows the country to charge transit fees, attract trade, develop ports and infrastructure, and access larger markets."},
+  {unit:6,q:"A developing country shifts most workers from farming to manufacturing. What stage of development is this?",a:"The country is transitioning from primary to secondary sector dominance — an early stage of industrialisation."},
+  {unit:6,q:"Why might a command economy struggle to meet citizens' needs?",a:"The government controls all production and prices, so it may not respond efficiently to what people want, leading to shortages."},
+  {unit:6,q:"A worker in Cote d'Ivoire grows cocoa but earns very little. A company in Europe sells chocolate and earns billions. What issue does this illustrate?",a:"Unequal distribution of profit in global trade — primary producers in developing countries receive a tiny share compared to manufacturers in wealthy countries."},
+  {unit:6,q:"Why might outsourcing harm workers in the host country even though it creates jobs?",a:"Jobs created through outsourcing often have low wages, poor conditions, long hours, and little job security."},
+  {unit:6,q:"Explain how a country moving from primary to quaternary sector employment would affect its HDI score.",a:"Higher-skilled, better-paid jobs raise income, fund better education and healthcare, and increase life expectancy — all raising HDI."},
+];
+
+let scores = {A:0, B:0};
+let currentTeam = 'A';
+let currentQ = 0;
+let phase = 'judge';
+let stealActive = false;
+let timerVal = TIMER_START;
+let timerRunning = false;
+let timerInterval = null;
+
+// ── AUDIO ──
+const audioCtx = (typeof AudioContext !== 'undefined') ? new AudioContext() : null;
+function beep(freq, dur, type='sine', vol=0.3) {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(vol, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+  o.start(); o.stop(audioCtx.currentTime + dur);
+}
+function playCorrect() { beep(523,.1); setTimeout(()=>beep(659,.1),100); setTimeout(()=>beep(784,.25),200); }
+function playWrong()   { beep(200,.15,'sawtooth'); setTimeout(()=>beep(150,.25,'sawtooth'),150); }
+function playTick()    { beep(880,.05,'square',.08); }
+function playLowTick() { beep(440,.08,'square',.12); }
+function playTimerEnd(){ beep(220,.15,'sawtooth'); setTimeout(()=>beep(180,.3,'sawtooth'),150); }
+
+// ── TIMER ──
+function startTimer() {
+  stopTimer();
+  timerVal = TIMER_START; timerRunning = true;
+  updateTimerDOM();
+  timerInterval = setInterval(()=>{
+    timerVal--;
+    if (timerVal <= 5 && timerVal > 0) playLowTick();
+    else if (timerVal > 5) playTick();
+    updateTimerDOM();
+    if (timerVal <= 0) { stopTimer(); playTimerEnd(); }
+  }, 1000);
+  document.getElementById('timer-toggle-btn').textContent = 'Pause';
+}
+function stopTimer() {
+  clearInterval(timerInterval); timerRunning = false;
+  const btn = document.getElementById('timer-toggle-btn');
+  if (btn) btn.textContent = 'Start';
+}
+function updateTimerDOM() {
+  const disp = document.getElementById('timer-disp');
+  const bar  = document.getElementById('timer-bar');
+  if (!disp || !bar) return;
+  const v = Math.max(0, timerVal);
+  disp.textContent = v;
+  disp.className = 'timer-display' + (v <= 5 ? ' low' : '');
+  bar.style.width = ((v / TIMER_START) * 100) + '%';
+  bar.className = 'timer-bar-fill' + (v <= 5 ? ' low' : '');
+}
+
+// ── SCORE BUTTONS (attached once, never lost) ──
+function updateScoreDOM() {
+  document.getElementById('score-a').textContent = scores.A;
+  document.getElementById('score-b').textContent = scores.B;
+}
+
+document.getElementById('btn-a-minus').addEventListener('click', function() {
+  scores.A = Math.max(0, scores.A - 1); updateScoreDOM();
+});
+document.getElementById('btn-a-plus').addEventListener('click', function() {
+  scores.A++; updateScoreDOM();
+});
+document.getElementById('btn-b-minus').addEventListener('click', function() {
+  scores.B = Math.max(0, scores.B - 1); updateScoreDOM();
+});
+document.getElementById('btn-b-plus').addEventListener('click', function() {
+  scores.B++; updateScoreDOM();
+});
+document.getElementById('timer-toggle-btn').addEventListener('click', function() {
+  if (timerRunning) stopTimer(); else startTimer();
+});
+
+// ── SCOREBOARD STATE ──
+function updateScoreboardState() {
+  const answeringTeam = stealActive ? other(currentTeam) : currentTeam;
+  const cardA = document.getElementById('card-a');
+  const cardB = document.getElementById('card-b');
+  const statusA = document.getElementById('status-a');
+  const statusB = document.getElementById('status-b');
+
+  cardA.className = 'team-card team-a';
+  cardB.className = 'team-card team-b';
+
+  if (answeringTeam === 'A') {
+    cardA.classList.add(stealActive ? 'steal' : 'active');
+    statusA.textContent = stealActive ? '⚡ STEAL!' : '▶ ANSWERING';
+    statusB.innerHTML = '&nbsp;';
+  } else {
+    cardB.classList.add(stealActive ? 'steal' : 'active');
+    statusB.textContent = stealActive ? '⚡ STEAL!' : '▶ ANSWERING';
+    statusA.innerHTML = '&nbsp;';
+  }
+
+  if (phase === 'reveal') {
+    cardA.className = 'team-card team-a';
+    cardB.className = 'team-card team-b';
+    statusA.innerHTML = '&nbsp;';
+    statusB.innerHTML = '&nbsp;';
+  }
+}
+
+// ── FLASH ──
+function flashPoint(team, isSteal) {
+  const el = document.createElement('div');
+  el.className = 'point-flash ' + (isSteal ? 'flash-steal' : (team === 'A' ? 'flash-a' : 'flash-b'));
+  el.textContent = isSteal ? 'STEAL! +1' : '+1';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 900);
+}
+
+function other(t) { return t === 'A' ? 'B' : 'A'; }
+
+// ── RENDER (only rebuilds #main, never the scoreboard) ──
+function render() {
+  const el = document.getElementById('main');
+  if (currentQ >= questions.length) { renderEnd(el); return; }
+
+  const q = questions[currentQ];
+  const pct = Math.round((currentQ / questions.length) * 100);
+  const unitTag = '<span class="unit-tag unit-' + q.unit + '-tag">Unit ' + q.unit + '</span>';
+
+  let statusMsg = '';
+  let controls = '';
+
+  if (phase === 'judge') {
+    statusMsg = 'Team ' + currentTeam + ' — answer out loud, then judge';
+    controls =
+      '<div class="phase-label">Judge Team ' + currentTeam + '\'s answer — answer hidden</div>' +
+      '<div class="btn-row">' +
+        '<button class="action correct" id="btn-correct">✓ Correct +1 Team ' + currentTeam + '</button>' +
+        '<button class="action wrong" id="btn-wrong">✗ Wrong — steal chance</button>' +
+      '</div>';
+  } else if (phase === 'steal') {
+    statusMsg = 'Team ' + other(currentTeam) + ' — STEAL opportunity!';
+    controls =
+      '<div class="phase-label">Judge Team ' + other(currentTeam) + '\'s steal — answer still hidden</div>' +
+      '<div class="btn-row">' +
+        '<button class="action correct" id="btn-steal-correct">✓ Correct — STEAL +1 Team ' + other(currentTeam) + '</button>' +
+        '<button class="action wrong" id="btn-no-point">✗ Wrong — no point</button>' +
+      '</div>';
+  } else if (phase === 'reveal') {
+    statusMsg = 'Round complete';
+    controls =
+      '<div class="answer-box">' +
+        '<div class="answer-label">✓ Answer</div>' +
+        '<div class="answer-text">' + q.a + '</div>' +
+      '</div>' +
+      '<div class="btn-row"><button class="action next" id="btn-next">Next Question →</button></div>';
+  }
+
+  el.innerHTML =
+    '<div class="progress-wrap">' +
+      '<div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+      '<div class="progress-label">Q' + (currentQ+1) + ' of ' + questions.length + '</div>' +
+    '</div>' +
+    '<div class="status-bar">' +
+      '<span class="status-turn">' + statusMsg + '</span>' +
+      '<span class="status-meta">' + unitTag + '</span>' +
+    '</div>' +
+    '<div class="q-card">' +
+      '<div class="q-num">' + unitTag + 'Question ' + (currentQ+1) + '</div>' +
+      '<div class="q-text">' + q.q + '</div>' +
+    '</div>' +
+    controls;
+
+  // Attach action button listeners after innerHTML set
+  const bc = document.getElementById('btn-correct');
+  const bw = document.getElementById('btn-wrong');
+  const bsc = document.getElementById('btn-steal-correct');
+  const bnp = document.getElementById('btn-no-point');
+  const bn = document.getElementById('btn-next');
+
+  if (bc) bc.addEventListener('click', function() { awardPoint(currentTeam, false); });
+  if (bw) bw.addEventListener('click', function() { markWrong(); });
+  if (bsc) bsc.addEventListener('click', function() { awardPoint(other(currentTeam), true); });
+  if (bnp) bnp.addEventListener('click', function() { noPoint(); });
+  if (bn) bn.addEventListener('click', function() { nextQ(); });
+
+  updateScoreboardState();
+}
+
+function awardPoint(team, isSteal) {
+  stopTimer();
+  scores[team]++;
+  updateScoreDOM();
+  flashPoint(team, isSteal);
+  playCorrect();
+  phase = 'reveal';
+  render();
+}
+
+function markWrong() {
+  stopTimer();
+  playWrong();
+  stealActive = true;
+  phase = 'steal';
+  render();
+  startTimer();
+}
+
+function noPoint() {
+  stopTimer();
+  playWrong();
+  phase = 'reveal';
+  render();
+}
+
+function nextQ() {
+  currentTeam = other(currentTeam);
+  currentQ++;
+  phase = 'judge';
+  stealActive = false;
+  render();
+  startTimer();
+}
+
+function renderEnd(el) {
+  stopTimer();
+  updateScoreboardState();
+  const winner = scores.A > scores.B ? 'Team A Wins!' : scores.B > scores.A ? 'Team B Wins!' : "It's a Tie!";
+  el.innerHTML =
+    '<div class="end-screen">' +
+      '<div class="end-title">' + winner + '</div>' +
+      '<div class="end-scores">' +
+        '<span class="end-score-a">Team A: ' + scores.A + ' pts</span>' +
+        ' &nbsp;&middot;&nbsp; ' +
+        '<span class="end-score-b">Team B: ' + scores.B + ' pts</span>' +
+      '</div>' +
+      '<button class="reset-btn" id="btn-reset">Play Again</button>' +
+    '</div>';
+  document.getElementById('btn-reset').addEventListener('click', resetGame);
+}
+
+function resetGame() {
+  scores = {A:0,B:0}; currentTeam = 'A'; currentQ = 0;
+  phase = 'judge'; stealActive = false;
+  updateScoreDOM();
+  render();
+  startTimer();
+}
+
+render();
+startTimer();
+</script>
+</body>
+</html>
