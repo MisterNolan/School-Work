@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G7 Literature Midterm Jeopardy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;600;700&family=Barlow+Condensed:wght@400;600&display=swap');
+
+  :root {
+    --navy: #0a0e2e;
+    --deep-blue: #0d1540;
+    --mid-blue: #1a2560;
+    --gold: #f5c518;
+    --gold-dim: #c9a012;
+    --gold-glow: #ffe066;
+    --red: #e63946;
+    --green: #2dc653;
+    --white: #f0f4ff;
+    --used: #1a1e3a;
+    --used-text: #3a3f60;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Oswald', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ======= SETUP SCREEN ======= */
+  #setup-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+    background: radial-gradient(ellipse at center, #1a2560 0%, #0a0e2e 70%);
+  }
+
+  #setup-screen h1 {
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(245,197,24,0.5), 3px 3px 0 #7a5e00;
+    letter-spacing: 3px;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  #setup-screen .subtitle {
+    font-size: 1.1rem;
+    color: #8899cc;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 48px;
+  }
+
+  .setup-card {
+    background: var(--deep-blue);
+    border: 2px solid var(--mid-blue);
+    border-radius: 12px;
+    padding: 40px;
+    width: 100%;
+    max-width: 560px;
+  }
+
+  .setup-label {
+    font-size: 0.85rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .team-count-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .count-btn {
+    width: 44px; height: 44px;
+    background: var(--mid-blue);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-size: 1.5rem;
+    font-family: 'Anton', sans-serif;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .count-btn:hover { background: var(--gold); color: var(--navy); }
+
+  #team-count-display {
+    font-family: 'Anton', sans-serif;
+    font-size: 2rem;
+    color: var(--white);
+    min-width: 32px;
+    text-align: center;
+  }
+
+  #team-names-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .team-name-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .team-color-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .team-name-input {
+    flex: 1;
+    background: var(--mid-blue);
+    border: 1px solid #2a3570;
+    border-radius: 8px;
+    padding: 10px 16px;
+    color: var(--white);
+    font-family: 'Oswald', sans-serif;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .team-name-input:focus { border-color: var(--gold); }
+
+  #start-btn {
+    width: 100%;
+    padding: 18px;
+    background: var(--gold);
+    color: var(--navy);
+    font-family: 'Anton', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 3px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    box-shadow: 0 4px 20px rgba(245,197,24,0.4);
+  }
+
+  #start-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(245,197,24,0.5); }
+  #start-btn:active { transform: translateY(0); }
+
+  /* ======= GAME SCREEN ======= */
+  #game-screen { display: none; flex-direction: column; min-height: 100vh; }
+
+  /* SCOREBOARD */
+  #scoreboard {
+    background: var(--deep-blue);
+    border-bottom: 2px solid var(--mid-blue);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .score-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    min-width: 120px;
+    transition: all 0.3s;
+    cursor: default;
+  }
+
+  .score-card.active {
+    border-color: var(--gold);
+    box-shadow: 0 0 16px rgba(245,197,24,0.3);
+    transform: scale(1.05);
+  }
+
+  .score-name {
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 2px;
+  }
+
+  .score-value {
+    font-family: 'Anton', sans-serif;
+    font-size: 1.6rem;
+    line-height: 1;
+    position: relative;
+  }
+
+  .score-adj {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .adj-btn {
+    width: 22px; height: 22px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: var(--white);
+    font-size: 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .adj-btn:hover { background: rgba(255,255,255,0.25); }
+
+  #scoreboard-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  #active-team-label {
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-align: right;
+  }
+
+  #active-team-name {
+    font-family: 'Anton', sans-serif;
+    font-size: 1.2rem;
+    color: var(--gold);
+    text-align: right;
+  }
+
+  #final-jeopardy-btn {
+    padding: 8px 18px;
+    background: transparent;
+    border: 1px solid var(--gold-dim);
+    color: var(--gold-dim);
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  #final-jeopardy-btn:hover { background: var(--gold); color: var(--navy); border-color: var(--gold); }
+
+  /* BOARD */
+  #board-container {
+    flex: 1;
+    padding: 12px 16px 16px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #board {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    flex: 1;
+  }
+
+  .category-header {
+    background: var(--gold);
+    color: var(--navy);
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(0.7rem, 1.3vw, 1rem);
+    letter-spacing: 1px;
+    text-align: center;
+    padding: 10px 8px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
+    line-height: 1.2;
+  }
+
+  .clue-cell {
+    background: var(--mid-blue);
+    color: var(--gold);
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(1rem, 2vw, 1.7rem);
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    min-height: 80px;
+    border: 1px solid #1a2560;
+  }
+
+  .clue-cell:hover { background: #243080; transform: scale(1.02); }
+
+  .clue-cell.used {
+    background: var(--used);
+    color: var(--used-text);
+    cursor: default;
+    transform: none;
+  }
+
+  .clue-cell.daily-double-glow {
+    box-shadow: 0 0 20px rgba(245,197,24,0.6) inset;
+  }
+
+  /* ======= CLUE MODAL ======= */
+  #modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(5,8,25,0.92);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  #modal-overlay.active { display: flex; }
+
+  #modal {
+    background: var(--deep-blue);
+    border: 2px solid var(--mid-blue);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 800px;
+    overflow: hidden;
+    animation: modal-in 0.25s ease;
+  }
+
+  @keyframes modal-in {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  #modal-header {
+    background: var(--gold);
+    color: var(--navy);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  #modal-category {
+    font-family: 'Anton', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+  }
+
+  #modal-points {
+    font-family: 'Anton', sans-serif;
+    font-size: 1.4rem;
+  }
+
+  #modal-body { padding: 32px 40px; }
+
+  /* TIMER */
+  #timer-bar-wrap {
+    background: #0d1540;
+    border-radius: 4px;
+    height: 8px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  #timer-bar {
+    height: 100%;
+    width: 100%;
+    background: var(--green);
+    border-radius: 4px;
+    transition: width 1s linear, background 0.5s;
+  }
+
+  #timer-bar.warning { background: var(--red); animation: blink 0.5s infinite alternate; }
+  @keyframes blink { from { opacity: 1; } to { opacity: 0.4; } }
+
+  #timer-display {
+    font-family: 'Anton', sans-serif;
+    font-size: 1.8rem;
+    color: var(--gold);
+    text-align: center;
+    margin-bottom: 28px;
+    letter-spacing: 4px;
+  }
+
+  #clue-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(1.3rem, 3vw, 2rem);
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.5;
+    color: var(--white);
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    margin-bottom: 24px;
+  }
+
+  #correct-answer {
+    display: none;
+    text-align: center;
+    padding: 16px;
+    background: rgba(45,198,83,0.1);
+    border: 1px solid var(--green);
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+
+  #correct-answer .answer-label {
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 6px;
+  }
+
+  #correct-answer .answer-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--white);
+  }
+
+  /* DAILY DOUBLE WAGER */
+  #dd-wager-section {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: rgba(245,197,24,0.08);
+    border: 1px solid var(--gold);
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+
+  #dd-wager-section h3 {
+    font-family: 'Anton', sans-serif;
+    font-size: 1.5rem;
+    color: var(--gold);
+    letter-spacing: 3px;
+  }
+
+  #dd-wager-input {
+    background: var(--mid-blue);
+    border: 2px solid var(--gold);
+    border-radius: 8px;
+    padding: 10px 20px;
+    color: var(--white);
+    font-family: 'Anton', sans-serif;
+    font-size: 1.5rem;
+    text-align: center;
+    width: 180px;
+    outline: none;
+  }
+
+  #dd-confirm-btn {
+    padding: 12px 32px;
+    background: var(--gold);
+    color: var(--navy);
+    font-family: 'Anton', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  /* ACTION BUTTONS */
+  #action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  .action-btn {
+    padding: 12px 24px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-correct { background: var(--green); color: #000; }
+  .btn-correct:hover { background: #25b048; }
+  .btn-wrong { background: var(--red); color: #fff; }
+  .btn-wrong:hover { background: #c0323e; }
+  .btn-reveal { background: transparent; border-color: #4455aa; color: #8899cc; }
+  .btn-reveal:hover { background: #1a2560; color: var(--white); }
+  .btn-skip { background: transparent; border-color: #2a3060; color: #556; }
+  .btn-skip:hover { background: #111630; color: #778; }
+  .btn-neutral { background: var(--mid-blue); color: var(--white); border-color: #2a3570; }
+  .btn-neutral:hover { background: #243080; }
+
+  #steal-section {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+    padding: 16px;
+    background: rgba(230,57,70,0.1);
+    border: 1px solid rgba(230,57,70,0.4);
+    border-radius: 8px;
+  }
+
+  #steal-section h4 {
+    font-family: 'Anton', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    color: var(--red);
+    text-align: center;
+  }
+
+  #steal-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+  /* SCORE FLASH */
+  .score-flash {
+    position: fixed;
+    font-family: 'Anton', sans-serif;
+    font-size: 2.5rem;
+    pointer-events: none;
+    z-index: 999;
+    animation: flash-up 1.4s ease-out forwards;
+  }
+
+  @keyframes flash-up {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    80% { opacity: 0.8; transform: translateY(-60px) scale(1.1); }
+    100% { opacity: 0; transform: translateY(-90px) scale(0.9); }
+  }
+
+  /* DD FANFARE OVERLAY */
+  #dd-fanfare {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    animation: fanfare-bg 0.3s ease;
+  }
+
+  #dd-fanfare.active { display: flex; }
+
+  #dd-fanfare h2 {
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(3rem, 8vw, 6rem);
+    color: var(--gold);
+    letter-spacing: 6px;
+    text-shadow: 0 0 40px rgba(245,197,24,0.8), 4px 4px 0 #7a5e00;
+    animation: pulse-gold 0.6s infinite alternate;
+  }
+
+  @keyframes pulse-gold {
+    from { text-shadow: 0 0 30px rgba(245,197,24,0.6), 4px 4px 0 #7a5e00; }
+    to { text-shadow: 0 0 60px rgba(245,197,24,1), 4px 4px 0 #7a5e00; }
+  }
+
+  #dd-fanfare p {
+    font-size: 1.2rem;
+    letter-spacing: 3px;
+    color: #aaa;
+    text-transform: uppercase;
+  }
+
+  /* ======= FINAL JEOPARDY ======= */
+  #final-screen {
+    display: none;
+    flex-direction: column;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at top, #1a2060 0%, #0a0e2e 60%);
+  }
+
+  #final-header {
+    background: var(--gold);
+    padding: 20px;
+    text-align: center;
+  }
+
+  #final-header h2 {
+    font-family: 'Anton', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    color: var(--navy);
+    letter-spacing: 4px;
+  }
+
+  #final-header p { color: var(--navy); letter-spacing: 2px; font-size: 0.9rem; margin-top: 4px; }
+
+  #final-body { flex: 1; padding: 40px 20px; max-width: 800px; margin: 0 auto; width: 100%; }
+
+  #final-clue-box {
+    background: var(--deep-blue);
+    border: 2px solid var(--mid-blue);
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(1.3rem, 2.5vw, 2rem);
+    font-weight: 600;
+    line-height: 1.6;
+    margin-bottom: 32px;
+    min-height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #final-category-label {
+    text-align: center;
+    font-size: 0.75rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+
+  .wager-section {
+    background: var(--deep-blue);
+    border: 1px solid var(--mid-blue);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .wager-section h4 {
+    font-family: 'Anton', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+
+  .wager-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .wager-input {
+    background: var(--mid-blue);
+    border: 1px solid #2a3570;
+    border-radius: 8px;
+    padding: 10px 16px;
+    color: var(--white);
+    font-family: 'Anton', sans-serif;
+    font-size: 1.2rem;
+    width: 160px;
+    text-align: center;
+    outline: none;
+  }
+
+  .wager-input:focus { border-color: var(--gold); }
+
+  .wager-locked {
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    color: var(--green);
+    text-transform: uppercase;
+  }
+
+  .lock-btn {
+    padding: 10px 20px;
+    background: var(--gold);
+    color: var(--navy);
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+
+  #reveal-clue-btn {
+    display: block;
+    width: 100%;
+    padding: 18px;
+    background: var(--mid-blue);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-family: 'Anton', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 3px;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: background 0.2s;
+  }
+
+  #reveal-clue-btn:hover { background: var(--gold); color: var(--navy); }
+
+  #final-answer-section {
+    display: none;
+    background: var(--deep-blue);
+    border: 1px solid var(--green);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  #final-answer-section .answer-label {
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 8px;
+  }
+
+  #final-answer-section .answer-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 600;
+  }
+
+  #final-judge-section { display: none; }
+
+  .judge-card {
+    background: var(--deep-blue);
+    border: 1px solid var(--mid-blue);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .judge-team-info h4 { font-family: 'Anton', sans-serif; font-size: 1.1rem; }
+  .judge-team-info p { font-size: 0.85rem; color: #889; }
+  .judge-btns { display: flex; gap: 8px; }
+
+  #final-scores-section {
+    display: none;
+    padding: 20px;
+    background: var(--deep-blue);
+    border-radius: 12px;
+    border: 2px solid var(--gold);
+    margin-top: 20px;
+    text-align: center;
+  }
+
+  #final-scores-section h3 {
+    font-family: 'Anton', sans-serif;
+    font-size: 1.8rem;
+    color: var(--gold);
+    letter-spacing: 3px;
+    margin-bottom: 20px;
+  }
+
+  .final-score-item {
+    font-size: 1.3rem;
+    padding: 10px;
+    border-bottom: 1px solid #1a2560;
+  }
+
+  .final-score-item:last-child { border: none; }
+  .final-score-item.winner { color: var(--gold); font-family: 'Anton', sans-serif; font-size: 1.6rem; }
+
+  /* ======= AUDIO ======= */
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen">
+  <h1>JEOPARDY!</h1>
+  <p class="subtitle">G7 Literature · Midterm Review</p>
+  <div class="setup-card">
+    <span class="setup-label">Number of Teams</span>
+    <div class="team-count-row">
+      <button class="count-btn" onclick="adjustTeams(-1)">−</button>
+      <span id="team-count-display">2</span>
+      <button class="count-btn" onclick="adjustTeams(1)">+</button>
+    </div>
+    <span class="setup-label">Team Names</span>
+    <div id="team-names-container"></div>
+    <button id="start-btn" onclick="startGame()">START GAME</button>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen">
+  <div id="scoreboard">
+    <div id="score-cards"></div>
+    <div id="scoreboard-right">
+      <div>
+        <div id="active-team-label">ACTIVE TEAM</div>
+        <div id="active-team-name">—</div>
+      </div>
+      <button id="final-jeopardy-btn" onclick="goToFinalJeopardy()">Final Jeopardy</button>
+    </div>
+  </div>
+  <div id="board-container">
+    <div id="board"></div>
+  </div>
+</div>
+
+<!-- CLUE MODAL -->
+<div id="modal-overlay">
+  <div id="modal">
+    <div id="modal-header">
+      <span id="modal-category">CATEGORY</span>
+      <span id="modal-points">$100</span>
+    </div>
+    <div id="modal-body">
+      <!-- DD Wager -->
+      <div id="dd-wager-section">
+        <h3>⭐ DAILY DOUBLE</h3>
+        <p style="color:#889;font-size:0.9rem;letter-spacing:1px;">Active team: <span id="dd-team-name" style="color:var(--gold)"></span></p>
+        <p style="color:#889;font-size:0.85rem;">Current score: <span id="dd-team-score" style="color:var(--white)"></span></p>
+        <input type="number" id="dd-wager-input" placeholder="Wager" min="100">
+        <button id="dd-confirm-btn" onclick="confirmDDWager()">LOCK WAGER & SEE CLUE</button>
+      </div>
+
+      <!-- Timer -->
+      <div id="timer-bar-wrap" style="display:none">
+        <div id="timer-bar"></div>
+      </div>
+      <div id="timer-display" style="display:none">0:60</div>
+
+      <!-- Clue -->
+      <div id="clue-text" style="display:none"></div>
+
+      <!-- Correct answer reveal -->
+      <div id="correct-answer">
+        <div class="answer-label">Correct Response</div>
+        <div class="answer-text" id="correct-answer-text"></div>
+      </div>
+
+      <!-- Action buttons -->
+      <div id="action-buttons"></div>
+
+      <!-- Steal section -->
+      <div id="steal-section">
+        <h4>STEAL OPPORTUNITY</h4>
+        <div id="steal-buttons"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DAILY DOUBLE FANFARE -->
+<div id="dd-fanfare">
+  <h2>DAILY DOUBLE!</h2>
+  <p>Place your wager</p>
+  <button class="action-btn btn-neutral" onclick="dismissFanfare()" style="margin-top:16px">Continue →</button>
+</div>
+
+<!-- FINAL JEOPARDY SCREEN -->
+<div id="final-screen">
+  <div id="final-header">
+    <h2>FINAL JEOPARDY</h2>
+    <p id="final-header-cat"></p>
+  </div>
+  <div id="final-body">
+    <div id="final-category-label">CATEGORY</div>
+    <div id="final-clue-box">Clue will appear here after all wagers are locked.</div>
+
+    <!-- Wager inputs -->
+    <div id="final-wager-inputs"></div>
+
+    <button id="reveal-clue-btn" onclick="revealFinalClue()">REVEAL CLUE</button>
+
+    <!-- Answer -->
+    <div id="final-answer-section">
+      <div class="answer-label">Correct Response</div>
+      <div class="answer-text" id="final-answer-text"></div>
+    </div>
+
+    <!-- Judge -->
+    <div id="final-judge-section"></div>
+
+    <!-- Final scores -->
+    <div id="final-scores-section">
+      <h3>FINAL SCORES</h3>
+      <div id="final-scores-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- AUDIO -->
+<audio id="snd-correct" preload="auto"></audio>
+<audio id="snd-wrong" preload="auto"></audio>
+<audio id="snd-timer" preload="auto"></audio>
+<audio id="snd-timeout" preload="auto"></audio>
+<audio id="snd-dd" preload="auto"></audio>
+
+<script>
+// ============================================================
+// GAME DATA
+// ============================================================
+const CATEGORIES = [
+  {
+    name: "VOCABULARY",
+    clues: [
+      { points: 100, clue: "This word means a sudden, heavy stream of questions, criticism, or blows.", answer: "What is a barrage?", dd: false },
+      { points: 200, clue: "If a person shows little interest or emotion and seems disconnected, they are described as this.", answer: "What is detached?", dd: false },
+      { points: 300, clue: "This word means to remove a fear, doubt, or false belief by making the truth clear.", answer: "What is dispel?", dd: false },
+      { points: 400, clue: "A feeling of pressing importance that something must be done immediately.", answer: "What is urgency?", dd: true },
+      { points: 500, clue: "This adjective describes something that causes great damage or widespread suffering.", answer: "What is devastating?", dd: false }
+    ]
+  },
+  {
+    name: "AMIGO BROTHERS",
+    clues: [
+      { points: 100, clue: "The relationship between Antonio and Felix in Amigo Brothers.", answer: "What are best friends?", dd: false },
+      { points: 200, clue: "To protect their friendship before the fight, the boys make this unusual decision.", answer: "What is to train separately / not see each other?", dd: false },
+      { points: 300, clue: "During the fight, the boys do this rather than hold back or give up.", answer: "What is fight with full effort and respect?", dd: false },
+      { points: 400, clue: "What happens at the very end of the fight that surprises the announcer.", answer: "What is the boys leave the ring together before the result is announced?", dd: false },
+      { points: 500, clue: "The central theme Piri Thomas conveys through Antonio and Felix's story.", answer: "What is true friendship survives competition?", dd: false }
+    ]
+  },
+  {
+    name: "WHAT DO FISH?",
+    clues: [
+      { points: 100, clue: "What Willie first notices outside his apartment window that starts the story.", answer: "What is a homeless man?", dd: false },
+      { points: 200, clue: "The cave fish symbolizes people who do this to avoid pain.", answer: "What is avoid facing / seeing their problems?", dd: false },
+      { points: 300, clue: "Willie's mother's response when he shares what he has learned from the homeless man.", answer: "What is she dismisses / ignores his ideas?", dd: false },
+      { points: 400, clue: "The central conflict of the story — Willie vs. this.", answer: "What is his mother's closed thinking / refusal to face hard truths?", dd: false },
+      { points: 500, clue: "What Avi suggests about people who avoid difficult truths, using Willie's mother as an example.", answer: "What is that avoiding hard truths is dangerous / keeps people stuck / unhappy?", dd: false }
+    ]
+  },
+  {
+    name: "A DAY'S WAIT",
+    clues: [
+      { points: 100, clue: "The medical mistake Schatz makes that leads him to believe he will die.", answer: "What is confusing Fahrenheit and Celsius temperature scales?", dd: false },
+      { points: 200, clue: "How Schatz behaves while his father is out — still, quiet, watching the end of his bed.", answer: "What is lying calmly and waiting to die / detached?", dd: false },
+      { points: 300, clue: "The character trait Hemingway shows through Schatz facing death in silence without telling his father.", answer: "What is courage / stoicism?", dd: false },
+      { points: 400, clue: "After learning his mistake, this is how Schatz reacts — falling apart over small things — showing the release of stored tension.", answer: "What is he cries easily / becomes emotionally fragile?", dd: false },
+      { points: 500, clue: "What the father's hunting trip during Schatz's illness reveals about Hemingway's storytelling style.", answer: "What is the iceberg theory / showing life continues normally, hiding the boy's hidden suffering?", dd: false }
+    ]
+  },
+  {
+    name: "THE PEOPLE COULD FLY",
+    clues: [
+      { points: 100, clue: "The origin of the folk tale retold by Virginia Hamilton.", answer: "What is West Africa / African American oral tradition?", dd: false },
+      { points: 200, clue: "What the enslaved people had to leave behind on the slave ships.", answer: "What is their wings / ability to fly?", dd: false },
+      { points: 300, clue: "The name of the old man who says the magic words and helps people fly.", answer: "Who is Toby?", dd: false },
+      { points: 400, clue: "What triggers Toby to call the enslaved people to fly.", answer: "What is witnessing the suffering of those being beaten?", dd: false },
+      { points: 500, clue: "What flying represents in the story on a symbolic level.", answer: "What is African heritage, freedom, and the power of the human spirit?", dd: false }
+    ]
+  },
+  {
+    name: "THEMES & ANALYSIS",
+    clues: [
+      { points: 100, clue: "The theme shared by both Amigo Brothers and A Day's Wait: facing a challenge without breaking.", answer: "What is courage?", dd: false },
+      { points: 200, clue: "In The People Could Fly, not everyone escapes, but the story says those left behind do this, which is equally powerful.", answer: "What is remember and retell the story?", dd: false },
+      { points: 300, clue: "The role Willie's mother plays — she tries to do this, but it ends up harming Willie's curiosity and growth.", answer: "What is protect Willie (by avoiding hard truths)?", dd: false },
+      { points: 400, clue: "In A Day's Wait, Schatz's courage is described as this type — an old code that says don't show pain or fear.", answer: "What is stoicism / the Hemingway code?", dd: false },
+      { points: 500, clue: "The literary term for what the cave fish in What Do Fish Have to Do with Anything represents — an object that stands for a larger idea.", answer: "What is a symbol?", dd: false }
+    ]
+  }
+];
+
+const FINAL_JEOPARDY = {
+  category: "COURAGE ACROSS TEXTS",
+  clue: "In three of the four texts on the midterm, a character faces a difficult truth or situation in silence, without asking for help. Name TWO of these characters and explain what each one's silence reveals about them.",
+  answer: "Who are Schatz (A Day's Wait) — his silence shows stoic courage / fear of appearing weak; and Antonio & Felix (Amigo Brothers) — their departure without hearing the result shows friendship matters more than winning; and/or the enslaved people (The People Could Fly) — those left behind keep the story alive in silence. (Accept any two with explanation.)"
+};
+
+// ============================================================
+// STATE
+// ============================================================
+const TEAM_COLORS = ["#4488ff","#e63946","#f5c518","#2dc653","#e040fb","#ff7043","#00bcd4","#ff9800"];
+
+let teams = [];
+let activeTeamIndex = 0;
+let teamCount = 2;
+let currentClue = null;
+let timerInterval = null;
+let timerSeconds = 60;
+let ddWager = 0;
+let isDD = false;
+let clueRevealed = false;
+let wrongTeams = new Set();
+
+// ============================================================
+// AUDIO
+// ============================================================
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  return audioCtx;
+}
+
+function playTone(frequency, duration, type = 'sine', volume = 0.3, delay = 0) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.value = frequency;
+    gain.gain.setValueAtTime(volume, ctx.currentTime + delay);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+    osc.start(ctx.currentTime + delay);
+    osc.stop(ctx.currentTime + delay + duration);
+  } catch(e) {}
+}
+
+function playCorrect() {
+  playTone(523, 0.15, 'sine', 0.4);
+  playTone(659, 0.15, 'sine', 0.4, 0.15);
+  playTone(784, 0.25, 'sine', 0.4, 0.3);
+  playTone(1047, 0.4, 'sine', 0.3, 0.55);
+}
+
+function playWrong() {
+  playTone(220, 0.1, 'sawtooth', 0.3);
+  playTone(180, 0.1, 'sawtooth', 0.3, 0.1);
+  playTone(150, 0.3, 'sawtooth', 0.3, 0.2);
+}
+
+function playTimeout() {
+  playTone(440, 0.2, 'square', 0.3);
+  playTone(330, 0.2, 'square', 0.3, 0.22);
+  playTone(220, 0.5, 'square', 0.3, 0.44);
+}
+
+function playDD() {
+  [523,659,784,1047,784,1047,1319].forEach((f, i) => {
+    playTone(f, 0.2, 'sine', 0.4, i * 0.15);
+  });
+}
+
+function playTick(fast) {
+  playTone(fast ? 880 : 660, 0.05, 'square', 0.15);
+}
+
+// ============================================================
+// SETUP
+// ============================================================
+function adjustTeams(delta) {
+  teamCount = Math.max(2, Math.min(8, teamCount + delta));
+  document.getElementById('team-count-display').textContent = teamCount;
+  renderTeamInputs();
+}
+
+function renderTeamInputs() {
+  const c = document.getElementById('team-names-container');
+  const existing = [...c.querySelectorAll('.team-name-input')].map(i => i.value);
+  c.innerHTML = '';
+  for (let i = 0; i < teamCount; i++) {
+    const color = TEAM_COLORS[i % TEAM_COLORS.length];
+    const defaultName = ['Team A','Team B','Team C','Team D','Team E','Team F','Team G','Team H'][i];
+    const row = document.createElement('div');
+    row.className = 'team-name-row';
+    row.innerHTML = `
+      <div class="team-color-dot" style="background:${color}"></div>
+      <input class="team-name-input" type="text" placeholder="${defaultName}" value="${existing[i] || ''}" maxlength="20">
+    `;
+    c.appendChild(row);
+  }
+}
+
+function startGame() {
+  const inputs = document.querySelectorAll('.team-name-input');
+  teams = [];
+  inputs.forEach((inp, i) => {
+    const name = inp.value.trim() || ['Team A','Team B','Team C','Team D','Team E','Team F','Team G','Team H'][i];
+    teams.push({ name, score: 0, color: TEAM_COLORS[i % TEAM_COLORS.length] });
+  });
+  activeTeamIndex = 0;
+
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'flex';
+
+  buildScoreboard();
+  buildBoard();
+  updateActiveTeam();
+}
+
+// ============================================================
+// SCOREBOARD
+// ============================================================
+function buildScoreboard() {
+  const sc = document.getElementById('score-cards');
+  sc.style.display = 'flex';
+  sc.style.gap = '10px';
+  sc.style.flexWrap = 'wrap';
+  sc.innerHTML = '';
+  teams.forEach((t, i) => {
+    const card = document.createElement('div');
+    card.className = 'score-card';
+    card.id = `score-card-${i}`;
+    card.style.background = `${t.color}22`;
+    card.style.borderColor = `${t.color}44`;
+    card.innerHTML = `
+      <div class="score-name" style="color:${t.color}">${t.name}</div>
+      <div class="score-value" id="score-val-${i}" style="color:${t.color}">$0</div>
+      <div class="score-adj">
+        <button class="adj-btn" onclick="adjustScore(${i}, -100)">−</button>
+        <button class="adj-btn" onclick="adjustScore(${i}, 100)">+</button>
+      </div>
+    `;
+    sc.appendChild(card);
+  });
+}
+
+function updateScoreboard() {
+  teams.forEach((t, i) => {
+    const el = document.getElementById(`score-val-${i}`);
+    if (el) el.textContent = '$' + t.score.toLocaleString();
+    const card = document.getElementById(`score-card-${i}`);
+    if (card) {
+      card.classList.toggle('active', i === activeTeamIndex);
+    }
+  });
+}
+
+function updateActiveTeam() {
+  document.getElementById('active-team-name').textContent = teams[activeTeamIndex].name;
+  document.getElementById('active-team-name').style.color = teams[activeTeamIndex].color;
+  updateScoreboard();
+}
+
+function adjustScore(teamIdx, amount) {
+  teams[teamIdx].score += amount;
+  updateScoreboard();
+}
+
+function changeScore(teamIdx, amount) {
+  const card = document.getElementById(`score-card-${teamIdx}`);
+  const oldScore = teams[teamIdx].score;
+  teams[teamIdx].score += amount;
+  updateScoreboard();
+  flashScore(teamIdx, amount);
+}
+
+function flashScore(teamIdx, amount) {
+  const card = document.getElementById(`score-card-${teamIdx}`);
+  if (!card) return;
+  const rect = card.getBoundingClientRect();
+  const flash = document.createElement('div');
+  flash.className = 'score-flash';
+  flash.textContent = (amount >= 0 ? '+' : '') + '$' + Math.abs(amount).toLocaleString();
+  flash.style.color = amount >= 0 ? '#2dc653' : '#e63946';
+  flash.style.left = rect.left + rect.width / 2 - 60 + 'px';
+  flash.style.top = rect.top + 'px';
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 1400);
+}
+
+// ============================================================
+// BOARD
+// ============================================================
+function buildBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+
+  // Headers
+  CATEGORIES.forEach(cat => {
+    const h = document.createElement('div');
+    h.className = 'category-header';
+    h.textContent = cat.name;
+    board.appendChild(h);
+  });
+
+  // Clue rows (5 rows x 6 cols)
+  for (let row = 0; row < 5; row++) {
+    CATEGORIES.forEach((cat, colIdx) => {
+      const clue = cat.clues[row];
+      const cell = document.createElement('div');
+      cell.className = 'clue-cell';
+      cell.id = `cell-${colIdx}-${row}`;
+      cell.textContent = '$' + clue.points;
+      cell.onclick = () => openClue(colIdx, row);
+      board.appendChild(cell);
+    });
+  }
+}
+
+function markUsed(colIdx, row) {
+  const cell = document.getElementById(`cell-${colIdx}-${row}`);
+  if (cell) {
+    cell.classList.add('used');
+    cell.onclick = null;
+    cell.textContent = '';
+  }
+}
+
+// ============================================================
+// CLUE MODAL
+// ============================================================
+function openClue(colIdx, row) {
+  const cat = CATEGORIES[colIdx];
+  const clue = cat.clues[row];
+  currentClue = { colIdx, row, clue, cat };
+  clueRevealed = false;
+  wrongTeams = new Set();
+
+  document.getElementById('modal-category').textContent = cat.name;
+  document.getElementById('modal-points').textContent = '$' + clue.points;
+  document.getElementById('correct-answer').style.display = 'none';
+  document.getElementById('steal-section').style.display = 'none';
+  document.getElementById('correct-answer-text').textContent = clue.answer;
+
+  if (clue.dd) {
+    // Show DD fanfare first
+    isDD = true;
+    ddWager = clue.points;
+    showFanfare();
+  } else {
+    isDD = false;
+    showClueModal(false);
+  }
+}
+
+function showFanfare() {
+  playDD();
+  document.getElementById('dd-fanfare').classList.add('active');
+}
+
+function dismissFanfare() {
+  document.getElementById('dd-fanfare').classList.remove('active');
+  showClueModal(true);
+}
+
+function showClueModal(isDD_) {
+  const overlay = document.getElementById('modal-overlay');
+  overlay.classList.add('active');
+
+  const ddSection = document.getElementById('dd-wager-section');
+  const timerWrap = document.getElementById('timer-bar-wrap');
+  const timerDisp = document.getElementById('timer-display');
+  const clueTextEl = document.getElementById('clue-text');
+
+  ddSection.style.display = 'none';
+  timerWrap.style.display = 'none';
+  timerDisp.style.display = 'none';
+  clueTextEl.style.display = 'none';
+
+  renderActionButtons('waiting');
+
+  if (isDD_) {
+    ddSection.style.display = 'flex';
+    document.getElementById('dd-team-name').textContent = teams[activeTeamIndex].name;
+    document.getElementById('dd-team-score').textContent = '$' + teams[activeTeamIndex].score;
+    document.getElementById('dd-wager-input').value = '';
+  } else {
+    clueTextEl.style.display = 'flex';
+    clueTextEl.textContent = currentClue.clue.clue;
+    renderActionButtons('normal');
+    startTimer();
+  }
+}
+
+function confirmDDWager() {
+  const val = parseInt(document.getElementById('dd-wager-input').value);
+  if (isNaN(val) || val < 100) { alert('Enter a wager of at least $100'); return; }
+  ddWager = val;
+  document.getElementById('dd-wager-section').style.display = 'none';
+  document.getElementById('clue-text').style.display = 'flex';
+  document.getElementById('clue-text').textContent = currentClue.clue.clue;
+  renderActionButtons('normal');
+  startTimer();
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function startTimer() {
+  timerSeconds = 60;
+  clearInterval(timerInterval);
+  const bar = document.getElementById('timer-bar');
+  const disp = document.getElementById('timer-display');
+  const wrap = document.getElementById('timer-bar-wrap');
+
+  wrap.style.display = 'block';
+  disp.style.display = 'block';
+  bar.style.width = '100%';
+  bar.className = '';
+  disp.textContent = '1:00';
+
+  let tickCount = 0;
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    tickCount++;
+    const pct = (timerSeconds / 60) * 100;
+    bar.style.width = pct + '%';
+    const mins = Math.floor(timerSeconds / 60);
+    const secs = timerSeconds % 60;
+    disp.textContent = `${mins}:${secs.toString().padStart(2,'0')}`;
+
+    if (timerSeconds <= 10) {
+      bar.className = 'warning';
+      if (tickCount % 1 === 0) playTick(true);
+    } else {
+      if (tickCount % 2 === 0) playTick(false);
+    }
+
+    if (timerSeconds <= 0) {
+      clearInterval(timerInterval);
+      playTimeout();
+      bar.style.width = '0%';
+      disp.textContent = '0:00';
+      renderActionButtons('timeout');
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+}
+
+// ============================================================
+// ACTION BUTTONS
+// ============================================================
+function renderActionButtons(state) {
+  const btns = document.getElementById('action-buttons');
+  const steal = document.getElementById('steal-section');
+  steal.style.display = 'none';
+  btns.innerHTML = '';
+
+  if (state === 'waiting') {
+    // Before clue is shown — nothing yet
+    return;
+  }
+
+  if (state === 'timeout') {
+    btns.innerHTML = `
+      <button class="action-btn btn-reveal" onclick="revealAnswer()">Reveal Answer</button>
+      <button class="action-btn btn-skip" onclick="closeModal()">Close</button>
+    `;
+    return;
+  }
+
+  if (state === 'normal' || state === 'active') {
+    const activeTeam = teams[activeTeamIndex];
+    const pts = isDD ? ddWager : currentClue.clue.points;
+    btns.innerHTML = `
+      <button class="action-btn btn-correct" onclick="handleCorrect(${activeTeamIndex}, ${pts})">✓ ${activeTeam.name} Correct</button>
+      <button class="action-btn btn-wrong" onclick="handleWrong(${activeTeamIndex}, ${pts})">✗ ${activeTeam.name} Wrong</button>
+      <button class="action-btn btn-reveal" onclick="revealAnswer()">Reveal Answer</button>
+      <button class="action-btn btn-skip" onclick="closeModal()">Close</button>
+    `;
+  }
+
+  if (state === 'revealed') {
+    btns.innerHTML = `<button class="action-btn btn-skip" onclick="closeModal()">Close</button>`;
+  }
+}
+
+// ============================================================
+// ANSWERING
+// ============================================================
+function handleCorrect(teamIdx, pts) {
+  stopTimer();
+  playCorrect();
+  changeScore(teamIdx, pts);
+  revealAnswer();
+  renderActionButtons('revealed');
+  document.getElementById('steal-section').style.display = 'none';
+  // Next team
+  if (!isDD) nextTeam();
+  markUsed(currentClue.colIdx, currentClue.row);
+}
+
+function handleWrong(teamIdx, pts) {
+  stopTimer();
+  playWrong();
+  changeScore(teamIdx, -pts);
+  wrongTeams.add(teamIdx);
+
+  // Show steal opportunity for other teams
+  const stealers = teams.filter((_, i) => i !== teamIdx && !wrongTeams.has(i));
+
+  if (stealers.length > 0) {
+    const steal = document.getElementById('steal-section');
+    steal.style.display = 'flex';
+    const stealBtns = document.getElementById('steal-buttons');
+    stealBtns.innerHTML = '';
+    stealers.forEach(t => {
+      const ti = teams.indexOf(t);
+      const btn = document.createElement('button');
+      btn.className = 'action-btn btn-correct';
+      btn.style.background = t.color;
+      btn.textContent = `✓ ${t.name} Correct`;
+      btn.onclick = () => { steal.style.display = 'none'; handleCorrect(ti, pts); };
+      stealBtns.appendChild(btn);
+    });
+
+    const wrongStealBtns = stealers.map(t => {
+      const ti = teams.indexOf(t);
+      return `<button class="action-btn btn-wrong" onclick="handleStealWrong(${ti}, ${pts})" style="border-color:${t.color};color:${t.color}">✗ ${t.name} Wrong</button>`;
+    });
+    wrongStealBtns.forEach(html => {
+      const d = document.createElement('div');
+      d.innerHTML = html;
+      stealBtns.appendChild(d.firstChild);
+    });
+  } else {
+    // All teams wrong
+    revealAnswer();
+    renderActionButtons('revealed');
+    if (!isDD) nextTeam();
+    markUsed(currentClue.colIdx, currentClue.row);
+  }
+
+  // Disable original buttons
+  const btns = document.getElementById('action-buttons');
+  btns.innerHTML = `
+    <button class="action-btn btn-reveal" onclick="revealAnswer()">Reveal Answer</button>
+    <button class="action-btn btn-skip" onclick="closeModal()">Close</button>
+  `;
+}
+
+function handleStealWrong(teamIdx, pts) {
+  playWrong();
+  changeScore(teamIdx, -pts);
+  wrongTeams.add(teamIdx);
+  const stealers = teams.filter((_, i) => !wrongTeams.has(i));
+  if (stealers.length > 0) {
+    handleWrong._resteal(stealers, pts);
+  } else {
+    revealAnswer();
+    const steal = document.getElementById('steal-section');
+    steal.style.display = 'none';
+    document.getElementById('action-buttons').innerHTML = `<button class="action-btn btn-skip" onclick="closeModal()">Close</button>`;
+    if (!isDD) nextTeam();
+    markUsed(currentClue.colIdx, currentClue.row);
+  }
+}
+
+// Rebuild steal section for remaining teams
+handleWrong._resteal = function(stealers, pts) {
+  const steal = document.getElementById('steal-section');
+  steal.style.display = 'flex';
+  const stealBtns = document.getElementById('steal-buttons');
+  stealBtns.innerHTML = '';
+  stealers.forEach(t => {
+    const ti = teams.indexOf(t);
+    const btn = document.createElement('button');
+    btn.className = 'action-btn btn-correct';
+    btn.style.background = t.color;
+    btn.textContent = `✓ ${t.name} Correct`;
+    btn.onclick = () => { steal.style.display = 'none'; handleCorrect(ti, pts); };
+    stealBtns.appendChild(btn);
+
+    const wbtn = document.createElement('button');
+    wbtn.className = 'action-btn btn-wrong';
+    wbtn.style.borderColor = t.color;
+    wbtn.style.color = t.color;
+    wbtn.textContent = `✗ ${t.name} Wrong`;
+    wbtn.onclick = () => handleStealWrong(ti, pts);
+    stealBtns.appendChild(wbtn);
+  });
+};
+
+function revealAnswer() {
+  document.getElementById('correct-answer').style.display = 'block';
+}
+
+function closeModal() {
+  stopTimer();
+  document.getElementById('modal-overlay').classList.remove('active');
+  markUsed(currentClue.colIdx, currentClue.row);
+  if (!isDD) nextTeam();
+  currentClue = null;
+}
+
+function nextTeam() {
+  activeTeamIndex = (activeTeamIndex + 1) % teams.length;
+  updateActiveTeam();
+}
+
+
+
+// ============================================================
+// FINAL JEOPARDY
+// ============================================================
+function goToFinalJeopardy() {
+  stopTimer();
+  document.getElementById('game-screen').style.display = 'none';
+  document.getElementById('final-screen').style.display = 'flex';
+
+  document.getElementById('final-header-cat').textContent = FINAL_JEOPARDY.category;
+  document.getElementById('final-category-label').textContent = FINAL_JEOPARDY.category;
+  document.getElementById('final-clue-box').textContent = 'Place your wagers below, then click Reveal Clue.';
+  document.getElementById('final-answer-text').textContent = FINAL_JEOPARDY.answer;
+
+  const wagerContainer = document.getElementById('final-wager-inputs');
+  wagerContainer.innerHTML = '';
+  teams.forEach((t, i) => {
+    const sec = document.createElement('div');
+    sec.className = 'wager-section';
+    sec.innerHTML = `
+      <h4 style="color:${t.color}">${t.name} &nbsp;<span style="font-size:0.8rem;color:#889">Score: $${t.score.toLocaleString()}</span></h4>
+      <div class="wager-row">
+        <input class="wager-input" id="final-wager-${i}" type="number" placeholder="Wager" min="0">
+        <button class="lock-btn" id="lock-btn-${i}" onclick="lockWager(${i})">Lock Wager</button>
+        <span class="wager-locked" id="wager-locked-${i}" style="display:none">✓ Locked</span>
+      </div>
+    `;
+    wagerContainer.appendChild(sec);
+  });
+
+  document.getElementById('final-answer-section').style.display = 'none';
+  document.getElementById('final-judge-section').style.display = 'none';
+  document.getElementById('final-scores-section').style.display = 'none';
+}
+
+const lockedWagers = {};
+
+function lockWager(i) {
+  const val = parseInt(document.getElementById(`final-wager-${i}`).value);
+  if (isNaN(val) || val < 0) { alert('Enter a valid wager.'); return; }
+  lockedWagers[i] = val;
+  document.getElementById(`final-wager-${i}`).disabled = true;
+  document.getElementById(`lock-btn-${i}`).disabled = true;
+  document.getElementById(`wager-locked-${i}`).style.display = 'inline';
+}
+
+function revealFinalClue() {
+  document.getElementById('final-clue-box').textContent = FINAL_JEOPARDY.clue;
+  document.getElementById('final-answer-section').style.display = 'block';
+  buildFinalJudge();
+  document.getElementById('final-judge-section').style.display = 'block';
+}
+
+function buildFinalJudge() {
+  const jc = document.getElementById('final-judge-section');
+  jc.innerHTML = '<h3 style="font-family:Anton,sans-serif;font-size:1.2rem;letter-spacing:2px;color:var(--gold);margin-bottom:12px;">JUDGE RESPONSES</h3>';
+  teams.forEach((t, i) => {
+    const wager = lockedWagers[i] ?? 0;
+    const card = document.createElement('div');
+    card.className = 'judge-card';
+    card.innerHTML = `
+      <div class="judge-team-info">
+        <h4 style="color:${t.color}">${t.name}</h4>
+        <p>Wager: $${wager.toLocaleString()} &nbsp;|&nbsp; Score: $${t.score.toLocaleString()}</p>
+      </div>
+      <div class="judge-btns">
+        <button class="action-btn btn-correct" onclick="finalJudge(${i}, true)">✓ Correct</button>
+        <button class="action-btn btn-wrong" onclick="finalJudge(${i}, false)">✗ Wrong</button>
+      </div>
+    `;
+    jc.appendChild(card);
+  });
+}
+
+const finalJudged = {};
+function finalJudge(i, correct) {
+  const wager = lockedWagers[i] ?? 0;
+  const delta = correct ? wager : -wager;
+  if (finalJudged[i]) {
+    // Undo previous
+    const prev = finalJudged[i];
+    teams[i].score -= (prev ? wager : -wager);
+  }
+  finalJudged[i] = correct;
+  teams[i].score += delta;
+  if (correct) playCorrect(); else playWrong();
+  flashScore(i, delta);
+
+  if (Object.keys(finalJudged).length >= teams.length) {
+    showFinalScores();
+  }
+}
+
+function showFinalScores() {
+  const sec = document.getElementById('final-scores-section');
+  sec.style.display = 'block';
+  const list = document.getElementById('final-scores-list');
+  const sorted = [...teams].sort((a, b) => b.score - a.score);
+  list.innerHTML = '';
+  sorted.forEach((t, rank) => {
+    const div = document.createElement('div');
+    div.className = 'final-score-item' + (rank === 0 ? ' winner' : '');
+    div.style.color = rank === 0 ? t.color : '';
+    div.textContent = `${rank === 0 ? '🏆 ' : ''}${t.name}: $${t.score.toLocaleString()}`;
+    list.appendChild(div);
+  });
+}
+
+// ============================================================
+// INIT
+// ============================================================
+renderTeamInputs();
+
+// Show action buttons when clue text becomes visible (for non-DD clues)
+const origShowClueModal = showClueModal;
+</script>
+</body>
+</html>
