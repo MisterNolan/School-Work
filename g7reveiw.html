@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geo Jeopardy – Grade 7 Midterm Review</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap');
+
+  :root {
+    --navy: #0a0e2a;
+    --navy2: #0d1540;
+    --blue: #1a237e;
+    --gold: #FFD700;
+    --gold2: #FFC107;
+    --gold-dark: #b8860b;
+    --red: #c0392b;
+    --red2: #e74c3c;
+    --team-a: #1565C0;
+    --team-b: #b71c1c;
+    --correct-glow: #00e676;
+    --wrong-glow: #ff1744;
+    --panel: rgba(255,255,255,0.05);
+    --panel-border: rgba(255,215,0,0.2);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--navy);
+    color: #fff;
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== SETUP SCREEN ===== */
+  #setup-screen {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at 50% 0%, #1a237e 0%, #0a0e2a 70%);
+  }
+  #setup-screen h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3rem, 8vw, 6rem);
+    color: var(--gold);
+    letter-spacing: 4px;
+    text-shadow: 0 0 40px rgba(255,215,0,0.4);
+    text-align: center;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  #setup-screen p.subtitle {
+    color: #90a4ae;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 48px;
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+  .setup-card {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    padding: 40px;
+    width: min(520px, 92vw);
+    backdrop-filter: blur(10px);
+  }
+  .setup-card label {
+    display: block;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+    margin-top: 24px;
+  }
+  .setup-card label:first-of-type { margin-top: 0; }
+  .setup-card input[type=number], .setup-card input[type=text] {
+    width: 100%; padding: 12px 16px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,215,0,0.3);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 1.1rem;
+    font-family: 'Barlow', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .setup-card input:focus { border-color: var(--gold); }
+  #team-names-container { margin-top: 16px; }
+  .team-name-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .team-color-dot {
+    width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+  }
+  .team-name-row input { flex: 1; padding: 10px 14px; font-size: 1rem; }
+  .btn-gold {
+    display: block; width: 100%; margin-top: 32px;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 100%);
+    border: none; border-radius: 8px;
+    color: #000; font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem; letter-spacing: 3px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 20px rgba(255,215,0,0.3);
+  }
+  .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,215,0,0.5); }
+
+  /* ===== GAME SCREEN ===== */
+  #game-screen { display: none; flex-direction: column; min-height: 100vh; }
+
+  /* Scoreboard */
+  #scoreboard {
+    display: flex; justify-content: space-between; align-items: stretch;
+    padding: 12px 20px; gap: 12px;
+    background: var(--navy2);
+    border-bottom: 2px solid var(--gold-dark);
+    flex-wrap: wrap;
+  }
+  #teams-area { display: flex; gap: 12px; flex: 1; flex-wrap: wrap; }
+  .team-card {
+    padding: 12px 20px; border-radius: 10px;
+    border: 2px solid transparent;
+    min-width: 140px; text-align: center;
+    transition: all 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .team-card.active { border-color: var(--gold); box-shadow: 0 0 20px rgba(255,215,0,0.3); }
+  .team-card .team-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase;
+    opacity: 0.7; margin-bottom: 4px;
+  }
+  .team-card .team-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem; letter-spacing: 1px;
+    margin-bottom: 2px;
+  }
+  .team-card .team-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem; line-height: 1;
+  }
+  .team-card .score-adj { display: flex; gap: 6px; margin-top: 6px; justify-content: center; }
+  .btn-adj {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.1);
+    color: #fff; font-size: 1rem; line-height: 1;
+    cursor: pointer; transition: background 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+  }
+  .btn-adj:hover { background: rgba(255,255,255,0.25); }
+  .score-flash {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem;
+    pointer-events: none; opacity: 0;
+    animation: flashAnim 1s ease forwards;
+    white-space: nowrap;
+  }
+  @keyframes flashAnim {
+    0%   { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%, -80%) scale(0.8); }
+  }
+  #turn-info {
+    display: flex; align-items: center; gap: 12px;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 0.9rem;
+    letter-spacing: 1px; text-transform: uppercase; color: #90a4ae;
+  }
+  #turn-name { color: var(--gold); font-size: 1rem; font-weight: 700; }
+
+  /* Board */
+  #board-section { flex: 1; padding: 16px; overflow: auto; }
+  #board {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    max-width: 1200px; margin: 0 auto;
+  }
+  .cat-header {
+    background: var(--blue);
+    border: 1px solid var(--gold-dark);
+    border-radius: 8px; padding: 14px 8px;
+    text-align: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(0.85rem, 1.5vw, 1.1rem);
+    letter-spacing: 2px; color: var(--gold);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    min-height: 70px; display: flex;
+    align-items: center; justify-content: center;
+  }
+  .clue-cell {
+    background: var(--blue);
+    border: 1px solid var(--gold-dark);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 70px; cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+    color: var(--gold);
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  }
+  .clue-cell:hover { background: #283593; transform: scale(1.03); box-shadow: 0 4px 20px rgba(255,215,0,0.2); }
+  .clue-cell.used { background: #0d1540; color: #1a237e; cursor: default; pointer-events: none; border-color: #1a237e; }
+  .clue-cell.daily-double-unused { border-color: var(--gold); box-shadow: inset 0 0 12px rgba(255,215,0,0.15); }
+
+  /* Final Jeopardy button */
+  #final-jeopardy-btn {
+    max-width: 1200px; margin: 0 auto 16px;
+    display: block; width: calc(100% - 0px);
+    padding: 14px;
+    background: linear-gradient(135deg, #4a148c, #7b1fa2);
+    border: 2px solid #ce93d8;
+    border-radius: 8px;
+    color: #fff; font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem; letter-spacing: 3px;
+    cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(74,20,140,0.4);
+  }
+  #final-jeopardy-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(74,20,140,0.6); }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--navy2);
+    border: 2px solid var(--gold-dark);
+    border-radius: 16px;
+    width: min(720px, 96vw);
+    max-height: 90vh; overflow-y: auto;
+    padding: 36px;
+    position: relative;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.8);
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .modal-cat {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 8px;
+  }
+  .modal-points {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem; color: var(--gold);
+    line-height: 1; margin-bottom: 20px;
+  }
+  .modal-clue {
+    font-size: 1.6rem; font-weight: 600; line-height: 1.4;
+    margin-bottom: 28px;
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 0.5px;
+  }
+  .modal-prompt {
+    font-size: 0.95rem; color: #90a4ae;
+    font-style: italic; margin-bottom: 24px;
+  }
+
+  /* Timer */
+  #timer-container { margin-bottom: 24px; }
+  #timer-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem; letter-spacing: 2px;
+    text-transform: uppercase; color: #90a4ae;
+    margin-bottom: 6px;
+    display: flex; justify-content: space-between;
+  }
+  #timer-bar-track {
+    height: 12px; background: rgba(255,255,255,0.1);
+    border-radius: 6px; overflow: hidden;
+  }
+  #timer-bar {
+    height: 100%; width: 100%;
+    background: linear-gradient(90deg, #00c853, #69f0ae);
+    border-radius: 6px;
+    transition: width 1s linear, background 0.5s;
+  }
+  #timer-bar.danger {
+    background: linear-gradient(90deg, #ff1744, #ff6d00);
+    animation: blink 0.5s ease infinite;
+  }
+  @keyframes blink { 50% { opacity: 0.4; } }
+  #timer-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem; color: #fff;
+  }
+
+  /* Answer area */
+  #answer-area { display: none; }
+  .answer-reveal {
+    background: rgba(0,230,118,0.1);
+    border: 1px solid rgba(0,230,118,0.4);
+    border-radius: 8px; padding: 16px 20px;
+    margin-bottom: 20px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.2rem;
+  }
+  .answer-reveal span { color: var(--correct-glow); font-weight: 700; }
+
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .btn-action {
+    padding: 12px 20px; border-radius: 8px;
+    border: none; cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1rem; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    transition: all 0.15s;
+    flex: 1; min-width: 120px;
+  }
+  .btn-correct { background: #00c853; color: #000; }
+  .btn-correct:hover { background: #00e676; }
+  .btn-wrong { background: #c62828; color: #fff; }
+  .btn-wrong:hover { background: #ef5350; }
+  .btn-neutral { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+  .btn-neutral:hover { background: rgba(255,255,255,0.2); }
+  .btn-skip { background: rgba(255,255,255,0.07); color: #90a4ae; border: 1px solid rgba(255,255,255,0.15); font-size: 0.85rem; }
+  .btn-skip:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+  .steal-section {
+    margin-top: 20px;
+    background: rgba(255,140,0,0.08);
+    border: 1px solid rgba(255,140,0,0.3);
+    border-radius: 8px; padding: 16px;
+    display: none;
+  }
+  .steal-section h4 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem; letter-spacing: 2px;
+    text-transform: uppercase; color: #ffa726;
+    margin-bottom: 12px;
+  }
+
+  /* Daily Double wager */
+  #dd-modal .modal { border-color: var(--gold); box-shadow: 0 0 60px rgba(255,215,0,0.3); }
+  .dd-fanfare {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 4rem; color: var(--gold);
+    text-align: center; text-shadow: 0 0 40px rgba(255,215,0,0.8);
+    animation: ddPulse 0.6s ease infinite alternate;
+    margin-bottom: 16px;
+  }
+  @keyframes ddPulse {
+    from { transform: scale(1); }
+    to   { transform: scale(1.05); text-shadow: 0 0 60px rgba(255,215,0,1); }
+  }
+  .wager-input {
+    width: 100%; padding: 16px;
+    background: rgba(255,255,255,0.07);
+    border: 2px solid var(--gold);
+    border-radius: 8px; color: var(--gold);
+    font-size: 2rem; font-family: 'Bebas Neue', sans-serif;
+    text-align: center; outline: none;
+    margin-bottom: 16px;
+  }
+
+  /* Final Jeopardy modal */
+  .fj-wager-grid {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .fj-team-wager {
+    background: var(--panel);
+    border-radius: 8px; padding: 16px;
+    border: 1px solid var(--panel-border);
+  }
+  .fj-team-wager label {
+    display: block;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .fj-team-wager input {
+    width: 100%; padding: 12px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px; color: #fff;
+    font-size: 1.3rem; font-family: 'Bebas Neue', sans-serif;
+    text-align: center; outline: none;
+  }
+  .fj-result-row {
+    display: flex; align-items: center;
+    gap: 12px; margin-top: 12px; flex-wrap: wrap;
+  }
+  .fj-result-row span { font-family: 'Barlow Condensed', sans-serif; font-size: 0.9rem; color: #90a4ae; }
+
+  /* Winner screen */
+  #winner-screen {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.95);
+    z-index: 200; flex-direction: column;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(8px);
+  }
+  #winner-screen h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3rem, 10vw, 7rem);
+    color: var(--gold);
+    text-shadow: 0 0 60px rgba(255,215,0,0.6);
+    animation: pulse 1.5s ease infinite alternate;
+    text-align: center;
+  }
+  @keyframes pulse {
+    from { text-shadow: 0 0 30px rgba(255,215,0,0.4); }
+    to   { text-shadow: 0 0 80px rgba(255,215,0,1); }
+  }
+  #winner-name { font-size: clamp(2rem, 6vw, 4rem); margin-top: 16px; font-family: 'Bebas Neue', sans-serif; letter-spacing: 4px; }
+  #winner-screen .btn-gold { width: 300px; margin-top: 40px; font-size: 1.4rem; }
+  .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 199; }
+  .confetti-piece {
+    position: absolute; width: 10px; height: 10px;
+    animation: confettiFall linear forwards;
+    border-radius: 2px;
+  }
+  @keyframes confettiFall {
+    0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* Score tally section in FJ */
+  .scores-tally {
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 8px; padding: 16px; margin-top: 16px;
+  }
+  .scores-tally h4 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase;
+    color: #90a4ae; margin-bottom: 12px;
+  }
+  .score-row {
+    display: flex; justify-content: space-between;
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem;
+    padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .score-row:last-child { border: none; }
+  .score-row .score-val { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="setup-screen">
+  <h1>GEO JEOPARDY</h1>
+  <p class="subtitle">Grade 7 Honours · Midterm Review</p>
+  <div class="setup-card">
+    <label>Number of Teams</label>
+    <input type="number" id="team-count" min="2" max="11" value="2">
+    <div id="team-names-container"></div>
+    <button class="btn-gold" onclick="startGame()">START GAME</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game-screen">
+  <div id="scoreboard">
+    <div id="teams-area"></div>
+    <div id="turn-info">Turn: <span id="turn-name">—</span></div>
+  </div>
+  <div id="board-section">
+    <div id="board"></div>
+    <button id="final-jeopardy-btn" onclick="openFinalJeopardy()" style="display:none">⭐ FINAL JEOPARDY</button>
+  </div>
+</div>
+
+<!-- CLUE MODAL -->
+<div class="modal-overlay" id="clue-modal">
+  <div class="modal">
+    <div class="modal-cat" id="modal-cat"></div>
+    <div class="modal-points" id="modal-points"></div>
+    <div class="modal-clue" id="modal-clue"></div>
+    <div class="modal-prompt">Teams must phrase their response as a question.</div>
+    <div id="timer-container">
+      <div id="timer-label"><span>Time Remaining</span><span id="timer-number">60</span></div>
+      <div id="timer-bar-track"><div id="timer-bar"></div></div>
+    </div>
+    <div id="answer-area">
+      <div class="answer-reveal">Correct response: <span id="modal-answer"></span></div>
+      <div id="original-team-btns"></div>
+      <div class="steal-section" id="steal-section">
+        <h4 id="steal-title">Steal Opportunity</h4>
+        <div id="steal-btns"></div>
+      </div>
+    </div>
+    <div id="pre-reveal-btns">
+      <div class="btn-row">
+        <button class="btn-action btn-neutral" onclick="revealAnswer()">Reveal Answer</button>
+        <button class="btn-action btn-skip" onclick="closeClueModal()">Skip / Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DAILY DOUBLE MODAL -->
+<div class="modal-overlay" id="dd-modal">
+  <div class="modal" style="text-align:center">
+    <div class="dd-fanfare">DAILY DOUBLE!</div>
+    <p style="font-family:'Barlow Condensed';letter-spacing:1px;color:#90a4ae;margin-bottom:24px" id="dd-team-prompt"></p>
+    <input type="number" class="wager-input" id="dd-wager" placeholder="Enter wager" min="0">
+    <button class="btn-gold" onclick="confirmDDWager()" style="display:block;width:100%">CONFIRM WAGER</button>
+  </div>
+</div>
+
+<!-- FINAL JEOPARDY MODAL -->
+<div class="modal-overlay" id="fj-modal">
+  <div class="modal">
+    <div class="modal-cat">⭐ FINAL JEOPARDY</div>
+    <div class="modal-points" id="fj-category" style="font-size:1.6rem"></div>
+    <div id="fj-wager-phase">
+      <p style="font-family:'Barlow Condensed';color:#90a4ae;margin-bottom:20px;letter-spacing:1px">Each team submits a secret wager before the clue is revealed.</p>
+      <div class="fj-wager-grid" id="fj-wager-grid"></div>
+      <button class="btn-gold" onclick="revealFJClue()" style="display:block;width:100%;margin-top:16px">REVEAL CLUE</button>
+    </div>
+    <div id="fj-clue-phase" style="display:none">
+      <div class="modal-clue" id="fj-clue-text"></div>
+      <div class="modal-prompt">All teams write their responses.</div>
+      <div id="fj-timer-container">
+        <div id="timer-label" style="display:flex;justify-content:space-between;font-family:'Barlow Condensed';font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;color:#90a4ae;margin-bottom:6px">
+          <span>Time Remaining</span><span id="fj-timer-number">60</span>
+        </div>
+        <div id="timer-bar-track" style="height:12px;background:rgba(255,255,255,0.1);border-radius:6px;overflow:hidden">
+          <div id="fj-timer-bar" style="height:100%;width:100%;background:linear-gradient(90deg,#00c853,#69f0ae);border-radius:6px;transition:width 1s linear,background 0.5s"></div>
+        </div>
+      </div>
+      <button class="btn-action btn-neutral" onclick="revealFJAnswer()" style="margin-top:20px;width:100%">Reveal Answer & Judge</button>
+    </div>
+    <div id="fj-answer-phase" style="display:none">
+      <div class="answer-reveal">Correct response: <span id="fj-answer-text"></span></div>
+      <div id="fj-team-results"></div>
+      <div class="scores-tally" id="fj-scores-tally">
+        <h4>Final Scores</h4>
+        <div id="fj-final-scores"></div>
+      </div>
+      <button class="btn-gold" onclick="showWinner()" style="display:block;width:100%;margin-top:20px">DECLARE WINNER</button>
+    </div>
+  </div>
+</div>
+
+<!-- WINNER SCREEN -->
+<div id="winner-screen">
+  <div class="confetti-container" id="confetti-container"></div>
+  <h1>🏆 WINNER! 🏆</h1>
+  <div id="winner-name"></div>
+  <button class="btn-gold" onclick="location.reload()">Play Again</button>
+</div>
+
+<audio id="snd-correct"></audio>
+<audio id="snd-wrong"></audio>
+<audio id="snd-alarm"></audio>
+<audio id="snd-dd"></audio>
+
+<script>
+// ===================== GAME DATA =====================
+const CATEGORIES = [
+  {
+    name: "NATURAL RESOURCES",
+    clues: [
+      { points: 100, clue: "This term describes any material from nature that people use — like trees, water, or coal.", answer: "What is a natural resource?" },
+      { points: 200, clue: "Unlike non-renewable resources, these can replenish naturally over time — examples include forests, fish, and sunlight.", answer: "What are renewable resources?" },
+      { points: 300, clue: "Fossil fuels fall into this category of resource because they form far slower than humans use them.", answer: "What is a non-renewable resource?" },
+      { points: 400, clue: "This measurement shows the environmental impact of a person or population — it tells us how much land and water is needed to support their lifestyle.", answer: "What is an ecological footprint?", dailyDouble: true },
+      { points: 500, clue: "Countries differ in resource use because of these four factors: wealth, population size, climate, and this fourth factor.", answer: "What is technology?" }
+    ]
+  },
+  {
+    name: "NEEDS vs WANTS",
+    clues: [
+      { points: 100, clue: "Clean drinking water is the classic example of this — something essential to human survival, not optional.", answer: "What is a need?" },
+      { points: 200, clue: "Designer clothes, video games, and smartphones are examples of these — things we desire but don't require to survive.", answer: "What are wants?" },
+      { points: 300, clue: "Both needs and wants drive the use of natural resources — explain the connection in the form of a question.", answer: "What is the relationship between needs, wants, and resource consumption?" },
+      { points: 400, clue: "This concept describes using natural resources at a rate that allows them to continue being available for future generations.", answer: "What is sustainability?" },
+      { points: 500, clue: "When people or nations use more resources than Earth can replenish, this is the result — a state where demand permanently exceeds supply.", answer: "What is resource depletion / overshoot?" }
+    ]
+  },
+  {
+    name: "SOIL & FARMING",
+    clues: [
+      { points: 100, clue: "This renewable resource underlies nearly all food production — without it, most crops could not grow.", answer: "What is soil?" },
+      { points: 200, clue: "This term describes damage that reduces soil quality, including loss of nutrients, erosion, or compaction.", answer: "What is soil degradation?" },
+      { points: 300, clue: "Overgrazing, chemical overuse, and removing tree cover all accelerate this harmful process that strips fertile soil of its ability to support plant life.", answer: "What is soil degradation / desertification?" },
+      { points: 400, clue: "This type of farming replaces trees and diverse plants with a single crop across a large area, making soil vulnerable to erosion.", answer: "What is monoculture / industrial farming?" },
+      { points: 500, clue: "This geographic region was studied in class as an example of severe soil loss caused by overgrazing and poor land management.", answer: "What is Mongolia / the Gobi region?" }
+    ]
+  },
+  {
+    name: "FISH & FORESTS",
+    clues: [
+      { points: 100, clue: "This practice occurs when fish are caught faster than populations can reproduce, pushing species toward collapse.", answer: "What is overfishing?" },
+      { points: 200, clue: "These non-target species are accidentally caught and usually discarded — a major problem with modern trawling methods.", answer: "What is by-catch?" },
+      { points: 300, clue: "This forest-clearing method removes every tree from a large area, exposing soil to erosion and destroying wildlife habitat.", answer: "What is clear-cutting?" },
+      { points: 400, clue: "This international certification — its initials are F-S-C — indicates that a wood product meets environmental and social standards for responsible forestry.", answer: "What is the Forest Stewardship Council (FSC) certification?" },
+      { points: 500, clue: "Deforestation causes all three of these major environmental impacts: soil erosion, this atmospheric change, and loss of biodiversity.", answer: "What is climate change / increased CO₂ / reduced carbon storage?" }
+    ]
+  },
+  {
+    name: "FOOD SYSTEMS",
+    clues: [
+      { points: 100, clue: "Food spoiled during harvesting, transport, or storage is called this — distinct from what consumers throw away.", answer: "What is food loss?" },
+      { points: 200, clue: "When consumers throw away edible food at home or in restaurants, it is classified as this.", answer: "What is food waste?" },
+      { points: 300, clue: "Reducing food waste conserves natural resources because producing food requires large amounts of these two resources.", answer: "What are water and soil (or land)?" },
+      { points: 400, clue: "Poor refrigeration infrastructure and long transport distances are leading causes of this type of food problem in developing countries.", answer: "What is food loss?" },
+      { points: 500, clue: "Roughly this fraction of all food produced globally is lost or wasted — a figure studied in class that shocks most students.", answer: "What is one-third (about 33%)?" }
+    ]
+  },
+  {
+    name: "CONSERVATION",
+    clues: [
+      { points: 100, clue: "This action — protecting forests from overharvesting — is the textbook definition of this concept.", answer: "What is conservation?" },
+      { points: 200, clue: "Individual actions like shorter showers, reducing meat consumption, and buying FSC-certified products all aim to do this to a person's ecological footprint.", answer: "What is reduce / lower?" },
+      { points: 300, clue: "Protecting a zone of ocean where no fishing is allowed is an example of this conservation strategy used to help fish populations recover.", answer: "What is a marine protected area (MPA)?" },
+      { points: 400, clue: "This global environmental problem — caused partly by deforestation and fossil fuel burning — makes sustainable resource management even more urgent.", answer: "What is climate change?" },
+      { points: 500, clue: "Sustainable forestry, fish quotas, and soil restoration programs all share this goal: balancing human use of resources with this principle.", answer: "What is long-term ecological sustainability / environmental balance?" }
+    ]
+  }
+];
+
+const FINAL_JEOPARDY = {
+  category: "RENEWABLE RESOURCES",
+  clue: "Explain why fish are considered a renewable resource, how overfishing threatens them, AND name one strategy that helps manage fish stocks sustainably.",
+  answer: "What is: fish renew through reproduction; overfishing collapses populations before they can recover; strategies include quotas, MPAs, or sustainable certifications (any valid strategy accepted)."
+};
+
+// ===================== STATE =====================
+let teams = [];
+let currentTeamIndex = 0;
+let usedClues = {};
+let timerInterval = null;
+let timerSeconds = 60;
+let currentClue = null;
+let currentCell = null;
+let fjTimerInterval = null;
+let audioCtx = null;
+
+// ===================== AUDIO (Web Audio API) =====================
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTone(freq, duration, type='sine', vol=0.3) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration);
+  } catch(e) {}
+}
+
+function playCorrect() {
+  [523, 659, 784, 1047].forEach((f, i) => {
+    setTimeout(() => playTone(f, 0.25, 'sine', 0.35), i * 80);
+  });
+}
+
+function playWrong() {
+  playTone(180, 0.5, 'sawtooth', 0.3);
+}
+
+function playAlarm() {
+  for (let i = 0; i < 3; i++) {
+    setTimeout(() => playTone(880, 0.2, 'square', 0.4), i * 300);
+  }
+}
+
+function playDDFanfare() {
+  const notes = [523, 659, 784, 659, 784, 1047];
+  notes.forEach((f, i) => setTimeout(() => playTone(f, 0.3, 'triangle', 0.4), i * 120));
+}
+
+function playTick(fast) {
+  playTone(fast ? 1200 : 900, 0.05, 'square', 0.15);
+}
+
+// ===================== SETUP =====================
+document.getElementById('team-count').addEventListener('input', buildTeamNameInputs);
+
+const TEAM_COLORS = ['#1565C0','#b71c1c','#1b5e20','#e65100','#4a148c','#006064','#bf360c','#1a237e','#4e342e','#37474f','#558b2f'];
+const TEAM_COLORS_CSS = ['#1976D2','#e53935','#2e7d32','#ef6c00','#7b1fa2','#00838f','#d84315','#283593','#795548','#546e7a','#7cb342'];
+
+function buildTeamNameInputs() {
+  const n = Math.min(Math.max(parseInt(document.getElementById('team-count').value)||2, 2), 11);
+  const container = document.getElementById('team-names-container');
+  container.innerHTML = '<label>Team Names</label>';
+  for (let i = 0; i < n; i++) {
+    const defaultNames = ['Team Alpha','Team Beta','Team Gamma','Team Delta','Team Epsilon','Team Zeta','Team Eta','Team Theta','Team Iota','Team Kappa','Team Lambda'];
+    container.innerHTML += `
+      <div class="team-name-row">
+        <div class="team-color-dot" style="background:${TEAM_COLORS_CSS[i]}"></div>
+        <input type="text" class="team-name-input" value="${defaultNames[i]}" placeholder="Team ${i+1} name">
+      </div>`;
+  }
+}
+
+buildTeamNameInputs();
+
+function startGame() {
+  const inputs = document.querySelectorAll('.team-name-input');
+  teams = Array.from(inputs).map((inp, i) => ({
+    name: inp.value.trim() || `Team ${i+1}`,
+    score: 0,
+    colorBg: TEAM_COLORS[i],
+    colorText: TEAM_COLORS_CSS[i]
+  }));
+
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'flex';
+
+  buildScoreboard();
+  buildBoard();
+}
+
+// ===================== SCOREBOARD =====================
+function buildScoreboard() {
+  const area = document.getElementById('teams-area');
+  area.innerHTML = '';
+  teams.forEach((t, i) => {
+    const card = document.createElement('div');
+    card.className = 'team-card' + (i === currentTeamIndex ? ' active' : '');
+    card.id = `team-card-${i}`;
+    card.style.background = `${t.colorBg}22`;
+    card.style.borderColor = i === currentTeamIndex ? t.colorText : 'transparent';
+    card.innerHTML = `
+      <div class="team-label">Team ${i+1}</div>
+      <div class="team-name" style="color:${t.colorText}">${t.name}</div>
+      <div class="team-score" id="score-${i}">$${t.score}</div>
+      <div class="score-adj">
+        <button class="btn-adj" onclick="adjustScore(${i}, 100)">+</button>
+        <button class="btn-adj" onclick="adjustScore(${i}, -100)">−</button>
+      </div>
+    `;
+    area.appendChild(card);
+  });
+  updateTurnInfo();
+}
+
+function updateTurnInfo() {
+  document.getElementById('turn-name').textContent = teams[currentTeamIndex].name;
+  document.getElementById('turn-name').style.color = teams[currentTeamIndex].colorText;
+}
+
+function updateScoreDisplay(teamIdx) {
+  document.getElementById(`score-${teamIdx}`).textContent = `$${teams[teamIdx].score}`;
+}
+
+function setActiveTeam(idx) {
+  currentTeamIndex = idx;
+  document.querySelectorAll('.team-card').forEach((c, i) => {
+    c.classList.toggle('active', i === idx);
+    c.style.borderColor = i === idx ? teams[i].colorText : 'transparent';
+  });
+  updateTurnInfo();
+}
+
+function nextTurn() {
+  setActiveTeam((currentTeamIndex + 1) % teams.length);
+}
+
+function flashScore(teamIdx, delta) {
+  const card = document.getElementById(`team-card-${teamIdx}`);
+  const flash = document.createElement('div');
+  flash.className = 'score-flash';
+  flash.textContent = (delta >= 0 ? '+' : '') + '$' + delta;
+  flash.style.color = delta >= 0 ? '#00e676' : '#ff1744';
+  card.appendChild(flash);
+  setTimeout(() => flash.remove(), 1100);
+}
+
+function adjustScore(teamIdx, delta) {
+  teams[teamIdx].score += delta;
+  updateScoreDisplay(teamIdx);
+  flashScore(teamIdx, delta);
+}
+
+// ===================== BOARD =====================
+function buildBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+
+  CATEGORIES.forEach(cat => {
+    const header = document.createElement('div');
+    header.className = 'cat-header';
+    header.textContent = cat.name;
+    board.appendChild(header);
+  });
+
+  for (let row = 0; row < 5; row++) {
+    CATEGORIES.forEach((cat, colIdx) => {
+      const clue = cat.clues[row];
+      const key = `${colIdx}-${row}`;
+      const cell = document.createElement('div');
+      cell.className = 'clue-cell' + (clue.dailyDouble ? ' daily-double-unused' : '');
+      cell.id = `cell-${colIdx}-${row}`;
+      cell.textContent = '$' + clue.points;
+      cell.addEventListener('click', () => openClue(colIdx, row, cell));
+      board.appendChild(cell);
+    });
+  }
+
+  checkAllUsed();
+}
+
+function openClue(colIdx, row, cell) {
+  const key = `${colIdx}-${row}`;
+  if (usedClues[key]) return;
+
+  const cat = CATEGORIES[colIdx];
+  const clue = cat.clues[row];
+  currentClue = { colIdx, row, clue, cat };
+  currentCell = cell;
+
+  if (clue.dailyDouble) {
+    openDailyDouble(clue, cat);
+    return;
+  }
+
+  showClueModal(clue, cat, clue.points);
+}
+
+// ===================== CLUE MODAL =====================
+function showClueModal(clue, cat, points) {
+  document.getElementById('modal-cat').textContent = cat.name;
+  document.getElementById('modal-points').textContent = '$' + points;
+  document.getElementById('modal-clue').textContent = clue.clue;
+  document.getElementById('modal-answer').textContent = clue.answer;
+  document.getElementById('answer-area').style.display = 'none';
+  document.getElementById('steal-section').style.display = 'none';
+  document.getElementById('pre-reveal-btns').style.display = 'block';
+
+  currentClue._wagerPoints = points;
+
+  buildOriginalTeamButtons(points);
+
+  document.getElementById('clue-modal').classList.add('open');
+  startTimer(60, points);
+}
+
+function buildOriginalTeamButtons(points) {
+  const container = document.getElementById('original-team-btns');
+  container.innerHTML = '<div class="btn-row" style="flex-wrap:wrap">' +
+    teams.map((t, i) => `
+      <button class="btn-action btn-correct" style="background:${t.colorText};color:#fff;min-width:100px" onclick="judgeOriginal(${i}, true, ${points})">
+        ✓ ${t.name}
+      </button>
+      <button class="btn-action btn-wrong" style="min-width:100px" onclick="judgeOriginal(${i}, false, ${points})">
+        ✗ ${t.name}
+      </button>
+    `).join('') +
+  '</div>';
+}
+
+function judgeOriginal(teamIdx, correct, points) {
+  if (correct) {
+    adjustScore(teamIdx, points);
+    playCorrect();
+    markUsed();
+    setActiveTeam(teamIdx);
+    closeClueModal();
+  } else {
+    adjustScore(teamIdx, -points);
+    playWrong();
+    showStealOpportunity(teamIdx, points);
+  }
+}
+
+function showStealOpportunity(excludeIdx, points) {
+  const steal = document.getElementById('steal-section');
+  steal.style.display = 'block';
+  document.getElementById('steal-title').textContent = `Steal for $${points}`;
+  const stealBtns = document.getElementById('steal-btns');
+  const others = teams.filter((_, i) => i !== excludeIdx);
+  if (others.length === 0) { steal.style.display = 'none'; return; }
+  stealBtns.innerHTML = '<div class="btn-row" style="flex-wrap:wrap">' +
+    others.map(t => {
+      const i = teams.indexOf(t);
+      return `
+        <button class="btn-action btn-correct" style="background:${t.colorText};color:#fff" onclick="judgeSteal(${i}, true, ${points})">✓ ${t.name}</button>
+        <button class="btn-action btn-wrong" onclick="judgeSteal(${i}, false, ${points})">✗ ${t.name}</button>
+      `;
+    }).join('') +
+  '</div>';
+}
+
+function judgeSteal(teamIdx, correct, points) {
+  if (correct) {
+    adjustScore(teamIdx, points);
+    playCorrect();
+    setActiveTeam(teamIdx);
+  } else {
+    adjustScore(teamIdx, -points);
+    playWrong();
+  }
+  markUsed();
+  closeClueModal();
+}
+
+function revealAnswer() {
+  stopTimer();
+  document.getElementById('answer-area').style.display = 'block';
+  document.getElementById('pre-reveal-btns').style.display = 'none';
+}
+
+function closeClueModal() {
+  stopTimer();
+  document.getElementById('clue-modal').classList.remove('open');
+  nextTurn();
+  checkAllUsed();
+}
+
+function markUsed() {
+  if (!currentClue) return;
+  const key = `${currentClue.colIdx}-${currentClue.row}`;
+  usedClues[key] = true;
+  if (currentCell) {
+    currentCell.classList.add('used');
+    currentCell.textContent = '';
+    currentCell.classList.remove('daily-double-unused');
+  }
+}
+
+// ===================== TIMER =====================
+function startTimer(seconds, points) {
+  stopTimer();
+  timerSeconds = seconds;
+  const bar = document.getElementById('timer-bar');
+  const num = document.getElementById('timer-number');
+  bar.style.width = '100%';
+  bar.classList.remove('danger');
+  num.textContent = timerSeconds;
+
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    const pct = (timerSeconds / seconds) * 100;
+    bar.style.width = pct + '%';
+    num.textContent = timerSeconds;
+
+    if (timerSeconds <= 10) {
+      bar.classList.add('danger');
+      playTick(true);
+    } else {
+      playTick(false);
+    }
+
+    if (timerSeconds <= 0) {
+      stopTimer();
+      playAlarm();
+      revealAnswer();
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+// ===================== DAILY DOUBLE =====================
+function openDailyDouble(clue, cat) {
+  playDDFanfare();
+  const activeTeam = teams[currentTeamIndex];
+  document.getElementById('dd-team-prompt').textContent =
+    `${activeTeam.name} — current score: $${activeTeam.score}. Enter your wager:`;
+  document.getElementById('dd-wager').value = '';
+  document.getElementById('dd-modal').classList.add('open');
+}
+
+function confirmDDWager() {
+  const wager = parseInt(document.getElementById('dd-wager').value) || 0;
+  if (wager < 0) { alert('Wager must be 0 or more.'); return; }
+  document.getElementById('dd-modal').classList.remove('open');
+  showClueModal(currentClue.clue, currentClue.cat, wager);
+}
+
+// ===================== CHECK ALL USED =====================
+function checkAllUsed() {
+  const total = CATEGORIES.length * 5;
+  if (Object.keys(usedClues).length >= total) {
+    document.getElementById('final-jeopardy-btn').style.display = 'block';
+  }
+}
+
+// ===================== FINAL JEOPARDY =====================
+function openFinalJeopardy() {
+  document.getElementById('fj-category').textContent = FINAL_JEOPARDY.category;
+
+  // Wager phase
+  document.getElementById('fj-wager-phase').style.display = 'block';
+  document.getElementById('fj-clue-phase').style.display = 'none';
+  document.getElementById('fj-answer-phase').style.display = 'none';
+
+  const grid = document.getElementById('fj-wager-grid');
+  grid.innerHTML = teams.map((t, i) => `
+    <div class="fj-team-wager">
+      <label style="color:${t.colorText}">${t.name} (Score: $${t.score})</label>
+      <input type="number" id="fj-wager-${i}" placeholder="Wager" min="0" style="border-color:${t.colorText}">
+    </div>
+  `).join('');
+
+  document.getElementById('fj-modal').classList.add('open');
+}
+
+function revealFJClue() {
+  // collect wagers
+  teams.forEach((t, i) => {
+    t.fjWager = parseInt(document.getElementById(`fj-wager-${i}`).value) || 0;
+  });
+
+  document.getElementById('fj-wager-phase').style.display = 'none';
+  document.getElementById('fj-clue-phase').style.display = 'block';
+  document.getElementById('fj-clue-text').textContent = FINAL_JEOPARDY.clue;
+
+  // Timer
+  startFJTimer(60);
+}
+
+function startFJTimer(seconds) {
+  let s = seconds;
+  const bar = document.getElementById('fj-timer-bar');
+  const num = document.getElementById('fj-timer-number');
+  bar.style.width = '100%';
+  bar.classList.remove('danger');
+  num.textContent = s;
+
+  fjTimerInterval = setInterval(() => {
+    s--;
+    const pct = (s / seconds) * 100;
+    bar.style.width = pct + '%';
+    num.textContent = s;
+    if (s <= 10) { bar.classList.add('danger'); playTick(true); }
+    else playTick(false);
+    if (s <= 0) { clearInterval(fjTimerInterval); playAlarm(); }
+  }, 1000);
+}
+
+function revealFJAnswer() {
+  if (fjTimerInterval) { clearInterval(fjTimerInterval); fjTimerInterval = null; }
+  document.getElementById('fj-clue-phase').style.display = 'none';
+  document.getElementById('fj-answer-phase').style.display = 'block';
+  document.getElementById('fj-answer-text').textContent = FINAL_JEOPARDY.answer;
+
+  const resultsDiv = document.getElementById('fj-team-results');
+  resultsDiv.innerHTML = teams.map((t, i) => `
+    <div class="fj-team-wager" style="border-color:${t.colorText}22">
+      <label style="color:${t.colorText}">${t.name} — Wager: $${t.fjWager}</label>
+      <div class="fj-result-row">
+        <button class="btn-action btn-correct" style="background:${t.colorText};color:#fff" onclick="judgeFJ(${i}, true)">✓ Correct</button>
+        <button class="btn-action btn-wrong" onclick="judgeFJ(${i}, false)">✗ Incorrect</button>
+      </div>
+      <div id="fj-result-label-${i}" style="margin-top:8px;font-family:'Barlow Condensed';font-size:0.9rem;color:#90a4ae"></div>
+    </div>
+  `).join('');
+
+  renderFJScores();
+}
+
+let fjJudged = {};
+function judgeFJ(teamIdx, correct) {
+  if (fjJudged[teamIdx]) return;
+  fjJudged[teamIdx] = true;
+  const delta = correct ? teams[teamIdx].fjWager : -teams[teamIdx].fjWager;
+  teams[teamIdx].score += delta;
+  if (correct) playCorrect(); else playWrong();
+  document.getElementById(`fj-result-label-${teamIdx}`).textContent =
+    (correct ? '✓ Correct! +' : '✗ Wrong! ') + (correct ? `$${teams[teamIdx].fjWager}` : `−$${teams[teamIdx].fjWager}`);
+  renderFJScores();
+}
+
+function renderFJScores() {
+  const div = document.getElementById('fj-final-scores');
+  const sorted = [...teams].sort((a,b) => b.score - a.score);
+  div.innerHTML = sorted.map(t => `
+    <div class="score-row">
+      <span style="color:${t.colorText}">${t.name}</span>
+      <span class="score-val">$${t.score}</span>
+    </div>
+  `).join('');
+}
+
+function showWinner() {
+  document.getElementById('fj-modal').classList.remove('open');
+  const winner = [...teams].sort((a,b) => b.score - a.score)[0];
+  document.getElementById('winner-name').textContent = winner.name;
+  document.getElementById('winner-name').style.color = winner.colorText;
+  document.getElementById('winner-screen').style.display = 'flex';
+  spawnConfetti();
+  playCorrect();
+  setTimeout(playCorrect, 600);
+  setTimeout(playCorrect, 1200);
+}
+
+function spawnConfetti() {
+  const container = document.getElementById('confetti-container');
+  const colors = ['#FFD700','#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DDA0DD','#98FB98'];
+  for (let i = 0; i < 80; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.animationDuration = (2 + Math.random() * 3) + 's';
+    p.style.animationDelay = Math.random() * 2 + 's';
+    p.style.width = (6 + Math.random() * 10) + 'px';
+    p.style.height = (6 + Math.random() * 10) + 'px';
+    p.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    container.appendChild(p);
+  }
+}
+</script>
+</body>
+</html>
