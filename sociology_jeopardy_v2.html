@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sociology Jeopardy – Butler, hooks, Walby</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0a0e2a;
+    --deep: #060919;
+    --gold: #f5c518;
+    --gold-dim: #b8941a;
+    --gold-glow: rgba(245,197,24,0.25);
+    --team-a: #2563eb;
+    --team-a-glow: rgba(37,99,235,0.4);
+    --team-b: #dc2626;
+    --team-b-glow: rgba(220,38,38,0.4);
+    --card-bg: #111740;
+    --card-hover: #1a2160;
+    --used: #1a1a2e;
+    --text: #e8ecf5;
+    --muted: #6b7ba4;
+    --correct-flash: #22c55e;
+    --wrong-flash: #ef4444;
+    --timer-green: #22c55e;
+    --timer-red: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--deep);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 40%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 40% 10%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 70%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 30%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 55%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 92% 20%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 15% 80%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 90%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(2px 2px at 35% 60%, rgba(255,255,255,0.2) 0%, transparent 100%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* HEADER */
+  #header {
+    text-align: center; padding: 18px 20px 10px;
+    position: relative; z-index: 1;
+    border-bottom: 2px solid var(--gold-dim);
+    background: linear-gradient(180deg, rgba(10,14,42,0.95) 0%, transparent 100%);
+  }
+  #header h1 {
+    font-family: 'Bebas Neue', cursive;
+    font-size: clamp(2rem, 5vw, 3.8rem);
+    letter-spacing: 4px; color: var(--gold);
+    text-shadow: 0 0 30px var(--gold-glow), 0 2px 0 rgba(0,0,0,0.5);
+  }
+  #header p { font-size: 0.85rem; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+
+  /* SCOREBOARD */
+  #scoreboard {
+    display: flex; justify-content: center; align-items: stretch;
+    gap: 20px; padding: 14px 20px; position: relative; z-index: 1;
+  }
+  .team-card {
+    background: var(--card-bg); border: 2px solid transparent;
+    border-radius: 12px; padding: 12px 24px; text-align: center;
+    min-width: 160px; transition: all 0.3s; position: relative; overflow: hidden;
+  }
+  .team-card::before {
+    content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity 0.3s;
+  }
+  .team-card.team-a { border-color: var(--team-a); }
+  .team-card.team-a::before { background: radial-gradient(circle at 50% 50%, var(--team-a-glow), transparent 70%); }
+  .team-card.team-b { border-color: var(--team-b); }
+  .team-card.team-b::before { background: radial-gradient(circle at 50% 50%, var(--team-b-glow), transparent 70%); }
+  .team-card.active::before { opacity: 1; }
+  .team-card.active { transform: scale(1.04); }
+  .team-card.active .team-label { opacity: 1; }
+  .team-label {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 0.75rem;
+    font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+    opacity: 0.55; transition: opacity 0.3s; margin-bottom: 4px;
+  }
+  .team-card.team-a .team-label { color: #93bbff; }
+  .team-card.team-b .team-label { color: #fca5a5; }
+  .team-name { font-family: 'Bebas Neue', cursive; font-size: 1.6rem; letter-spacing: 2px; }
+  .team-card.team-a .team-name { color: #60a5fa; }
+  .team-card.team-b .team-name { color: #f87171; }
+  .team-score { font-family: 'Bebas Neue', cursive; font-size: 2.4rem; line-height: 1; position: relative; }
+  .team-card.team-a .team-score { color: #93c5fd; }
+  .team-card.team-b .team-score { color: #fca5a5; }
+  .score-adj { display: flex; gap: 6px; margin-top: 6px; justify-content: center; }
+  .score-adj button {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+    color: var(--text); border-radius: 6px; font-size: 1rem;
+    width: 32px; height: 28px; cursor: pointer; transition: background 0.2s;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+  }
+  .score-adj button:hover { background: rgba(255,255,255,0.18); }
+  .score-flash {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Bebas Neue', cursive; font-size: 2rem;
+    pointer-events: none; z-index: 20;
+    animation: flashUp 1.2s forwards;
+  }
+  .score-flash.pos { color: var(--correct-flash); }
+  .score-flash.neg { color: var(--wrong-flash); }
+  @keyframes flashUp {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+    60% { opacity: 0.8; transform: translate(-50%, -120%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -160%) scale(0.8); }
+  }
+  #turn-indicator {
+    text-align: center; font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600; letter-spacing: 2px; font-size: 0.85rem;
+    color: var(--gold); padding: 4px 0 8px; position: relative; z-index: 1;
+  }
+
+  /* BOARD */
+  #board-wrap { padding: 0 16px 16px; position: relative; z-index: 1; }
+  #board {
+    display: grid; grid-template-columns: repeat(6, 1fr);
+    gap: 6px; max-width: 1100px; margin: 0 auto;
+  }
+  .cat-header {
+    background: var(--gold); color: var(--navy);
+    font-family: 'Bebas Neue', cursive;
+    font-size: clamp(0.7rem, 1.6vw, 1.05rem);
+    letter-spacing: 1.5px; text-align: center;
+    padding: 12px 6px; border-radius: 6px; line-height: 1.2;
+  }
+  .clue-cell {
+    background: var(--card-bg); border: 1px solid rgba(245,197,24,0.2);
+    border-radius: 6px; display: flex; align-items: center;
+    justify-content: center; cursor: pointer; transition: all 0.2s;
+    min-height: 60px; position: relative; overflow: hidden;
+  }
+  .clue-cell:hover:not(.used) {
+    background: var(--card-hover); border-color: var(--gold-dim);
+    transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245,197,24,0.15);
+  }
+  .clue-cell .val {
+    font-family: 'Bebas Neue', cursive; font-size: clamp(1.2rem, 3vw, 1.8rem);
+    color: var(--gold); text-shadow: 0 0 12px var(--gold-glow);
+  }
+  .clue-cell.used {
+    background: var(--used); border-color: rgba(255,255,255,0.04);
+    cursor: default; opacity: 0.35;
+  }
+  .clue-cell.used .val { color: var(--muted); text-shadow: none; }
+
+  /* FINAL BTN */
+  #final-btn {
+    display: block; margin: 14px auto 0;
+    background: linear-gradient(135deg, var(--gold), #d4a017);
+    color: var(--navy); font-family: 'Bebas Neue', cursive;
+    font-size: 1.4rem; letter-spacing: 3px; border: none;
+    border-radius: 8px; padding: 12px 36px; cursor: pointer;
+    transition: all 0.2s; box-shadow: 0 4px 20px var(--gold-glow);
+  }
+  #final-btn:hover { transform: scale(1.04); box-shadow: 0 6px 28px rgba(245,197,24,0.4); }
+
+  /* MODAL */
+  #overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(4,6,20,0.92); backdrop-filter: blur(6px);
+    z-index: 100; align-items: center; justify-content: center; padding: 20px;
+  }
+  #overlay.show { display: flex; }
+  #modal {
+    background: linear-gradient(160deg, #0f1640 0%, #0a0e2a 100%);
+    border: 2px solid var(--gold-dim); border-radius: 16px;
+    padding: 36px 40px; max-width: 740px; width: 100%; position: relative;
+    box-shadow: 0 0 60px rgba(245,197,24,0.12), 0 20px 60px rgba(0,0,0,0.6);
+    animation: modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes modalIn {
+    from { transform: scale(0.85) translateY(20px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  #modal-cat {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 0.8rem;
+    font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 6px;
+  }
+  #modal-points {
+    font-family: 'Bebas Neue', cursive; font-size: 2.8rem; color: var(--gold);
+    text-shadow: 0 0 20px var(--gold-glow); line-height: 1; margin-bottom: 18px;
+  }
+  #modal-clue {
+    font-size: 1.25rem; font-weight: 500; line-height: 1.55;
+    color: var(--text); margin-bottom: 24px; min-height: 60px;
+  }
+
+  /* TIMER */
+  #timer-wrap { margin-bottom: 18px; }
+  #timer-bar-bg { background: rgba(255,255,255,0.08); border-radius: 4px; height: 8px; overflow: hidden; }
+  #timer-bar { height: 100%; width: 100%; background: var(--timer-green); border-radius: 4px; transition: width 1s linear, background 0.5s; }
+  #timer-bar.danger { background: var(--timer-red); animation: blink 0.5s infinite; }
+  @keyframes blink { 50% { opacity: 0.4; } }
+  #timer-num { font-family: 'Bebas Neue', cursive; font-size: 1.3rem; color: var(--gold); text-align: right; margin-top: 4px; }
+  #timer-num.danger { color: var(--timer-red); }
+
+  /* ANSWER */
+  #answer-wrap {
+    background: rgba(245,197,24,0.06); border: 1px solid var(--gold-dim);
+    border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; display: none;
+  }
+  #answer-wrap.show { display: block; }
+  #answer-label {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 0.75rem;
+    font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--gold-dim); margin-bottom: 6px;
+  }
+  #answer-text { font-size: 1.05rem; color: var(--gold); font-weight: 600; line-height: 1.4; }
+
+  /* STEAL */
+  #steal-wrap {
+    background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.4);
+    border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: none; text-align: center;
+  }
+  #steal-wrap.show { display: block; }
+  #steal-msg { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 1rem; letter-spacing: 1px; color: #93c5fd; margin-bottom: 10px; }
+
+  /* WAGER */
+  #wager-section { background: rgba(245,197,24,0.05); border: 1px solid var(--gold-dim); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  #wager-label { font-family: 'Barlow Condensed', sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 8px; }
+  #wager-row { display: flex; gap: 10px; align-items: center; }
+  #wager-input { background: rgba(255,255,255,0.06); border: 1px solid var(--gold-dim); color: var(--gold); font-family: 'Bebas Neue', cursive; font-size: 1.8rem; text-align: center; border-radius: 6px; padding: 6px 14px; width: 150px; }
+  #wager-input:focus { outline: none; border-color: var(--gold); }
+
+  /* BUTTONS */
+  .btn-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .btn { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.95rem; letter-spacing: 1.5px; border: none; border-radius: 8px; padding: 10px 20px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-correct-a { background: var(--team-a); color: #fff; }
+  .btn-correct-b { background: var(--team-b); color: #fff; }
+  .btn-wrong-a { background: rgba(37,99,235,0.2); color: #93c5fd; border: 1px solid var(--team-a); }
+  .btn-wrong-b { background: rgba(220,38,38,0.2); color: #fca5a5; border: 1px solid var(--team-b); }
+  .btn-reveal { background: rgba(245,197,24,0.15); color: var(--gold); border: 1px solid var(--gold-dim); }
+  .btn-skip { background: rgba(255,255,255,0.06); color: var(--muted); border: 1px solid rgba(255,255,255,0.1); }
+  .btn-close { background: rgba(255,255,255,0.06); color: var(--muted); border: 1px solid rgba(255,255,255,0.1); }
+  .btn-gold { background: linear-gradient(135deg, var(--gold), #d4a017); color: var(--navy); }
+
+  /* FINAL JEOPARDY */
+  #fj-overlay { display: none; position: fixed; inset: 0; background: rgba(4,6,20,0.96); backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+  #fj-overlay.show { display: flex; }
+  #fj-modal { background: linear-gradient(160deg, #0f1640 0%, #0a0e2a 100%); border: 2px solid var(--gold); border-radius: 16px; padding: 36px 40px; max-width: 760px; width: 100%; box-shadow: 0 0 80px rgba(245,197,24,0.2); animation: modalIn 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+  #fj-modal h2 { font-family: 'Bebas Neue', cursive; font-size: 2.8rem; color: var(--gold); letter-spacing: 4px; text-align: center; margin-bottom: 6px; }
+  #fj-modal .fj-cat { text-align: center; color: var(--muted); font-family: 'Barlow Condensed', sans-serif; font-weight: 600; letter-spacing: 2px; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 24px; }
+  .fj-team-section { background: var(--card-bg); border-radius: 10px; padding: 16px 20px; margin-bottom: 14px; }
+  .fj-team-section h3 { font-family: 'Bebas Neue', cursive; font-size: 1.4rem; letter-spacing: 2px; margin-bottom: 10px; }
+  .fj-team-section.team-a h3 { color: #60a5fa; }
+  .fj-team-section.team-b h3 { color: #f87171; }
+  .fj-wager-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .fj-wager-row label { font-size: 0.85rem; color: var(--muted); font-family: 'Barlow Condensed', sans-serif; font-weight: 600; letter-spacing: 1px; }
+  .fj-wager-input { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: var(--text); font-family: 'Bebas Neue', cursive; font-size: 1.4rem; text-align: center; border-radius: 6px; padding: 6px 14px; width: 120px; }
+  .fj-wager-input:focus { outline: none; border-color: var(--gold-dim); }
+  #fj-clue-wrap { display: none; }
+  #fj-clue-wrap.show { display: block; }
+  #fj-clue { font-size: 1.2rem; font-weight: 500; line-height: 1.55; color: var(--text); background: rgba(245,197,24,0.05); border: 1px solid var(--gold-dim); border-radius: 8px; padding: 18px 20px; margin: 16px 0; }
+  #fj-answer { display: none; }
+  #fj-answer.show { display: block; background: rgba(245,197,24,0.08); border: 1px solid var(--gold-dim); border-radius: 8px; padding: 12px 16px; color: var(--gold); font-weight: 600; margin: 10px 0 16px; font-size: 1rem; }
+  .fj-result-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+
+  /* WINNER */
+  #winner-overlay { display: none; position: fixed; inset: 0; background: rgba(4,6,20,0.97); z-index: 300; align-items: center; justify-content: center; flex-direction: column; text-align: center; padding: 20px; }
+  #winner-overlay.show { display: flex; }
+  #winner-overlay h1 { font-family: 'Bebas Neue', cursive; font-size: clamp(3rem, 8vw, 6rem); color: var(--gold); letter-spacing: 6px; text-shadow: 0 0 60px var(--gold-glow); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { text-shadow: 0 0 40px var(--gold-glow); } 50% { text-shadow: 0 0 80px rgba(245,197,24,0.6); } }
+  #winner-overlay p { font-family: 'Barlow Condensed', sans-serif; font-size: 1.4rem; color: var(--muted); margin-top: 10px; }
+  #winner-overlay .final-scores { display: flex; gap: 30px; margin: 30px 0; justify-content: center; }
+  .final-score-card { padding: 20px 36px; border-radius: 12px; border: 2px solid; }
+  .final-score-card.team-a { border-color: var(--team-a); background: rgba(37,99,235,0.1); }
+  .final-score-card.team-b { border-color: var(--team-b); background: rgba(220,38,38,0.1); }
+  .final-score-card .name { font-family: 'Bebas Neue', cursive; font-size: 1.8rem; letter-spacing: 2px; }
+  .final-score-card.team-a .name { color: #60a5fa; }
+  .final-score-card.team-b .name { color: #f87171; }
+  .final-score-card .score { font-family: 'Bebas Neue', cursive; font-size: 3rem; line-height: 1; }
+  .final-score-card.team-a .score { color: #93c5fd; }
+  .final-score-card.team-b .score { color: #fca5a5; }
+  #play-again { margin-top: 10px; background: linear-gradient(135deg, var(--gold), #d4a017); color: var(--navy); font-family: 'Bebas Neue', cursive; font-size: 1.4rem; letter-spacing: 3px; border: none; border-radius: 8px; padding: 14px 40px; cursor: pointer; transition: transform 0.2s; }
+  #play-again:hover { transform: scale(1.05); }
+
+  .confetti-piece { position: fixed; width: 10px; height: 10px; top: -10px; animation: confettiFall linear forwards; z-index: 400; border-radius: 2px; }
+  @keyframes confettiFall { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>Sociology Jeopardy</h1>
+  <p>Identify the theorist — Butler &nbsp;·&nbsp; bell hooks &nbsp;·&nbsp; Walby</p>
+</div>
+
+<div id="scoreboard">
+  <div class="team-card team-a active" id="card-a">
+    <div class="team-label">Active Team</div>
+    <div class="team-name">Team A</div>
+    <div class="team-score" id="score-a">0</div>
+    <div class="score-adj">
+      <button onclick="adjustScore('a',-100)">−</button>
+      <button onclick="adjustScore('a',100)">+</button>
+    </div>
+  </div>
+  <div class="team-card team-b" id="card-b">
+    <div class="team-label">Active Team</div>
+    <div class="team-name">Team B</div>
+    <div class="team-score" id="score-b">0</div>
+    <div class="score-adj">
+      <button onclick="adjustScore('b',-100)">−</button>
+      <button onclick="adjustScore('b',100)">+</button>
+    </div>
+  </div>
+</div>
+<div id="turn-indicator">▶ TEAM A's TURN</div>
+
+<div id="board-wrap">
+  <div id="board"></div>
+  <button id="final-btn" onclick="launchFinal()">⭐ FINAL JEOPARDY</button>
+</div>
+
+<!-- CLUE MODAL -->
+<div id="overlay">
+  <div id="modal">
+    <div id="modal-cat"></div>
+    <div id="modal-points"></div>
+    <div id="wager-section" style="display:none;">
+      <div id="wager-label">DAILY DOUBLE — Enter Your Wager</div>
+      <div id="wager-row">
+        <input type="number" id="wager-input" placeholder="0" min="0">
+        <button class="btn btn-gold" onclick="confirmWager()">CONFIRM WAGER</button>
+      </div>
+    </div>
+    <div id="modal-clue"></div>
+    <div id="timer-wrap">
+      <div id="timer-bar-bg"><div id="timer-bar"></div></div>
+      <div id="timer-num">60</div>
+    </div>
+    <div id="answer-wrap">
+      <div id="answer-label">Correct Response</div>
+      <div id="answer-text"></div>
+    </div>
+    <div id="steal-wrap">
+      <div id="steal-msg"></div>
+      <div class="btn-row" id="steal-buttons"></div>
+    </div>
+    <div class="btn-row" id="main-buttons"></div>
+  </div>
+</div>
+
+<!-- FINAL JEOPARDY -->
+<div id="fj-overlay">
+  <div id="fj-modal">
+    <h2>Final Jeopardy</h2>
+    <div class="fj-cat" id="fj-cat-display"></div>
+    <div id="fj-step-wager">
+      <div class="fj-team-section team-a">
+        <h3>Team A — Score: <span id="fj-score-a-display">0</span></h3>
+        <div class="fj-wager-row">
+          <label>Wager:</label>
+          <input class="fj-wager-input" type="number" id="fj-wager-a" placeholder="0" min="0">
+        </div>
+      </div>
+      <div class="fj-team-section team-b">
+        <h3>Team B — Score: <span id="fj-score-b-display">0</span></h3>
+        <div class="fj-wager-row">
+          <label>Wager:</label>
+          <input class="fj-wager-input" type="number" id="fj-wager-b" placeholder="0" min="0">
+        </div>
+      </div>
+      <div class="btn-row" style="margin-top:16px;">
+        <button class="btn btn-gold" onclick="fjRevealClue()">REVEAL CLUE</button>
+      </div>
+    </div>
+    <div id="fj-clue-wrap">
+      <div id="fj-clue"></div>
+      <div id="fj-answer"></div>
+      <div class="fj-team-section team-a">
+        <h3>Team A</h3>
+        <div id="fj-a-result" class="fj-result-row">
+          <button class="btn btn-correct-a" onclick="fjJudge('a',true)">✓ CORRECT</button>
+          <button class="btn btn-wrong-a" onclick="fjJudge('a',false)">✗ WRONG</button>
+        </div>
+      </div>
+      <div class="fj-team-section team-b" style="margin-top:10px;">
+        <h3>Team B</h3>
+        <div id="fj-b-result" class="fj-result-row">
+          <button class="btn btn-correct-b" onclick="fjJudge('b',true)">✓ CORRECT</button>
+          <button class="btn btn-wrong-b" onclick="fjJudge('b',false)">✗ WRONG</button>
+        </div>
+      </div>
+      <div class="btn-row" style="margin-top:16px;">
+        <button class="btn btn-reveal" onclick="fjRevealAnswer()">Reveal Answer</button>
+        <button class="btn btn-gold" onclick="fjFinish()" id="fj-finish-btn" style="display:none;">SEE WINNER</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WINNER -->
+<div id="winner-overlay">
+  <h1>🏆 WINNER!</h1>
+  <p id="winner-name"></p>
+  <div class="final-scores">
+    <div class="final-score-card team-a"><div class="name">Team A</div><div class="score" id="final-a">0</div></div>
+    <div class="final-score-card team-b"><div class="name">Team B</div><div class="score" id="final-b">0</div></div>
+  </div>
+  <button id="play-again" onclick="location.reload()">PLAY AGAIN</button>
+</div>
+
+<script>
+// ─── GAME DATA ───────────────────────────────
+// Categories: Define It | Spot the Theory | Real-World Example | Name the Theorist | Critique & Evaluate | All Three
+// Answers always: "Who is [Theorist]? ([key concept])"
+// All Three: comparison answers naming all three
+
+const CATEGORIES = [
+  {
+    name: "DEFINE IT",
+    clues: [
+      {
+        pts: 100,
+        clue: "This theorist defines gender not as something you ARE, but as something you DO — produced through repeated everyday actions.",
+        answer: "Who is Judith Butler? (gender performativity)"
+      },
+      {
+        pts: 200,
+        clue: "This theorist defines patriarchy as a system of six interlocking structures — not a single law or attitude — that together produce gender inequality.",
+        answer: "Who is Sylvia Walby? (six structures of patriarchy)"
+      },
+      {
+        pts: 300,
+        clue: "This theorist defines the concept that recognises how race, class, and gender do not operate separately but overlap and interact to shape a person's experience.",
+        answer: "Who is bell hooks? (intersectionality)"
+      },
+      {
+        pts: 400,
+        clue: "This theorist argues that 'heterosexuality being the expected norm' is itself a structure of patriarchy — one of six — that reinforces gender inequality.",
+        answer: "Who is Sylvia Walby? (patriarchy in sexuality)"
+      },
+      {
+        pts: 500,
+        clue: "This theorist defines the process by which performing gender 'incorrectly' — such as crying if you are male — triggers social punishment that reinforces gendered norms.",
+        answer: "Who is Judith Butler? (regulation of gender performance)"
+      },
+    ]
+  },
+  {
+    name: "SPOT THE THEORY",
+    clues: [
+      {
+        pts: 100,
+        clue: "A researcher argues that gender inequality persists not because of individual prejudice but because of six mutually reinforcing social structures. Whose framework is this?",
+        answer: "Who is Sylvia Walby? (six structures of patriarchy)"
+      },
+      {
+        pts: 200,
+        clue: "A sociologist says we cannot understand a Black woman's experience of discrimination by looking at gender alone OR race alone — only their combination. Whose framework is this?",
+        answer: "Who is bell hooks? (intersectionality / matrix of domination)"
+      },
+      {
+        pts: 300,
+        clue: "A theorist argues that drag performances are sociologically significant because they expose gender as a constructed performance with no original. Whose framework is this?",
+        answer: "Who is Judith Butler? (gender performativity / parody)"
+      },
+      {
+        pts: 400,
+        clue: "A policy report concludes that laws promoting equal pay are insufficient on their own — because workplace norms, culture, and household roles all reinforce each other. Whose framework does this reflect?",
+        answer: "Who is Sylvia Walby? (interdependence of patriarchal structures)"
+      },
+      {
+        pts: 500,
+        clue: "A feminist writer argues that mainstream feminist movements have failed by centring the voices and experiences of white, middle-class women while ignoring others. Whose critique is this?",
+        answer: "Who is bell hooks? (critique of white mainstream feminism)"
+      },
+    ]
+  },
+  {
+    name: "REAL-WORLD EXAMPLE",
+    clues: [
+      {
+        pts: 100,
+        clue: "A social media app suggests different fashion filters and poses to users depending on whether they select 'male' or 'female'. Which theorist's ideas best explain why this is sociologically significant?",
+        answer: "Who is Judith Butler? (gender performativity — media reinforcing gender norms)"
+      },
+      {
+        pts: 200,
+        clue: "A university women's leadership program finds that most participants are from wealthy backgrounds — women from low-income communities rarely benefit. Which theorist's framework explains this limitation?",
+        answer: "Who is bell hooks? (intersectionality — class and gender interact)"
+      },
+      {
+        pts: 300,
+        clue: "A country passes generous parental leave laws, but men still rarely take the leave because workplace culture, social expectations, and media all discourage it. Which theorist predicted this outcome?",
+        answer: "Who is Sylvia Walby? (structures of patriarchy reinforce each other)"
+      },
+      {
+        pts: 400,
+        clue: "In Taiwan, women earn on average less than men, are underrepresented in senior roles, and perform more unpaid domestic work. Which theorist's six-part framework maps this situation most directly?",
+        answer: "Who is Sylvia Walby? (paid work + household production structures)",
+        dailyDouble: true
+      },
+      {
+        pts: 500,
+        clue: "A young man is publicly mocked for wearing nail polish at school. He changes his appearance to avoid further ridicule. Which theorist would argue this is how gender norms are reproduced and enforced?",
+        answer: "Who is Judith Butler? (social regulation of gender performance)"
+      },
+    ]
+  },
+  {
+    name: "NAME THE THEORIST",
+    clues: [
+      {
+        pts: 100,
+        clue: "She argued that gender is performative — there is no natural or original gender identity beneath the performance.",
+        answer: "Who is Judith Butler? (gender performativity)"
+      },
+      {
+        pts: 200,
+        clue: "She argued that inequality cannot be understood by looking at gender, race, or class separately — only through their interaction.",
+        answer: "Who is bell hooks? (intersectionality)"
+      },
+      {
+        pts: 300,
+        clue: "She identified six structures — including paid work, the state, and male violence — through which patriarchy operates as a system.",
+        answer: "Who is Sylvia Walby? (six structures of patriarchy)"
+      },
+      {
+        pts: 400,
+        clue: "She argued that lived experience — especially of marginalised people — is a valid and important source of sociological knowledge that dominant groups often dismiss.",
+        answer: "Who is bell hooks? (lived experience as knowledge)"
+      },
+      {
+        pts: 500,
+        clue: "She distinguishes between 'private patriarchy' — where women are controlled mainly in the household — and 'public patriarchy' — where control operates through employment and the state.",
+        answer: "Who is Sylvia Walby? (private vs. public patriarchy)"
+      },
+    ]
+  },
+  {
+    name: "CRITIQUE & EVALUATE",
+    clues: [
+      {
+        pts: 100,
+        clue: "A critic argues that this theorist's ideas focus too heavily on language and performance and neglect the material, economic conditions that shape women's lives.",
+        answer: "Who is Judith Butler? (limitation: neglects material/economic factors)"
+      },
+      {
+        pts: 200,
+        clue: "This theorist has been criticised for treating patriarchy as a relatively stable system — making it harder to explain why gender inequality looks different across cultures and time periods.",
+        answer: "Who is Sylvia Walby? (limitation: underestimates variation across contexts)"
+      },
+      {
+        pts: 300,
+        clue: "This theorist is praised for showing that no single axis of identity — not gender, not race, not class alone — can explain inequality. This is her most important contribution.",
+        answer: "Who is bell hooks? (strength: intersectionality)"
+      },
+      {
+        pts: 400,
+        clue: "A student argues this theorist's framework is difficult to apply in practice because it does not clearly show how the six structures cause each other — only that they coexist.",
+        answer: "Who is Sylvia Walby? (critique: unclear causal relationships between structures)"
+      },
+      {
+        pts: 500,
+        clue: "This theorist is critiqued for writing in highly abstract, dense academic language that is difficult for ordinary people to access — somewhat contradicting the democratic aims of feminist theory.",
+        answer: "Who is Judith Butler? (critique: inaccessible academic language)"
+      },
+    ]
+  },
+  {
+    name: "ALL THREE",
+    clues: [
+      {
+        pts: 100,
+        clue: "All three theorists reject this as the main explanation for gender inequality. Name what they reject.",
+        answer: "What is biological or individualistic explanation? (All three argue inequality is structural/social)"
+      },
+      {
+        pts: 200,
+        clue: "Both this theorist and bell hooks agree that gender cannot be understood in isolation — but they differ on what else must be considered. Name both theorists and the key difference.",
+        answer: "Who are Butler and hooks? (Butler adds sexuality/norms; hooks adds race and class)"
+      },
+      {
+        pts: 300,
+        clue: "Walby and hooks both identify institutions as sites of inequality — but they focus on different ones. Name a key institution each theorist emphasises.",
+        answer: "Who are Walby and hooks? (Walby: paid work, state, household; hooks: education, media, family as sites of interlocking oppression)"
+      },
+      {
+        pts: 400,
+        clue: "All three theorists would critique a policy that gives men and women identical parental leave — but for different reasons. Give each theorist's reason.",
+        answer: "Butler: norms still enforce who uses it; hooks: class and race mean access is unequal; Walby: household and workplace structures still disadvantage women"
+      },
+      {
+        pts: 500,
+        clue: "Compare how Butler and Walby understand patriarchy. What does each theorist say it is, and what is the key difference in their approaches?",
+        answer: "Butler: patriarchy is reproduced through repeated performances of gender norms — it is cultural and discursive. Walby: patriarchy is a structural system of six interlocking institutions — it is material and systemic. Key difference: Butler focuses on identity/culture; Walby focuses on institutions/economy."
+      },
+    ]
+  }
+];
+
+const FINAL_JEOPARDY = {
+  category: "THE BIG PICTURE",
+  clue: "All three theorists studied this unit believe that gender inequality is structural — not individual. For each theorist, name their central concept AND identify one real-world institution or example where their theory can be applied.",
+  answer: "Butler: gender performativity — e.g. school dress codes enforcing gender norms. hooks: intersectionality — e.g. a women's program that fails low-income women of colour. Walby: six structures of patriarchy — e.g. the gender pay gap as a result of paid work + household production structures reinforcing each other."
+};
+
+// ─── STATE ───────────────────────────────────
+let scores = { a: 0, b: 0 };
+let activeTeam = 'a';
+let currentClue = null;
+let timerInterval = null;
+let timerSeconds = 60;
+let isStealPhase = false;
+let wagerAmount = 0;
+let fjJudged = { a: false, b: false };
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+// ─── SOUNDS ──────────────────────────────────
+function playTone(freq, duration, type='sine', gain=0.3, delay=0) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+    g.gain.setValueAtTime(0, ctx.currentTime + delay);
+    g.gain.linearRampToValueAtTime(gain, ctx.currentTime + delay + 0.01);
+    g.gain.linearRampToValueAtTime(0, ctx.currentTime + delay + duration);
+    osc.start(ctx.currentTime + delay);
+    osc.stop(ctx.currentTime + delay + duration + 0.05);
+  } catch(e) {}
+}
+function soundCorrect() { playTone(523,0.12); playTone(659,0.12,'sine',0.3,0.13); playTone(784,0.25,'sine',0.3,0.26); }
+function soundWrong() { playTone(180,0.4,'sawtooth',0.25); }
+function soundTimerTick(fast=false) { playTone(fast?880:660,0.05,'square',0.1); }
+function soundAlarm() { for(let i=0;i<3;i++) playTone(440,0.2,'sawtooth',0.3,i*0.25); }
+function soundDailyDouble() { [523,659,784,1047].forEach((f,i)=>playTone(f,0.2,'sine',0.35,i*0.18)); }
+
+// ─── BOARD ───────────────────────────────────
+function buildBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  CATEGORIES.forEach(cat => {
+    const h = document.createElement('div');
+    h.className = 'cat-header';
+    h.textContent = cat.name;
+    board.appendChild(h);
+  });
+  for (let row = 0; row < 5; row++) {
+    CATEGORIES.forEach((cat, ci) => {
+      const clue = cat.clues[row];
+      const cell = document.createElement('div');
+      cell.className = 'clue-cell';
+      cell.id = `cell-${ci}-${row}`;
+      cell.innerHTML = `<span class="val">${clue.pts}</span>`;
+      cell.onclick = () => openClue(ci, row);
+      board.appendChild(cell);
+    });
+  }
+}
+
+// ─── OPEN CLUE ───────────────────────────────
+function openClue(ci, ri) {
+  const cell = document.getElementById(`cell-${ci}-${ri}`);
+  if (cell.classList.contains('used')) return;
+  const clue = CATEGORIES[ci].clues[ri];
+  currentClue = { ci, ri, pts: clue.pts, answer: clue.answer, isDailyDouble: !!clue.dailyDouble };
+  document.getElementById('modal-cat').textContent = CATEGORIES[ci].name;
+  document.getElementById('answer-wrap').classList.remove('show');
+  document.getElementById('answer-text').textContent = clue.answer;
+  document.getElementById('steal-wrap').classList.remove('show');
+  isStealPhase = false;
+
+  if (clue.dailyDouble) {
+    soundDailyDouble();
+    document.getElementById('modal-points').textContent = 'DAILY DOUBLE!';
+    document.getElementById('modal-clue').textContent = '';
+    document.getElementById('wager-section').style.display = 'block';
+    document.getElementById('wager-input').value = '';
+    document.getElementById('main-buttons').innerHTML = '';
+    stopTimer();
+    document.getElementById('timer-wrap').style.display = 'none';
+  } else {
+    wagerAmount = clue.pts;
+    document.getElementById('modal-points').textContent = clue.pts;
+    document.getElementById('modal-clue').textContent = clue.clue;
+    document.getElementById('wager-section').style.display = 'none';
+    document.getElementById('timer-wrap').style.display = 'block';
+    renderMainButtons();
+    startTimer();
+  }
+  document.getElementById('overlay').classList.add('show');
+}
+
+function confirmWager() {
+  const val = parseInt(document.getElementById('wager-input').value) || 0;
+  wagerAmount = Math.max(0, val);
+  const clue = CATEGORIES[currentClue.ci].clues[currentClue.ri];
+  document.getElementById('modal-points').textContent = `Wager: ${wagerAmount}`;
+  document.getElementById('modal-clue').textContent = clue.clue;
+  document.getElementById('wager-section').style.display = 'none';
+  document.getElementById('timer-wrap').style.display = 'block';
+  renderMainButtons();
+  startTimer();
+}
+
+function renderMainButtons() {
+  document.getElementById('main-buttons').innerHTML = `
+    <button class="btn btn-correct-a" onclick="judgeAnswer('a',true)">✓ Team A Correct</button>
+    <button class="btn btn-correct-b" onclick="judgeAnswer('b',true)">✓ Team B Correct</button>
+    <button class="btn btn-wrong-a" onclick="judgeAnswer('a',false)">✗ Team A Wrong</button>
+    <button class="btn btn-wrong-b" onclick="judgeAnswer('b',false)">✗ Team B Wrong</button>
+    <button class="btn btn-reveal" onclick="revealAnswer()">Reveal Answer</button>
+    <button class="btn btn-skip" onclick="skipClue()">Skip / No Answer</button>
+  `;
+}
+
+// ─── JUDGING ─────────────────────────────────
+function judgeAnswer(team, correct) {
+  stopTimer();
+  const pts = wagerAmount;
+  if (correct) {
+    soundCorrect();
+    changeScore(team, pts);
+    activeTeam = team;
+    updateActiveTeam();
+    revealAnswer();
+    document.getElementById('steal-wrap').classList.remove('show');
+    document.getElementById('main-buttons').innerHTML = `<button class="btn btn-close" onclick="closeClue()">CLOSE</button>`;
+  } else {
+    soundWrong();
+    changeScore(team, -pts);
+    if (!isStealPhase) {
+      isStealPhase = true;
+      const other = team === 'a' ? 'b' : 'a';
+      document.getElementById('steal-wrap').classList.add('show');
+      document.getElementById('steal-msg').textContent = `Team ${team.toUpperCase()} was wrong! Team ${other.toUpperCase()} can steal for ${pts} points.`;
+      document.getElementById('steal-buttons').innerHTML = `
+        <button class="btn btn-correct-${other}" onclick="judgeAnswer('${other}',true)">✓ Team ${other.toUpperCase()} Correct</button>
+        <button class="btn btn-wrong-${other}" onclick="stealWrong('${other}')">✗ Team ${other.toUpperCase()} Wrong</button>
+        <button class="btn btn-skip" onclick="skipClue()">No Steal</button>
+      `;
+      document.getElementById('main-buttons').innerHTML = '';
+    }
+  }
+}
+
+function stealWrong(team) {
+  soundWrong();
+  changeScore(team, -wagerAmount);
+  revealAnswer();
+  document.getElementById('steal-wrap').classList.remove('show');
+  document.getElementById('main-buttons').innerHTML = `<button class="btn btn-close" onclick="closeClue()">CLOSE</button>`;
+}
+
+function revealAnswer() { document.getElementById('answer-wrap').classList.add('show'); }
+
+function skipClue() {
+  stopTimer();
+  revealAnswer();
+  document.getElementById('steal-wrap').classList.remove('show');
+  document.getElementById('main-buttons').innerHTML = `<button class="btn btn-close" onclick="closeClue()">CLOSE</button>`;
+}
+
+function closeClue() {
+  stopTimer();
+  document.getElementById(`cell-${currentClue.ci}-${currentClue.ri}`).classList.add('used');
+  document.getElementById('overlay').classList.remove('show');
+  if (!currentClue.isDailyDouble) switchTurn();
+}
+
+// ─── TIMER ───────────────────────────────────
+function startTimer() {
+  timerSeconds = 60;
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    updateTimerDisplay();
+    soundTimerTick(timerSeconds <= 10);
+    if (timerSeconds <= 0) { stopTimer(); soundAlarm(); document.getElementById('timer-num').textContent = "TIME!"; }
+  }, 1000);
+}
+function stopTimer() { clearInterval(timerInterval); timerInterval = null; }
+function updateTimerDisplay() {
+  const bar = document.getElementById('timer-bar');
+  const num = document.getElementById('timer-num');
+  bar.style.width = ((timerSeconds/60)*100) + '%';
+  num.textContent = timerSeconds;
+  const danger = timerSeconds <= 10;
+  bar.classList.toggle('danger', danger);
+  num.classList.toggle('danger', danger);
+}
+
+// ─── SCORE ───────────────────────────────────
+function changeScore(team, delta) {
+  scores[team] += delta;
+  document.getElementById(`score-${team}`).textContent = scores[team];
+  showFlash(team, delta);
+}
+function adjustScore(team, delta) { changeScore(team, delta); }
+function showFlash(team, delta) {
+  const card = document.getElementById(`card-${team}`);
+  const el = document.createElement('div');
+  el.className = 'score-flash ' + (delta > 0 ? 'pos' : 'neg');
+  el.textContent = (delta > 0 ? '+' : '') + delta;
+  card.appendChild(el);
+  setTimeout(() => el.remove(), 1300);
+}
+
+// ─── TURN ────────────────────────────────────
+function switchTurn() {
+  activeTeam = activeTeam === 'a' ? 'b' : 'a';
+  updateActiveTeam();
+}
+function updateActiveTeam() {
+  document.getElementById('card-a').classList.toggle('active', activeTeam === 'a');
+  document.getElementById('card-b').classList.toggle('active', activeTeam === 'b');
+  document.getElementById('turn-indicator').textContent = `▶ TEAM ${activeTeam.toUpperCase()}'S TURN`;
+}
+
+// ─── FINAL JEOPARDY ──────────────────────────
+function launchFinal() {
+  fjJudged = { a: false, b: false };
+  document.getElementById('fj-cat-display').textContent = FINAL_JEOPARDY.category;
+  document.getElementById('fj-score-a-display').textContent = scores.a;
+  document.getElementById('fj-score-b-display').textContent = scores.b;
+  document.getElementById('fj-step-wager').style.display = 'block';
+  document.getElementById('fj-clue-wrap').classList.remove('show');
+  document.getElementById('fj-answer').classList.remove('show');
+  document.getElementById('fj-finish-btn').style.display = 'none';
+  document.getElementById('fj-a-result').innerHTML = `<button class="btn btn-correct-a" onclick="fjJudge('a',true)">✓ CORRECT</button><button class="btn btn-wrong-a" onclick="fjJudge('a',false)">✗ WRONG</button>`;
+  document.getElementById('fj-b-result').innerHTML = `<button class="btn btn-correct-b" onclick="fjJudge('b',true)">✓ CORRECT</button><button class="btn btn-wrong-b" onclick="fjJudge('b',false)">✗ WRONG</button>`;
+  document.getElementById('fj-overlay').classList.add('show');
+}
+function fjRevealClue() {
+  document.getElementById('fj-step-wager').style.display = 'none';
+  document.getElementById('fj-clue-wrap').classList.add('show');
+  document.getElementById('fj-clue').textContent = FINAL_JEOPARDY.clue;
+}
+function fjRevealAnswer() {
+  const ans = document.getElementById('fj-answer');
+  ans.textContent = '✔ ' + FINAL_JEOPARDY.answer;
+  ans.classList.add('show');
+}
+function fjJudge(team, correct) {
+  const wager = Math.max(0, parseInt(document.getElementById(`fj-wager-${team}`).value) || 0);
+  const delta = correct ? wager : -wager;
+  changeScore(team, delta);
+  if (correct) soundCorrect(); else soundWrong();
+  document.getElementById(`fj-${team}-result`).innerHTML = `<span style="color:${correct?'var(--correct-flash)':'var(--wrong-flash)'};font-family:Bebas Neue;font-size:1.2rem;">${correct?'✓ CORRECT':'✗ WRONG'} — ${delta>0?'+':''}${delta}</span>`;
+  fjJudged[team] = true;
+  if (fjJudged.a && fjJudged.b) document.getElementById('fj-finish-btn').style.display = 'inline-block';
+}
+function fjFinish() {
+  document.getElementById('fj-overlay').classList.remove('show');
+  showWinner();
+}
+
+// ─── WINNER ──────────────────────────────────
+function showWinner() {
+  document.getElementById('final-a').textContent = scores.a;
+  document.getElementById('final-b').textContent = scores.b;
+  document.getElementById('winner-name').textContent = scores.a > scores.b ? 'TEAM A WINS!' : scores.b > scores.a ? 'TEAM B WINS!' : "IT'S A TIE!";
+  document.getElementById('winner-overlay').classList.add('show');
+  launchConfetti();
+}
+function launchConfetti() {
+  const colors = ['#f5c518','#2563eb','#dc2626','#22c55e','#a855f7','#ec4899'];
+  for (let i = 0; i < 80; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.left = Math.random()*100+'vw';
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    el.style.animationDuration = (2+Math.random()*3)+'s';
+    el.style.animationDelay = (Math.random()*1.5)+'s';
+    el.style.transform = `rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 5000);
+  }
+}
+
+buildBoard();
+</script>
+</body>
+</html>
