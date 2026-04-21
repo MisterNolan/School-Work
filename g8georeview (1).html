@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GeoJeopardy</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a2e; --surface:#0d0d3d; --card:#1a1a5e;
+  --card-used:#0d0d1f; --gold:#ffd700; --a:#00c2ff; --b:#ff3e6c;
+  --green:#00e676; --red:#ff3e6c; --text:#fff; --muted:rgba(255,255,255,.45);
+  --border:rgba(255,255,255,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* SCREENS */
+.screen{display:none;} .screen.active{display:block;}
+
+/* BOARD SCREEN */
+#board-screen{padding:1rem;}
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;}
+.game-logo{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:.08em;background:linear-gradient(135deg,var(--a),var(--gold),var(--b));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.scores-bar{display:flex;gap:16px;align-items:center;}
+.score-pill{background:var(--surface);border-radius:10px;padding:8px 16px;border:2px solid transparent;text-align:center;min-width:100px;}
+.score-pill.active-a{border-color:var(--a);}
+.score-pill.active-b{border-color:var(--b);}
+.score-pill-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
+.team-a-col .score-pill-label{color:var(--a);}
+.team-b-col .score-pill-label{color:var(--b);}
+.score-pill-val{font-family:'Bebas Neue',sans-serif;font-size:32px;line-height:1;}
+.team-a-col .score-pill-val{color:var(--a);}
+.team-b-col .score-pill-val{color:var(--b);}
+.score-edit{display:flex;gap:4px;justify-content:center;margin-top:4px;}
+.se-btn{width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:rgba(255,255,255,.07);color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.se-btn:hover{background:rgba(255,255,255,.18);}
+.turn-indicator{font-size:12px;color:var(--gold);font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-align:center;}
+
+/* GRID */
+.board-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;}
+.cat-header{background:var(--card);border-radius:8px;padding:.6rem .4rem;text-align:center;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gold);min-height:56px;display:flex;align-items:center;justify-content:center;line-height:1.2;}
+.clue-cell{background:var(--card);border-radius:8px;padding:.5rem;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold);cursor:pointer;min-height:60px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);transition:background .15s,transform .1s;}
+.clue-cell:hover{background:#2a2a8e;transform:scale(1.03);}
+.clue-cell.used{background:var(--card-used);color:transparent;cursor:default;border-color:transparent;}
+.clue-cell.used:hover{transform:none;}
+.daily-double-hint{font-size:10px;} /* hidden until revealed */
+
+.final-btn{margin-top:.75rem;width:100%;padding:12px;background:linear-gradient(135deg,var(--gold),#ff9800);color:#1a0a00;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.1em;border:none;border-radius:10px;cursor:pointer;}
+.final-btn:disabled{opacity:.35;cursor:default;}
+
+/* CLUE SCREEN */
+#clue-screen{min-height:100vh;display:none;flex-direction:column;padding:1.5rem;background:var(--bg);}
+#clue-screen.active{display:flex;}
+.clue-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;}
+.clue-meta{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+.clue-pts{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);}
+.timer-big{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--green);line-height:1;transition:color .3s;}
+.timer-big.low{color:var(--red);animation:blink .5s infinite alternate;}
+@keyframes blink{from{opacity:1;}to{opacity:.3;}}
+.timer-bar-track{width:100%;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;margin-bottom:1.5rem;}
+.timer-bar-fill{height:100%;border-radius:3px;background:var(--green);transition:width 1s linear,background .3s;}
+.timer-bar-fill.low{background:var(--red);}
+
+.clue-card{background:var(--card);border-radius:16px;padding:2rem;flex:1;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;margin-bottom:1rem;}
+.clue-card::after{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--a),var(--gold),var(--b));}
+.clue-answer-label{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.75rem;}
+.clue-answer-text{font-size:24px;font-weight:700;line-height:1.4;text-align:center;}
+.clue-question-box{background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.3);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1rem;display:none;animation:slide-in .3s ease;}
+@keyframes slide-in{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+.clue-question-label{font-size:10px;font-weight:700;color:var(--green);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;}
+.clue-question-text{font-size:16px;color:#b9ffd8;line-height:1.6;}
+
+.judge-area{display:flex;flex-direction:column;gap:10px;}
+.phase-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+button.action{padding:12px 22px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:transform .1s,opacity .1s;}
+button.action:hover{opacity:.88;} button.action:active{transform:scale(.97);}
+button.correct{background:linear-gradient(135deg,#00c853,#00e676);color:#003300;box-shadow:0 4px 20px rgba(0,230,118,.3);}
+button.wrong{background:linear-gradient(135deg,#c62828,#ff3e6c);color:#fff;box-shadow:0 4px 20px rgba(255,62,108,.3);}
+button.reveal-btn{background:linear-gradient(135deg,var(--a),#0077ff);color:#fff;box-shadow:0 4px 20px rgba(0,194,255,.3);}
+button.back-btn{background:rgba(255,255,255,.08);color:var(--muted);border:1px solid var(--border);}
+button.back-btn:hover{background:rgba(255,255,255,.15);color:#fff;}
+
+/* DAILY DOUBLE SCREEN */
+#dd-screen{min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;}
+#dd-screen.active{display:flex;}
+.dd-title{font-family:'Bebas Neue',sans-serif;font-size:80px;background:linear-gradient(135deg,var(--gold),#ff9800);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.5rem;animation:dd-pop .5s ease;}
+@keyframes dd-pop{from{transform:scale(.5);opacity:0;}to{transform:scale(1);opacity:1;}}
+.dd-sub{font-size:16px;color:var(--muted);margin-bottom:2rem;}
+.dd-team{font-size:18px;font-weight:700;margin-bottom:1.5rem;}
+.dd-team span.a{color:var(--a);} .dd-team span.b{color:var(--b);}
+.wager-row{display:flex;gap:12px;align-items:center;margin-bottom:2rem;justify-content:center;}
+.wager-input{background:var(--surface);border:2px solid var(--gold);border-radius:10px;color:var(--gold);font-family:'Bebas Neue',sans-serif;font-size:36px;text-align:center;width:160px;padding:8px 12px;outline:none;}
+.wager-input:focus{border-color:#fff;}
+button.dd-go{background:linear-gradient(135deg,var(--gold),#ff9800);color:#1a0a00;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.08em;padding:14px 36px;border:none;border-radius:10px;cursor:pointer;}
+
+/* FINAL JEOPARDY */
+#final-screen{min-height:100vh;display:none;flex-direction:column;padding:1.5rem;}
+#final-screen.active{display:flex;}
+.final-title{font-family:'Bebas Neue',sans-serif;font-size:48px;text-align:center;background:linear-gradient(135deg,var(--gold),#ff9800);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.25rem;}
+.final-sub{text-align:center;font-size:12px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1.5rem;}
+.wager-section{background:var(--surface);border-radius:16px;padding:1.5rem;margin-bottom:1rem;}
+.wager-section h3{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:1rem;}
+.wager-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.wager-team{text-align:center;}
+.wager-team-label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;}
+.wager-team.a .wager-team-label{color:var(--a);}
+.wager-team.b .wager-team-label{color:var(--b);}
+.wager-team input{background:var(--card);border:2px solid var(--border);border-radius:8px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:28px;text-align:center;width:100%;padding:8px;outline:none;}
+.wager-team.a input:focus{border-color:var(--a);}
+.wager-team.b input:focus{border-color:var(--b);}
+button.final-go{width:100%;padding:14px;background:linear-gradient(135deg,var(--gold),#ff9800);color:#1a0a00;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.1em;border:none;border-radius:10px;cursor:pointer;margin-bottom:1rem;}
+
+/* END SCREEN */
+#end-screen{min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;}
+#end-screen.active{display:flex;}
+.end-title{font-family:'Bebas Neue',sans-serif;font-size:64px;background:linear-gradient(135deg,var(--gold),#ff9800);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;}
+.end-scores{font-size:20px;color:var(--muted);margin-bottom:2rem;}
+.end-a{color:var(--a);font-weight:700;} .end-b{color:var(--b);font-weight:700;}
+button.play-again{background:linear-gradient(135deg,var(--gold),#ff9800);color:#1a0a00;font-family:'Bebas Neue',sans-serif;font-size:22px;padding:14px 40px;border:none;border-radius:10px;cursor:pointer;}
+
+/* FLASH */
+.point-flash{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Bebas Neue',sans-serif;font-size:96px;pointer-events:none;z-index:200;animation:pop-fade .9s ease forwards;}
+@keyframes pop-fade{0%{opacity:0;transform:translate(-50%,-50%) scale(.4);}30%{opacity:1;transform:translate(-50%,-50%) scale(1.1);}60%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-50%) scale(1.2);}}
+.flash-pos-a{color:var(--a);text-shadow:0 0 40px var(--a);}
+.flash-pos-b{color:var(--b);text-shadow:0 0 40px var(--b);}
+.flash-neg{color:var(--red);text-shadow:0 0 40px var(--red);}
+</style>
+</head>
+<body>
+
+<!-- BOARD -->
+<div id="board-screen" class="screen active">
+  <div class="top-bar">
+    <div class="game-logo">GeoJeopardy</div>
+    <div class="scores-bar">
+      <div class="team-a-col">
+        <div class="score-pill" id="pill-a">
+          <div class="score-pill-label">Team A</div>
+          <div class="score-pill-val" id="board-score-a">0</div>
+          <div class="score-edit">
+            <button class="se-btn" id="se-a-minus">−</button>
+            <button class="se-btn" id="se-a-plus">+</button>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;">
+        <div class="turn-indicator" id="turn-lbl">Team A picks first</div>
+      </div>
+      <div class="team-b-col">
+        <div class="score-pill" id="pill-b">
+          <div class="score-pill-label">Team B</div>
+          <div class="score-pill-val" id="board-score-b">0</div>
+          <div class="score-edit">
+            <button class="se-btn" id="se-b-minus">−</button>
+            <button class="se-btn" id="se-b-plus">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="board-grid" id="board-grid"></div>
+  <button class="final-btn" id="final-jeopardy-btn">Final GeoJeopardy →</button>
+</div>
+
+<!-- DAILY DOUBLE -->
+<div id="dd-screen" class="screen">
+  <div class="dd-title">Daily Double!</div>
+  <div class="dd-sub">Units 5 &amp; 6 — GeoJeopardy</div>
+  <div class="dd-team" id="dd-team-lbl"></div>
+  <div style="font-size:14px;color:var(--muted);margin-bottom:1rem;">Enter your wager (max = your current score or 500, whichever is higher)</div>
+  <div class="wager-row">
+    <input class="wager-input" type="number" id="dd-wager" min="0" value="100" placeholder="Wager">
+    <button class="dd-go" id="dd-go-btn">Let's go →</button>
+  </div>
+</div>
+
+<!-- CLUE -->
+<div id="clue-screen" class="screen">
+  <div class="clue-top">
+    <div>
+      <div class="clue-meta" id="clue-cat-lbl"></div>
+      <div class="clue-pts" id="clue-pts-lbl"></div>
+    </div>
+    <div style="text-align:right;">
+      <div class="timer-big" id="clue-timer">60</div>
+    </div>
+  </div>
+  <div class="timer-bar-track"><div class="timer-bar-fill" id="clue-timer-bar" style="width:100%"></div></div>
+  <div class="clue-card">
+    <div class="clue-answer-label">The answer is...</div>
+    <div class="clue-answer-text" id="clue-answer-text"></div>
+  </div>
+  <div class="clue-question-box" id="clue-question-box">
+    <div class="clue-question-label">Correct question</div>
+    <div class="clue-question-text" id="clue-question-text"></div>
+  </div>
+  <div class="judge-area" id="judge-area"></div>
+</div>
+
+<!-- FINAL JEOPARDY -->
+<div id="final-screen" class="screen">
+  <div class="final-title">Final GeoJeopardy</div>
+  <div class="final-sub">Category: Global Development</div>
+  <div class="wager-section">
+    <h3>Enter wagers (secret — teams write on paper)</h3>
+    <div class="wager-grid">
+      <div class="wager-team a">
+        <div class="wager-team-label">Team A</div>
+        <input type="number" id="final-wager-a" min="0" placeholder="0">
+      </div>
+      <div class="wager-team b">
+        <div class="wager-team-label">Team B</div>
+        <input type="number" id="final-wager-b" min="0" placeholder="0">
+      </div>
+    </div>
+  </div>
+  <button class="final-go" id="final-go-btn">Reveal the clue →</button>
+  <div id="final-clue-area" style="display:none;">
+    <div class="clue-card" style="margin-bottom:1rem;">
+      <div class="clue-answer-label">Final clue</div>
+      <div class="clue-answer-text">This country has one of the world's highest GDP per capita from oil exports, yet many of its migrant workers earn very low wages and have limited rights — illustrating that high national wealth does not guarantee quality of life for everyone.</div>
+    </div>
+    <div class="clue-question-box" id="final-question-box" style="display:none;">
+      <div class="clue-question-label">Correct question</div>
+      <div class="clue-question-text">What is Kuwait? (Accept any Gulf state.) This illustrates that GDP per capita hides inequality — wealth is concentrated and does not reflect the living standards of all residents.</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1rem;">
+      <button class="action reveal-btn" id="final-reveal-btn">Reveal answer</button>
+    </div>
+    <div id="final-judge-area" style="display:none;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="background:var(--surface);border-radius:12px;padding:1rem;text-align:center;">
+          <div style="font-size:11px;font-weight:700;color:var(--a);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">Team A</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">Wager: <span id="final-show-wager-a" style="color:#fff;font-weight:700;">—</span></div>
+          <div style="display:flex;gap:8px;justify-content:center;">
+            <button class="action correct" id="final-a-correct">✓ Correct</button>
+            <button class="action wrong" id="final-a-wrong">✗ Wrong</button>
+          </div>
+        </div>
+        <div style="background:var(--surface);border-radius:12px;padding:1rem;text-align:center;">
+          <div style="font-size:11px;font-weight:700;color:var(--b);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">Team B</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px;">Wager: <span id="final-show-wager-b" style="color:#fff;font-weight:700;">—</span></div>
+          <div style="display:flex;gap:8px;justify-content:center;">
+            <button class="action correct" id="final-b-correct">✓ Correct</button>
+            <button class="action wrong" id="final-b-wrong">✗ Wrong</button>
+          </div>
+        </div>
+      </div>
+      <button class="action back-btn" id="final-end-btn" style="width:100%;margin-top:12px;">See final scores →</button>
+    </div>
+  </div>
+</div>
+
+<!-- END -->
+<div id="end-screen" class="screen">
+  <div class="end-title" id="end-title">Team A Wins!</div>
+  <div class="end-scores" id="end-scores"></div>
+  <button class="play-again" id="play-again-btn">Play Again</button>
+</div>
+
+<script>
+// ── DATA ──
+const CATEGORIES = [
+  'Quality of Life',
+  'Measuring Up',
+  'Life & Health',
+  'Show Me the Money',
+  'Systems & Sectors',
+  'Global Trade'
+];
+
+// [category index, points, answer (shown), question (hidden)]
+const CLUES = [
+  // Quality of Life (col 0)
+  [0,100,'The term for a person\'s overall well-being including health, education, and access to resources','What is quality of life?'],
+  [0,200,'The difference between this and a "want" is that it is essential for survival','What is a need?'],
+  [0,300,'The term for when some groups in society have significantly more access to resources and opportunities than others','What is inequality?'],
+  [0,400,'Quality of life can vary within a country, not just between countries — this rural vs urban gap is an example of this type of inequality','What is internal or domestic inequality?'],
+  [0,500,'A country can have a high GDP but still have low quality of life if this is happening with its wealth','What is unequal distribution (or: wealth not being invested in education and healthcare)?'],
+
+  // Measuring Up (col 1)
+  [1,100,'The HDI combines life expectancy, income, and this third component','What is education?'],
+  [1,200,'Unlike a single indicator, this combines multiple measures into one score to compare countries','What is an index?'],
+  [1,300,'The Happy Planet Index measures well-being alongside this, unlike the HDI','What is environmental sustainability?'],
+  [1,400,'On a scatter graph, this type of relationship means both variables increase together','What is a positive relationship?'],
+  [1,500,'Two countries have identical GDP per capita but very different HDI scores — this is most likely why','What is a difference in life expectancy or education levels?'],
+
+  // Life & Health (col 2)
+  [2,100,'The average number of years a person born today is expected to live','What is life expectancy?'],
+  [2,200,'These regions around the world are famous for having unusually high life expectancy linked to lifestyle and community','What are Blue Zones?'],
+  [2,300,'Access to clean water, healthcare, and nutritious food all improve this quality of life indicator','What is life expectancy?'],
+  [2,400,'Blue Zone communities typically share these lifestyle features — name two','What are: plant-based diet, natural physical activity, strong social ties, low stress, sense of purpose?'],
+  [2,500,'A country improves access to clean water for its rural population — explain how this raises its HDI score','What is: reduces disease, improves health, raises life expectancy, frees time for education and work?'],
+
+  // Show Me the Money (col 3) — DAILY DOUBLE at 400
+  [3,100,'The total value of all goods and services produced in a country in one year','What is GDP?'],
+  [3,200,'GDP divided by population, giving the average wealth per person','What is GDP per capita?'],
+  [3,300,'A country without coastline faces this economic challenge related to trade','What is being landlocked (limited/expensive access to global trade)?'],
+  [3,400,'DAILY DOUBLE — A country is rich in oil but has a low HDI. This is most likely why','What is: oil wealth is controlled by a small elite or government corruption prevents reinvestment in education and healthcare?'],
+  [3,500,'This is the key limitation of using GDP per capita to measure quality of life','What is: it does not show how wealth is distributed — inequality is hidden?'],
+
+  // Systems & Sectors (col 4)
+  [4,100,'The economic system where the government controls production, prices, and distribution','What is a command economy?'],
+  [4,200,'In this type of economy, supply and demand determine prices with little government involvement','What is a market economy?'],
+  [4,300,'Name all four economic sectors in order from first to last','What are: Primary, Secondary, Tertiary, Quaternary?'],
+  [4,400,'As countries develop economically, employment shifts away from this sector toward tertiary and quaternary jobs','What is the primary (or secondary) sector?'],
+  [4,500,'A country dominated by quaternary sector jobs is likely to score high on this index — explain why','What is the HDI? Higher-skilled jobs mean higher income, better-funded education and healthcare, and longer life expectancy.'],
+
+  // Global Trade (col 5)
+  [5,100,'This trading system guarantees producers in developing countries a fair price and safe working conditions','What is fair trade?'],
+  [5,200,'When a company moves its production to another country to reduce labour costs, this is called...','What is outsourcing?'],
+  [5,300,'The sequence of steps from raw material to final consumer is called this','What is a supply chain?'],
+  [5,400,'Farmers in Cote d\'Ivoire grow most of the world\'s cocoa, but earn only 3-6% of the price of chocolate. This illustrates what problem in global trade?','What is unequal distribution of profit (or: exploitation of primary producers)?'],
+  [5,500,'A country near a major trade route gains these two economic advantages','What are: transit fee revenue and access to larger markets (also accept: port development, infrastructure investment)?'],
+];
+
+const DAILY_DOUBLE_INDEX = CLUES.findIndex(c => c[1] === 400 && c[0] === 3);
+
+const TIMER_MAX = 60;
+let scores = {A:0, B:0};
+let currentTeam = 'A';
+let usedClues = new Set();
+let timerInterval = null;
+let timerVal = TIMER_MAX;
+let ddWager = 0;
+let currentClueIdx = -1;
+let cluePhase = 'judge'; // judge | steal | reveal
+let stealActive = false;
+let finalJudged = {A:false, B:false};
+
+function other(t){return t==='A'?'B':'A';}
+
+// ── AUDIO ──
+const audioCtx = (typeof AudioContext !== 'undefined') ? new AudioContext() : null;
+function beep(freq,dur,type='sine',vol=.3){
+  if(!audioCtx)return;
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.connect(g);g.connect(audioCtx.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);
+  o.start();o.stop(audioCtx.currentTime+dur);
+}
+function playCorrect(){beep(523,.1);setTimeout(()=>beep(659,.1),100);setTimeout(()=>beep(784,.25),200);}
+function playWrong(){beep(200,.15,'sawtooth');setTimeout(()=>beep(150,.25,'sawtooth'),150);}
+function playTick(){beep(880,.05,'square',.06);}
+function playLowTick(){beep(440,.08,'square',.1);}
+function playTimerEnd(){beep(220,.15,'sawtooth');setTimeout(()=>beep(180,.3,'sawtooth'),150);}
+function playDD(){beep(220,.1);setTimeout(()=>beep(277,.1),120);setTimeout(()=>beep(330,.1),240);setTimeout(()=>beep(440,.3),360);}
+
+// ── FLASH ──
+function flash(cls, txt){
+  const el=document.createElement('div');
+  el.className='point-flash '+cls;el.textContent=txt;
+  document.body.appendChild(el);setTimeout(()=>el.remove(),900);
+}
+
+// ── SCORE UPDATE ──
+function updateScores(){
+  document.getElementById('board-score-a').textContent=scores.A;
+  document.getElementById('board-score-b').textContent=scores.B;
+  updatePillActive();
+}
+function updatePillActive(){
+  document.getElementById('pill-a').className='score-pill'+(currentTeam==='A'?' active-a':'');
+  document.getElementById('pill-b').className='score-pill'+(currentTeam==='B'?' active-b':'');
+  document.getElementById('turn-lbl').textContent='Team '+currentTeam+' picks';
+}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── TIMER ──
+function startTimer(max, onEnd){
+  stopTimer();
+  timerVal=max;
+  updateTimerDisplay();
+  timerInterval=setInterval(()=>{
+    timerVal--;
+    if(timerVal<=10&&timerVal>0) playLowTick();
+    else if(timerVal>10) playTick();
+    updateTimerDisplay();
+    if(timerVal<=0){stopTimer();playTimerEnd();if(onEnd)onEnd();}
+  },1000);
+}
+function stopTimer(){clearInterval(timerInterval);}
+function updateTimerDisplay(){
+  const d=document.getElementById('clue-timer');
+  const b=document.getElementById('clue-timer-bar');
+  if(!d||!b)return;
+  const v=Math.max(0,timerVal);
+  d.textContent=v;
+  d.className='timer-big'+(v<=10?' low':'');
+  b.style.width=((v/TIMER_MAX)*100)+'%';
+  b.className='timer-bar-fill'+(v<=10?' low':'');
+}
+
+// ── BOARD ──
+function buildBoard(){
+  const grid=document.getElementById('board-grid');
+  grid.innerHTML='';
+  CATEGORIES.forEach(cat=>{
+    const h=document.createElement('div');
+    h.className='cat-header';h.textContent=cat;grid.appendChild(h);
+  });
+  for(let pts of [100,200,300,400,500]){
+    for(let col=0;col<6;col++){
+      const idx=CLUES.findIndex(c=>c[0]===col&&c[1]===pts);
+      const cell=document.createElement('div');
+      if(usedClues.has(idx)){
+        cell.className='clue-cell used';cell.textContent='';
+      } else {
+        cell.className='clue-cell';
+        cell.textContent=pts;
+        cell.dataset.idx=idx;
+        cell.addEventListener('click',()=>openClue(idx));
+      }
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function openClue(idx){
+  currentClueIdx=idx;
+  cluePhase='judge';
+  stealActive=false;
+  const clue=CLUES[idx];
+  if(idx===DAILY_DOUBLE_INDEX){
+    // Show DD screen
+    const maxWager=Math.max(scores[currentTeam],500);
+    document.getElementById('dd-wager').max=maxWager;
+    document.getElementById('dd-wager').value=Math.min(100,maxWager);
+    document.getElementById('dd-team-lbl').innerHTML='Team <span class="'+currentTeam.toLowerCase()+'">'+currentTeam+'</span> — you found the Daily Double!';
+    playDD();
+    showScreen('dd-screen');
+  } else {
+    launchClue(clue[1]);
+  }
+}
+
+function launchClue(pts){
+  const clue=CLUES[currentClueIdx];
+  document.getElementById('clue-cat-lbl').textContent=CATEGORIES[clue[0]];
+  document.getElementById('clue-pts-lbl').textContent=(currentClueIdx===DAILY_DOUBLE_INDEX?'Daily Double — Wager: '+pts:pts+' pts');
+  document.getElementById('clue-answer-text').textContent=clue[2];
+  document.getElementById('clue-question-box').style.display='none';
+  document.getElementById('clue-question-text').textContent=clue[3];
+  renderJudgeArea(pts);
+  showScreen('clue-screen');
+  startTimer(TIMER_MAX, ()=>{ renderJudgeArea(pts); });
+}
+
+function renderJudgeArea(pts){
+  const area=document.getElementById('judge-area');
+  const isDD=(currentClueIdx===DAILY_DOUBLE_INDEX);
+
+  if(cluePhase==='judge'){
+    const judgingTeam=currentTeam;
+    area.innerHTML=
+      '<div class="phase-lbl">Team '+judgingTeam+' responds — judge without revealing</div>'+
+      '<div class="btn-row">'+
+        '<button class="action correct" id="jbtn-correct">✓ Correct +'+pts+'</button>'+
+        (isDD?'':'<button class="action wrong" id="jbtn-wrong">✗ Wrong −'+pts+'</button>')+
+        (isDD?'<button class="action wrong" id="jbtn-wrong">✗ Wrong −'+pts+'</button>':'')+
+      '</div>'+
+      '<div class="btn-row"><button class="action back-btn" id="jbtn-reveal-only">Reveal &amp; skip</button></div>';
+
+    document.getElementById('jbtn-correct').addEventListener('click',()=>{
+      stopTimer(); scores[judgingTeam]+=pts; updateScores();
+      flash('flash-pos-'+judgingTeam.toLowerCase(),'+'+pts); playCorrect();
+      revealAndFinish();
+    });
+    document.getElementById('jbtn-wrong').addEventListener('click',()=>{
+      stopTimer(); scores[judgingTeam]-=pts; updateScores();
+      flash('flash-neg','−'+pts); playWrong();
+      if(isDD){ revealAndFinish(); }
+      else { cluePhase='steal'; stealActive=true; renderJudgeArea(pts); startTimer(TIMER_MAX,()=>renderJudgeArea(pts)); }
+    });
+    document.getElementById('jbtn-reveal-only').addEventListener('click',()=>{
+      stopTimer(); revealAndFinish();
+    });
+
+  } else if(cluePhase==='steal'){
+    const stealTeam=other(currentTeam);
+    area.innerHTML=
+      '<div class="phase-lbl">Team '+stealTeam+' — steal for '+pts+' pts (wrong = −'+pts+')</div>'+
+      '<div class="btn-row">'+
+        '<button class="action correct" id="sbtn-correct">✓ Correct +'+pts+'</button>'+
+        '<button class="action wrong" id="sbtn-wrong">✗ Wrong −'+pts+'</button>'+
+      '</div>'+
+      '<div class="btn-row"><button class="action back-btn" id="sbtn-skip">Reveal &amp; skip</button></div>';
+
+    document.getElementById('sbtn-correct').addEventListener('click',()=>{
+      stopTimer(); scores[stealTeam]+=pts; updateScores();
+      flash('flash-pos-'+stealTeam.toLowerCase(),'+'+pts); playCorrect();
+      currentTeam=stealTeam; revealAndFinish();
+    });
+    document.getElementById('sbtn-wrong').addEventListener('click',()=>{
+      stopTimer(); scores[stealTeam]-=pts; updateScores();
+      flash('flash-neg','−'+pts); playWrong(); revealAndFinish();
+    });
+    document.getElementById('sbtn-skip').addEventListener('click',()=>{
+      stopTimer(); revealAndFinish();
+    });
+  }
+}
+
+function revealAndFinish(){
+  const clue=CLUES[currentClueIdx];
+  document.getElementById('clue-question-box').style.display='block';
+  const area=document.getElementById('judge-area');
+  area.innerHTML='<div class="btn-row"><button class="action back-btn" id="jbtn-back">← Back to board</button></div>';
+  document.getElementById('jbtn-back').addEventListener('click',()=>{
+    usedClues.add(currentClueIdx);
+    currentTeam=other(currentTeam);
+    updatePillActive();
+    buildBoard();
+    showScreen('board-screen');
+  });
+}
+
+// ── DD FLOW ──
+document.getElementById('dd-go-btn').addEventListener('click',()=>{
+  ddWager=parseInt(document.getElementById('dd-wager').value)||100;
+  ddWager=Math.max(0,Math.min(ddWager,Math.max(scores[currentTeam],500)));
+  launchClue(ddWager);
+});
+
+// ── SCORE EDIT BUTTONS ──
+document.getElementById('se-a-minus').addEventListener('click',()=>{ scores.A=Math.max(0,scores.A-100); updateScores(); });
+document.getElementById('se-a-plus').addEventListener('click',()=>{ scores.A+=100; updateScores(); });
+document.getElementById('se-b-minus').addEventListener('click',()=>{ scores.B=Math.max(0,scores.B-100); updateScores(); });
+document.getElementById('se-b-plus').addEventListener('click',()=>{ scores.B+=100; updateScores(); });
+
+// ── FINAL JEOPARDY ──
+document.getElementById('final-jeopardy-btn').addEventListener('click',()=>{
+  document.getElementById('final-wager-a').value='';
+  document.getElementById('final-wager-b').value='';
+  document.getElementById('final-clue-area').style.display='none';
+  document.getElementById('final-judge-area').style.display='none';
+  document.getElementById('final-question-box').style.display='none';
+  showScreen('final-screen');
+});
+
+document.getElementById('final-go-btn').addEventListener('click',()=>{
+  const wa=parseInt(document.getElementById('final-wager-a').value)||0;
+  const wb=parseInt(document.getElementById('final-wager-b').value)||0;
+  document.getElementById('final-show-wager-a').textContent=wa;
+  document.getElementById('final-show-wager-b').textContent=wb;
+  document.getElementById('final-clue-area').style.display='block';
+  document.getElementById('final-go-btn').style.display='none';
+  document.querySelector('.wager-section').style.display='none';
+  finalJudged={A:false,B:false};
+});
+
+document.getElementById('final-reveal-btn').addEventListener('click',()=>{
+  document.getElementById('final-question-box').style.display='block';
+  document.getElementById('final-judge-area').style.display='block';
+  document.getElementById('final-reveal-btn').style.display='none';
+});
+
+function applyFinalWager(team, correct){
+  const w=parseInt(document.getElementById('final-show-wager-'+team.toLowerCase()).textContent)||0;
+  if(correct){ scores[team]+=w; flash('flash-pos-'+team.toLowerCase(),'+'+w); playCorrect(); }
+  else { scores[team]-=w; flash('flash-neg','−'+w); playWrong(); }
+  updateScores();
+  finalJudged[team]=true;
+  document.getElementById('final-'+team.toLowerCase()+'-correct').disabled=true;
+  document.getElementById('final-'+team.toLowerCase()+'-wrong').disabled=true;
+}
+
+document.getElementById('final-a-correct').addEventListener('click',()=>applyFinalWager('A',true));
+document.getElementById('final-a-wrong').addEventListener('click',()=>applyFinalWager('A',false));
+document.getElementById('final-b-correct').addEventListener('click',()=>applyFinalWager('B',true));
+document.getElementById('final-b-wrong').addEventListener('click',()=>applyFinalWager('B',false));
+
+document.getElementById('final-end-btn').addEventListener('click',()=>{
+  const winner=scores.A>scores.B?'Team A Wins!':scores.B>scores.A?'Team B Wins!':"It's a Tie!";
+  document.getElementById('end-title').textContent=winner;
+  document.getElementById('end-scores').innerHTML=
+    '<span class="end-a">Team A: '+scores.A+' pts</span> &nbsp;&middot;&nbsp; <span class="end-b">Team B: '+scores.B+' pts</span>';
+  showScreen('end-screen');
+});
+
+document.getElementById('play-again-btn').addEventListener('click',()=>{
+  scores={A:0,B:0}; currentTeam='A'; usedClues=new Set();
+  updateScores(); buildBoard(); showScreen('board-screen');
+});
+
+// ── INIT ──
+buildBoard();
+updateScores();
+</script>
+</body>
+</html>
