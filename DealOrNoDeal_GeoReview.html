@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deal or No Deal – Geo Review</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Playfair+Display:wght@700;900&display=swap');
+
+:root {
+  --bg: #0b0c10;
+  --surface: #13141a;
+  --surface2: #1c1e27;
+  --gold: #f5c518;
+  --gold2: #e6a817;
+  --red: #e63946;
+  --green: #2dc653;
+  --blue: #4361ee;
+  --text: #f0f0f0;
+  --muted: #7a7d8e;
+  --border: rgba(245,197,24,0.15);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Montserrat', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Subtle grid background */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(245,197,24,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,197,24,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events:none; z-index:0;
+}
+
+/* ===== INTRO SCREEN ===== */
+#intro {
+  position:relative; z-index:1;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  min-height:100vh;
+  padding:40px 20px;
+}
+
+.intro-eyebrow {
+  font-size:0.75rem; letter-spacing:4px; text-transform:uppercase;
+  color:var(--muted); margin-bottom:16px;
+}
+
+#intro h1 {
+  font-family:'Playfair Display', serif;
+  font-size:clamp(2.8rem, 8vw, 6rem);
+  font-weight:900;
+  color:var(--gold);
+  text-align:center;
+  line-height:1;
+  text-shadow: 0 0 60px rgba(245,197,24,0.3);
+  margin-bottom:8px;
+}
+
+#intro h2 {
+  font-size:clamp(0.9rem, 2vw, 1.2rem);
+  font-weight:600; letter-spacing:3px;
+  text-transform:uppercase; color:var(--muted);
+  margin-bottom:48px;
+}
+
+.player-box-display {
+  background: linear-gradient(135deg, #1a1c25, #22243000);
+  border:2px solid var(--gold);
+  border-radius:20px;
+  padding:32px 48px;
+  text-align:center;
+  box-shadow: 0 0 60px rgba(245,197,24,0.15), inset 0 0 40px rgba(245,197,24,0.04);
+  margin-bottom:40px;
+  position:relative;
+  overflow:hidden;
+}
+.player-box-display::after {
+  content:'';
+  position:absolute; inset:0;
+  background:radial-gradient(circle at 50% 0%, rgba(245,197,24,0.08) 0%, transparent 70%);
+}
+.player-box-display .box-num {
+  font-family:'Playfair Display', serif;
+  font-size:5rem; font-weight:900; color:var(--gold);
+  line-height:1; display:block;
+}
+.player-box-display .box-label {
+  font-size:0.75rem; letter-spacing:4px; text-transform:uppercase;
+  color:var(--muted); margin-top:8px; display:block;
+}
+.player-box-display .box-sublabel {
+  font-size:0.9rem; color:var(--text); margin-top:6px; opacity:0.7;
+}
+
+.start-btn {
+  background: var(--gold);
+  color:#000; border:none;
+  font-family:'Montserrat', sans-serif;
+  font-size:1rem; font-weight:900;
+  letter-spacing:3px; text-transform:uppercase;
+  padding:18px 56px; border-radius:50px;
+  cursor:pointer;
+  transition: all 0.2s;
+  box-shadow: 0 8px 40px rgba(245,197,24,0.3);
+}
+.start-btn:hover { transform:translateY(-3px); box-shadow:0 12px 50px rgba(245,197,24,0.5); }
+
+/* ===== MAIN GAME ===== */
+#game { display:none; position:relative; z-index:1; min-height:100vh; }
+
+/* Header */
+#header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 28px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  flex-wrap:wrap; gap:12px;
+}
+#header h1 {
+  font-family:'Playfair Display', serif;
+  font-size:1.4rem; color:var(--gold);
+  letter-spacing:1px;
+}
+.hud-item {
+  text-align:center;
+}
+.hud-label {
+  font-size:0.65rem; letter-spacing:3px; text-transform:uppercase;
+  color:var(--muted); display:block; margin-bottom:2px;
+}
+.hud-val {
+  font-family:'Playfair Display', serif;
+  font-size:1.3rem; font-weight:700; color:var(--gold);
+}
+
+/* Main layout */
+#main-layout {
+  display:grid;
+  grid-template-columns: 200px 1fr 200px;
+  gap:0;
+  min-height:calc(100vh - 65px);
+}
+
+/* Value boards */
+.value-board {
+  padding:16px 12px;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column; gap:5px;
+}
+.value-board.right { border-right:none; border-left:1px solid var(--border); }
+
+.val-pill {
+  padding:6px 10px; border-radius:6px;
+  text-align:center;
+  font-weight:700; font-size:0.85rem;
+  transition: all 0.4s;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  color:var(--text);
+}
+.val-pill.eliminated {
+  opacity:0.2;
+  text-decoration:line-through;
+  filter:grayscale(1);
+}
+.val-pill.high { color:#f5c518; border-color:rgba(245,197,24,0.3); }
+.val-pill.mid  { color:#e0e0e0; }
+.val-pill.low  { color:#7a7d8e; border-color:rgba(122,125,142,0.2); }
+
+/* Center area */
+#center {
+  display:flex; flex-direction:column;
+  align-items:center;
+  padding:20px 24px;
+  gap:20px;
+  overflow-y:auto;
+}
+
+/* Box grid */
+#box-grid {
+  display:grid;
+  grid-template-columns:repeat(6, 1fr);
+  gap:10px;
+  width:100%;
+  max-width:560px;
+}
+
+.box {
+  aspect-ratio:1;
+  background:var(--surface2);
+  border:2px solid var(--border);
+  border-radius:12px;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  cursor:pointer;
+  transition: all 0.2s;
+  position:relative;
+  overflow:hidden;
+}
+.box::before {
+  content:'';
+  position:absolute; inset:0;
+  background:radial-gradient(circle at 50% 0%, rgba(245,197,24,0.06), transparent 70%);
+  opacity:0;
+  transition:opacity 0.2s;
+}
+.box:hover:not(.opened):not(.disabled) { border-color:var(--gold); transform:scale(1.05); }
+.box:hover:not(.opened):not(.disabled)::before { opacity:1; }
+.box .box-n {
+  font-family:'Playfair Display', serif;
+  font-size:1.4rem; font-weight:900; color:var(--gold);
+}
+.box .box-sub {
+  font-size:0.55rem; letter-spacing:2px; text-transform:uppercase;
+  color:var(--muted); margin-top:2px;
+}
+.box.player-box {
+  border-color:var(--blue);
+  background:rgba(67,97,238,0.1);
+}
+.box.player-box .box-n { color:var(--blue); }
+.box.opened {
+  opacity:0.3; cursor:default;
+  border-color:transparent;
+  transform:none !important;
+}
+.box.opened .box-n { color:var(--muted); }
+.box.disabled { cursor:default; }
+.box.banker-stole {
+  opacity:0.25; cursor:default;
+  border-color:var(--red);
+}
+
+/* Question panel */
+#question-panel {
+  width:100%; max-width:560px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:24px 28px;
+  display:none;
+}
+.q-eyebrow {
+  font-size:0.65rem; letter-spacing:3px; text-transform:uppercase;
+  color:var(--muted); margin-bottom:10px;
+}
+.q-text {
+  font-size:1.15rem; font-weight:700; line-height:1.5;
+  margin-bottom:20px; color:var(--text);
+}
+.q-answer {
+  background:rgba(45,198,83,0.08);
+  border:1px solid rgba(45,198,83,0.25);
+  border-radius:8px; padding:14px 18px;
+  font-size:0.9rem; color:var(--green);
+  display:none; margin-bottom:16px;
+}
+.q-answer strong { display:block; font-size:0.65rem; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+.q-btns { display:flex; gap:10px; flex-wrap:wrap; }
+.btn-reveal {
+  padding:10px 22px; border-radius:8px; border:none;
+  background:var(--surface2); color:var(--text);
+  font-family:'Montserrat', sans-serif; font-weight:700;
+  font-size:0.8rem; letter-spacing:2px; text-transform:uppercase;
+  cursor:pointer; transition:all 0.2s;
+  border:1px solid var(--border);
+}
+.btn-reveal:hover { background:rgba(255,255,255,0.08); }
+.btn-correct {
+  padding:10px 22px; border-radius:8px; border:none;
+  background:var(--green); color:#000;
+  font-family:'Montserrat', sans-serif; font-weight:900;
+  font-size:0.8rem; letter-spacing:2px; text-transform:uppercase;
+  cursor:pointer; transition:all 0.2s;
+}
+.btn-correct:hover { background:#3ddf6a; }
+.btn-wrong {
+  padding:10px 22px; border-radius:8px; border:none;
+  background:var(--red); color:#fff;
+  font-family:'Montserrat', sans-serif; font-weight:900;
+  font-size:0.8rem; letter-spacing:2px; text-transform:uppercase;
+  cursor:pointer; transition:all 0.2s;
+}
+.btn-wrong:hover { background:#ff5c6a; }
+
+/* Status message */
+#status-msg {
+  width:100%; max-width:560px;
+  text-align:center;
+  font-size:0.85rem; color:var(--muted);
+  letter-spacing:1px; min-height:24px;
+}
+
+/* ===== BANKER OVERLAY ===== */
+#banker-overlay {
+  display:none; position:fixed; inset:0; z-index:100;
+  background:rgba(0,0,0,0.92);
+  backdrop-filter:blur(8px);
+  align-items:center; justify-content:center;
+  flex-direction:column;
+}
+#banker-overlay.open { display:flex; }
+
+.banker-ring {
+  width:120px; height:120px; border-radius:50%;
+  border:3px solid var(--gold);
+  display:flex; align-items:center; justify-content:center;
+  font-size:3rem; margin-bottom:24px;
+  box-shadow: 0 0 60px rgba(245,197,24,0.3);
+  animation: ringPulse 2s ease infinite;
+  background: radial-gradient(circle, rgba(245,197,24,0.08), transparent);
+}
+@keyframes ringPulse {
+  0%,100% { box-shadow:0 0 30px rgba(245,197,24,0.2); }
+  50%      { box-shadow:0 0 80px rgba(245,197,24,0.5); }
+}
+
+.banker-title {
+  font-size:0.7rem; letter-spacing:5px; text-transform:uppercase;
+  color:var(--muted); margin-bottom:8px;
+}
+
+.banker-offer-val {
+  font-family:'Playfair Display', serif;
+  font-size:clamp(3rem, 10vw, 6rem);
+  font-weight:900; color:var(--gold);
+  text-shadow:0 0 60px rgba(245,197,24,0.5);
+  margin-bottom:12px;
+  animation: offerPop 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes offerPop {
+  from { transform:scale(0.5); opacity:0; }
+  to   { transform:scale(1); opacity:1; }
+}
+
+.banker-msg {
+  font-size:1rem; color:var(--text); opacity:0.7;
+  max-width:480px; text-align:center; line-height:1.6;
+  margin-bottom:36px; padding:0 20px;
+}
+
+.deal-btns { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; }
+
+.btn-deal {
+  padding:18px 56px; border-radius:50px; border:none;
+  font-family:'Montserrat', sans-serif; font-weight:900;
+  font-size:1.1rem; letter-spacing:3px; text-transform:uppercase;
+  cursor:pointer; transition:all 0.2s;
+}
+.btn-deal-yes {
+  background:var(--green); color:#000;
+  box-shadow:0 8px 40px rgba(45,198,83,0.4);
+}
+.btn-deal-yes:hover { transform:translateY(-3px); box-shadow:0 12px 50px rgba(45,198,83,0.6); }
+.btn-deal-no {
+  background:var(--red); color:#fff;
+  box-shadow:0 8px 40px rgba(230,57,70,0.4);
+}
+.btn-deal-no:hover { transform:translateY(-3px); box-shadow:0 12px 50px rgba(230,57,70,0.6); }
+
+/* ===== REVEAL OVERLAY ===== */
+#reveal-overlay {
+  display:none; position:fixed; inset:0; z-index:200;
+  background:rgba(0,0,0,0.96);
+  backdrop-filter:blur(12px);
+  align-items:center; justify-content:center;
+  flex-direction:column; text-align:center; padding:40px;
+}
+#reveal-overlay.open { display:flex; }
+
+.reveal-title {
+  font-size:0.7rem; letter-spacing:5px; text-transform:uppercase;
+  color:var(--muted); margin-bottom:16px;
+}
+.reveal-big {
+  font-family:'Playfair Display', serif;
+  font-size:clamp(3rem, 12vw, 8rem);
+  font-weight:900; color:var(--gold);
+  text-shadow:0 0 80px rgba(245,197,24,0.6);
+  animation:offerPop 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  margin-bottom:16px;
+}
+.reveal-sub {
+  font-size:1.1rem; color:var(--text); opacity:0.7;
+  max-width:500px; line-height:1.7; margin-bottom:32px;
+}
+.reveal-sub strong { color:var(--gold); }
+
+/* Swap screen */
+#swap-overlay {
+  display:none; position:fixed; inset:0; z-index:150;
+  background:rgba(0,0,0,0.94);
+  backdrop-filter:blur(8px);
+  align-items:center; justify-content:center;
+  flex-direction:column; text-align:center; padding:40px;
+}
+#swap-overlay.open { display:flex; }
+
+.swap-boxes {
+  display:flex; gap:40px; margin:32px 0; flex-wrap:wrap; justify-content:center;
+}
+.swap-box {
+  width:120px; height:120px; border-radius:20px;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  border:2px solid var(--gold);
+  background:rgba(245,197,24,0.05);
+}
+.swap-box .sn {
+  font-family:'Playfair Display', serif;
+  font-size:2.5rem; font-weight:900; color:var(--gold);
+}
+.swap-box .sl { font-size:0.65rem; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-top:4px; }
+.swap-box.theirs { border-color:var(--blue); background:rgba(67,97,238,0.08); }
+.swap-box.theirs .sn { color:var(--blue); }
+
+.swap-btns { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; }
+.btn-swap {
+  padding:16px 40px; border-radius:50px; border:none;
+  font-family:'Montserrat', sans-serif; font-weight:900;
+  font-size:0.95rem; letter-spacing:2px; text-transform:uppercase;
+  cursor:pointer; transition:all 0.2s;
+}
+.btn-swap-stick { background:var(--gold); color:#000; box-shadow:0 6px 30px rgba(245,197,24,0.3); }
+.btn-swap-swap  { background:var(--blue); color:#fff; box-shadow:0 6px 30px rgba(67,97,238,0.3); }
+
+/* Value open animation overlay */
+#val-flash {
+  display:none; position:fixed; inset:0; z-index:300;
+  align-items:center; justify-content:center;
+  pointer-events:none;
+}
+#val-flash.show { display:flex; }
+.val-flash-inner {
+  font-family:'Playfair Display', serif;
+  font-size:clamp(4rem, 15vw, 10rem);
+  font-weight:900; color:var(--gold);
+  text-shadow:0 0 80px rgba(245,197,24,0.8);
+  animation:flashVal 1.2s ease forwards;
+}
+@keyframes flashVal {
+  0%   { opacity:0; transform:scale(0.6); }
+  20%  { opacity:1; transform:scale(1.1); }
+  70%  { opacity:1; transform:scale(1); }
+  100% { opacity:0; transform:scale(1.3); }
+}
+
+/* Confetti */
+.confetti-container { position:fixed; inset:0; pointer-events:none; z-index:299; }
+.confetti-piece {
+  position:absolute; width:10px; height:10px;
+  animation:confettiFall linear forwards;
+  border-radius:2px;
+}
+@keyframes confettiFall {
+  0%   { transform:translateY(-20px) rotate(0deg); opacity:1; }
+  100% { transform:translateY(110vh) rotate(720deg); opacity:0; }
+}
+
+/* Stolen banner */
+.stolen-banner {
+  width:100%; max-width:560px;
+  background:rgba(230,57,70,0.12);
+  border:1px solid rgba(230,57,70,0.35);
+  border-radius:10px; padding:14px 20px;
+  font-size:0.85rem; color:var(--red); display:none;
+  margin-top:-8px;
+}
+
+/* Round pill */
+.round-pill {
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:50px; padding:6px 16px;
+  font-size:0.7rem; letter-spacing:3px;
+  text-transform:uppercase; color:var(--muted);
+}
+
+/* Responsive */
+@media(max-width:768px) {
+  #main-layout { grid-template-columns:100px 1fr 100px; }
+  .val-pill { font-size:0.7rem; padding:4px 6px; }
+  #box-grid { grid-template-columns:repeat(4,1fr); gap:8px; }
+}
+@media(max-width:520px) {
+  #main-layout { grid-template-columns:1fr; }
+  .value-board { display:none; }
+  #box-grid { grid-template-columns:repeat(4,1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="intro">
+  <p class="intro-eyebrow">Grade 7 Honours Geography · Review Game</p>
+  <h1>Deal or<br>No Deal</h1>
+  <h2>Classroom Edition</h2>
+  <div class="player-box-display">
+    <span class="box-num" id="player-box-num">?</span>
+    <span class="box-label">Your Box</span>
+    <span class="box-sublabel">Hold onto this one — don't open it!</span>
+  </div>
+  <button class="start-btn" onclick="startGame()">Let's Play</button>
+</div>
+
+<!-- GAME -->
+<div id="game">
+  <div id="header">
+    <h1>Deal or No Deal</h1>
+    <div class="hud-item">
+      <span class="hud-label">Your Box</span>
+      <span class="hud-val" id="hud-player-box">—</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">Boxes Left</span>
+      <span class="hud-val" id="hud-boxes-left">22</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">Boxes This Round</span>
+      <span class="hud-val" id="hud-round-left">5</span>
+    </div>
+    <div class="round-pill" id="hud-round-label">Round 1</div>
+  </div>
+
+  <div id="main-layout">
+    <!-- Left values (low) -->
+    <div class="value-board" id="board-left"></div>
+
+    <!-- Center -->
+    <div id="center">
+      <div id="box-grid"></div>
+      <div id="status-msg">Pick a box to open for the first question.</div>
+      <div class="stolen-banner" id="stolen-banner"></div>
+      <div id="question-panel">
+        <div class="q-eyebrow">Question <span id="q-num"></span> of 26</div>
+        <div class="q-text" id="q-text"></div>
+        <div class="q-answer" id="q-answer">
+          <strong>Answer</strong>
+          <span id="q-answer-text"></span>
+        </div>
+        <div class="q-btns">
+          <button class="btn-reveal" id="btn-reveal" onclick="revealAnswer()">Show Answer</button>
+          <button class="btn-correct" id="btn-correct" style="display:none" onclick="judgeAnswer(true)">✓ Correct</button>
+          <button class="btn-wrong" id="btn-wrong" style="display:none" onclick="judgeAnswer(false)">✗ Wrong</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right values (high) -->
+    <div class="value-board right" id="board-right"></div>
+  </div>
+</div>
+
+<!-- BANKER -->
+<div id="banker-overlay">
+  <div class="banker-ring">📞</div>
+  <div class="banker-title">The Banker is calling...</div>
+  <div class="banker-offer-val" id="banker-offer-val">—</div>
+  <div class="banker-msg" id="banker-msg"></div>
+  <div class="deal-btns">
+    <button class="btn-deal btn-deal-yes" onclick="takeDeal()">DEAL</button>
+    <button class="btn-deal btn-deal-no" onclick="noDeal()">NO DEAL</button>
+  </div>
+</div>
+
+<!-- SWAP -->
+<div id="swap-overlay">
+  <div class="reveal-title">Final Decision</div>
+  <p style="font-size:1.1rem;color:var(--text);opacity:0.7;max-width:480px;line-height:1.7">
+    One box remains. You can <strong style="color:var(--gold)">stick</strong> with your original box,
+    or <strong style="color:var(--blue)">swap</strong> to the last box on the board.
+  </p>
+  <div class="swap-boxes">
+    <div class="swap-box">
+      <span class="sn" id="swap-your-num">?</span>
+      <span class="sl">Your Box</span>
+    </div>
+    <div class="swap-box theirs">
+      <span class="sn" id="swap-their-num">?</span>
+      <span class="sl">Last Box</span>
+    </div>
+  </div>
+  <div class="swap-btns">
+    <button class="btn-swap btn-swap-stick" onclick="swapDecision(false)">Stick with Mine</button>
+    <button class="btn-swap btn-swap-swap" onclick="swapDecision(true)">Swap!</button>
+  </div>
+</div>
+
+<!-- REVEAL -->
+<div id="reveal-overlay">
+  <div class="confetti-container" id="confetti-el"></div>
+  <div class="reveal-title" id="reveal-title">Your Box Contained...</div>
+  <div class="reveal-big" id="reveal-big">—</div>
+  <div class="reveal-sub" id="reveal-sub"></div>
+  <button class="start-btn" onclick="location.reload()" style="margin-top:16px">Play Again</button>
+</div>
+
+<!-- Value flash -->
+<div id="val-flash">
+  <div class="val-flash-inner" id="val-flash-text"></div>
+</div>
+
+<script>
+// ===== DATA =====
+const ALL_VALUES = [1,2,3,4,5,6,7,8,9,10,15,20,25,30,35,40,50,60,70,80,90];
+// 100% is in player's box — not on the board
+
+const QUESTIONS = [
+  // Natural Resources
+  { q:"What is a natural resource?", a:"A material from nature that people use (e.g. water, trees, coal, fish)." },
+  { q:"What is the difference between a renewable and a non-renewable resource?", a:"Renewable resources replenish naturally over time; non-renewable resources form far slower than they are used." },
+  { q:"Give one example of a non-renewable resource.", a:"Any of: fossil fuels, coal, oil, natural gas." },
+  { q:"What does an ecological footprint measure?", a:"The environmental impact of a person or population — how much land and water is needed to support their lifestyle." },
+  { q:"Why does resource use vary between countries?", a:"Differences in wealth, population size, climate, and technology." },
+  // Needs & Wants
+  { q:"What is the difference between a need and a want?", a:"A need is essential for survival (e.g. clean water, food, shelter). A want is desired but not required to survive." },
+  { q:"Give one example of a human need and one want.", a:"Need: clean water / food / shelter. Want: smartphone / designer clothes / video games." },
+  { q:"What is sustainability?", a:"Using natural resources at a rate that allows them to continue being available for future generations." },
+  // Soil & Farming
+  { q:"What is soil degradation?", a:"Damage that reduces soil quality — including loss of nutrients, erosion, and compaction." },
+  { q:"Name two human activities that cause soil degradation.", a:"Any two of: overgrazing, deforestation, monoculture farming, overuse of chemicals." },
+  { q:"Why is soil important to humans?", a:"It supports food production — most of the food we eat depends on healthy soil." },
+  { q:"What is the difference between food loss and food waste?", a:"Food loss happens during production and distribution (e.g. spoilage in transport). Food waste happens at the consumer level (e.g. throwing away edible food)." },
+  // Fish
+  { q:"What is overfishing and why is it a problem?", a:"Catching fish faster than populations can reproduce — leads to population collapse and ecosystem disruption." },
+  { q:"What is by-catch?", a:"Non-target species caught unintentionally in fishing nets — they are usually discarded, often dead." },
+  { q:"Name one strategy used to manage fish stocks sustainably.", a:"Any of: fishing quotas, marine protected areas (MPAs), sustainable fishing certifications." },
+  { q:"What is one consequence of overfishing on ocean ecosystems?", a:"Species like sharks and cod become endangered or extinct, disrupting food chains." },
+  // Forests & Deforestation
+  { q:"What is clear-cutting?", a:"Removing all trees from a large area — exposes soil to erosion and destroys wildlife habitat." },
+  { q:"Name two environmental impacts of deforestation.", a:"Any two of: soil erosion, increased flooding, climate change (CO₂ release), habitat loss and biodiversity loss." },
+  { q:"What does FSC certification mean?", a:"Forest Stewardship Council — it means a wood product meets environmental and social standards for responsible, sustainable forestry." },
+  { q:"Why are forests important for climate?", a:"They absorb CO₂ and store carbon. Deforestation releases stored carbon, contributing to climate change." },
+  // Conservation
+  { q:"What is conservation?", a:"Protecting natural resources from overuse or damage so they remain available for the future." },
+  { q:"Give one example of a conservation strategy for forests.", a:"Any of: selective logging, replanting/reforestation programs, FSC certification, protected forest areas." },
+  { q:"How can individual actions reduce environmental impact?", a:"Reducing consumption, buying sustainably sourced products, reducing food waste, using less energy." },
+  // General Geography
+  { q:"What country is Mr. Nolan from? (passport country)", a:"Ireland." },
+  { q:"What is the largest country in the world by area?", a:"Russia." },
+  { q:"Name one country whose flag is not a rectangle.", a:"Any of: Switzerland (square), Vatican City (square), Nepal (double pennant / non-rectangular)." }
+];
+
+// Shuffle questions
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+// ===== STATE =====
+const ROUND_SCHEDULE = [5,3,3,3,2,1,1,1]; // boxes to open each round
+let playerBoxNum, playerBoxValue = 100;
+let boxValues = {}; // box# -> value (for board boxes only)
+let boxOpened = {}; // box# -> bool
+let remainingValues = [...ALL_VALUES]; // values still in play
+let questions = shuffle(QUESTIONS);
+let qIndex = 0;
+let currentRound = 0;
+let boxesLeftThisRound = 0;
+let currentOpenBox = null;
+let dealTaken = false;
+let dealValue = null;
+let audioCtx = null;
+
+// ===== AUDIO =====
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  return audioCtx;
+}
+function tone(freq, dur, type='sine', vol=0.25) {
+  try {
+    const ctx = getAudio();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+dur);
+    o.start(); o.stop(ctx.currentTime+dur);
+  } catch(e){}
+}
+function playOpen()   { [330,440,550].forEach((f,i)=>setTimeout(()=>tone(f,0.2,'triangle',0.3),i*80)); }
+function playCorrect(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,0.25,'sine',0.35),i*80)); }
+function playWrong()  { tone(180,0.5,'sawtooth',0.3); }
+function playPhone() {
+  // Classic telephone ring: two short bursts separated by silence, repeated 4 times
+  const ctx = getAudio();
+  function ring(startTime) {
+    const freqs = [480, 440];
+    freqs.forEach(freq => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      // First burst
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.35, startTime + 0.02);
+      gain.gain.setValueAtTime(0.35, startTime + 0.38);
+      gain.gain.linearRampToValueAtTime(0, startTime + 0.4);
+      // Second burst after 0.2s gap
+      gain.gain.setValueAtTime(0, startTime + 0.6);
+      gain.gain.linearRampToValueAtTime(0.35, startTime + 0.62);
+      gain.gain.setValueAtTime(0.35, startTime + 0.98);
+      gain.gain.linearRampToValueAtTime(0, startTime + 1.0);
+      osc.start(startTime);
+      osc.stop(startTime + 1.05);
+    });
+  }
+  // Ring 4 times — each cycle = 1s sound + 1s silence = 2s per cycle
+  const now = ctx.currentTime + 0.1;
+  for (let i = 0; i < 4; i++) ring(now + i * 2.0);
+}
+function playReveal() { [523,659,784,880,1047].forEach((f,i)=>setTimeout(()=>tone(f,0.3,'sine',0.4),i*100)); }
+
+// ===== SETUP =====
+function startGame() {
+  // Assign player box randomly (1–22)
+  playerBoxNum = Math.floor(Math.random()*22)+1;
+  document.getElementById('player-box-num').textContent = playerBoxNum;
+
+  // Assign shuffled values to board boxes (all except player's box)
+  const shuffledVals = shuffle(ALL_VALUES);
+  let vi = 0;
+  for (let b=1; b<=22; b++) {
+    if (b === playerBoxNum) continue;
+    boxValues[b] = shuffledVals[vi++];
+  }
+
+  document.getElementById('intro').style.display = 'none';
+  document.getElementById('game').style.display = 'block';
+
+  document.getElementById('hud-player-box').textContent = `Box ${playerBoxNum}`;
+  buildValueBoards();
+  buildBoxGrid();
+  startRound(0);
+}
+
+// ===== VALUE BOARDS =====
+const LOW_VALS  = [1,2,3,4,5,6,7,8,9,10,15];
+const HIGH_VALS = [20,25,30,35,40,50,60,70,80,90,100];
+
+function buildValueBoards() {
+  const left  = document.getElementById('board-left');
+  const right = document.getElementById('board-right');
+  left.innerHTML  = '<div style="font-size:0.6rem;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;text-align:center">Values</div>';
+  right.innerHTML = '<div style="font-size:0.6rem;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;text-align:center">Values</div>';
+
+  LOW_VALS.forEach(v => {
+    const p = document.createElement('div');
+    p.className = 'val-pill low';
+    p.id = `val-${v}`;
+    p.textContent = v + '%';
+    left.appendChild(p);
+  });
+  HIGH_VALS.forEach(v => {
+    const p = document.createElement('div');
+    p.className = `val-pill ${v>=50?'high':'mid'}`;
+    p.id = `val-${v}`;
+    p.textContent = v + '%';
+    right.appendChild(p);
+  });
+}
+
+function eliminateValue(val) {
+  const el = document.getElementById(`val-${val}`);
+  if (el) el.classList.add('eliminated');
+  remainingValues = remainingValues.filter(v=>v!==val);
+}
+
+// ===== BOX GRID =====
+function buildBoxGrid() {
+  const grid = document.getElementById('box-grid');
+  grid.innerHTML = '';
+  for (let b=1; b<=22; b++) {
+    const box = document.createElement('div');
+    box.className = 'box' + (b===playerBoxNum?' player-box':'');
+    box.id = `box-${b}`;
+    box.innerHTML = `<span class="box-n">${b}</span><span class="box-sub">${b===playerBoxNum?'Yours':'Box'}</span>`;
+    box.addEventListener('click', ()=>selectBox(b));
+    grid.appendChild(box);
+  }
+}
+
+// ===== ROUNDS =====
+function startRound(roundIdx) {
+  currentRound = roundIdx;
+  boxesLeftThisRound = ROUND_SCHEDULE[roundIdx];
+  document.getElementById('hud-round-label').textContent = `Round ${roundIdx+1}`;
+  updateHUD();
+  setStatus(`Round ${roundIdx+1} — open <strong>${boxesLeftThisRound}</strong> box${boxesLeftThisRound>1?'es':''}.`);
+  enableBoxes(true);
+}
+
+function updateHUD() {
+  const opened = Object.values(boxOpened).filter(Boolean).length;
+  document.getElementById('hud-boxes-left').textContent = 22 - opened;
+  document.getElementById('hud-round-left').textContent = boxesLeftThisRound;
+}
+
+function enableBoxes(yes) {
+  document.querySelectorAll('.box:not(.opened):not(.banker-stole):not(.player-box)').forEach(b=>{
+    b.classList.toggle('disabled', !yes);
+  });
+}
+
+// ===== BOX SELECTION =====
+function selectBox(num) {
+  if (num === playerBoxNum) return;
+  const el = document.getElementById(`box-${num}`);
+  if (el.classList.contains('opened') || el.classList.contains('banker-stole') || el.classList.contains('disabled')) return;
+  if (boxesLeftThisRound <= 0) return;
+
+  currentOpenBox = num;
+  enableBoxes(false);
+  showQuestion();
+}
+
+// ===== QUESTION =====
+function showQuestion() {
+  const panel = document.getElementById('question-panel');
+  panel.style.display = 'block';
+  document.getElementById('q-num').textContent = qIndex+1;
+  document.getElementById('q-text').textContent = questions[qIndex].q;
+  document.getElementById('q-answer-text').textContent = questions[qIndex].a;
+  document.getElementById('q-answer').style.display = 'none';
+  document.getElementById('btn-reveal').style.display = 'inline-block';
+  document.getElementById('btn-correct').style.display = 'none';
+  document.getElementById('btn-wrong').style.display = 'none';
+  setStatus('');
+  panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function revealAnswer() {
+  document.getElementById('q-answer').style.display = 'block';
+  document.getElementById('btn-reveal').style.display = 'none';
+  document.getElementById('btn-correct').style.display = 'inline-block';
+  document.getElementById('btn-wrong').style.display = 'inline-block';
+}
+
+function judgeAnswer(correct) {
+  qIndex++;
+  document.getElementById('question-panel').style.display = 'none';
+
+  // Fun mode: deal already taken, just opening boxes for show — no penalties
+  if (window._funMode) {
+    openBox(currentOpenBox);
+    boxesLeftThisRound--;
+    updateHUD();
+    const rem = countRemainingBoardBoxes();
+    if (rem <= 0) {
+      setTimeout(() => showFinalReveal(100, false, null), 800);
+    } else {
+      setStatus(`Opening for fun! ${rem} box${rem > 1 ? 'es' : ''} remaining.`);
+      enableBoxes(true);
+    }
+    return;
+  }
+
+  if (correct) {
+    playCorrect();
+    openBox(currentOpenBox);
+  } else {
+    playWrong();
+    bankerStealsHighest();
+  }
+
+  boxesLeftThisRound--;
+  updateHUD();
+
+  if (boxesLeftThisRound <= 0) {
+    setTimeout(() => endOfRound(), 1200);
+  } else {
+    setStatus(`${boxesLeftThisRound} box${boxesLeftThisRound > 1 ? 'es' : ''} left this round. Pick another.`);
+    enableBoxes(true);
+  }
+}
+
+// ===== OPEN BOX =====
+function openBox(num) {
+  const val = boxValues[num];
+  boxOpened[num] = true;
+  const el = document.getElementById(`box-${num}`);
+  el.classList.add('opened');
+  el.innerHTML = `<span class="box-n" style="font-size:1rem;color:var(--muted)">${val}%</span>`;
+
+  eliminateValue(val);
+  playOpen();
+  showValFlash(val + '%');
+}
+
+function showValFlash(text) {
+  const fl = document.getElementById('val-flash');
+  document.getElementById('val-flash-text').textContent = text;
+  fl.classList.add('show');
+  setTimeout(()=>fl.classList.remove('show'), 1300);
+}
+
+// ===== BANKER STEALS RANDOM (20%–90%) =====
+function bankerStealsHighest() {
+  // Build list of eligible boxes: on the board, not opened, value between 20 and 90
+  let eligible = [];
+  for (let b = 1; b <= 22; b++) {
+    if (b === playerBoxNum) continue;
+    const el = document.getElementById(`box-${b}`);
+    if (el.classList.contains('opened') || el.classList.contains('banker-stole')) continue;
+    const v = boxValues[b];
+    if (v >= 20 && v <= 90) eligible.push(b);
+  }
+
+  // Fallback: if no 20–90 box remains, pick any remaining board box
+  if (eligible.length === 0) {
+    for (let b = 1; b <= 22; b++) {
+      if (b === playerBoxNum) continue;
+      const el = document.getElementById(`box-${b}`);
+      if (!el.classList.contains('opened') && !el.classList.contains('banker-stole')) eligible.push(b);
+    }
+  }
+  if (eligible.length === 0) return;
+
+  // Pick randomly from eligible list
+  const stolenBox = eligible[Math.floor(Math.random() * eligible.length)];
+  const stolenVal = boxValues[stolenBox];
+
+  const el = document.getElementById(`box-${stolenBox}`);
+  el.classList.add('banker-stole');
+  el.innerHTML = `<span class="box-n" style="font-size:0.75rem;color:var(--red)">BANKER<br>TOOK</span>`;
+  eliminateValue(stolenVal);
+  boxOpened[stolenBox] = true;
+
+  const banner = document.getElementById('stolen-banner');
+  banner.style.display = 'block';
+  banner.textContent = `❌ Wrong answer — the Banker stole Box ${stolenBox} (${stolenVal}%) off the board!`;
+  setTimeout(() => banner.style.display = 'none', 5000);
+  tone(200, 0.6, 'sawtooth', 0.35);
+}
+
+// ===== END OF ROUND / BANKER =====
+function endOfRound() {
+  // Check if game is over first
+  const remaining = countRemainingBoardBoxes();
+
+  if (remaining <= 1) {
+    // Final swap moment
+    offerSwap();
+    return;
+  }
+
+  // Show banker offer
+  const offer = calcOffer();
+  playPhone();
+
+  document.getElementById('banker-offer-val').textContent = offer + '%';
+  document.getElementById('banker-msg').textContent = bankerMessage(offer);
+  document.getElementById('banker-overlay').classList.add('open');
+}
+
+function countRemainingBoardBoxes() {
+  let count = 0;
+  for (let b=1; b<=22; b++) {
+    if (b===playerBoxNum) continue;
+    const el = document.getElementById(`box-${b}`);
+    if (!el.classList.contains('opened') && !el.classList.contains('banker-stole')) count++;
+  }
+  return count;
+}
+
+function calcOffer() {
+  // Average of remaining values (including player's 100%) times a factor
+  const vals = [...remainingValues, 100]; // player's box always has 100
+  const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+  // Shade slightly low early, close to fair late
+  const roundsPlayed = currentRound+1;
+  const totalRounds = ROUND_SCHEDULE.length;
+  const factor = 0.75 + (roundsPlayed/totalRounds)*0.2; // 0.75 → 0.95
+  return Math.round(avg * factor);
+}
+
+function bankerMessage(offer) {
+  const avg = ([...remainingValues,100].reduce((a,b)=>a+b,0)/([...remainingValues,100].length));
+  if (offer >= avg*0.92) return `That's a strong offer — very close to the average of what's still on the board. A serious proposal. What do you say?`;
+  if (offer >= avg*0.80) return `A fair offer from the Banker. You've played well so far. Is ${offer}% enough, or do you believe something better is waiting?`;
+  if (offer >= avg*0.65) return `The Banker is being cautious. There's still a lot of value left on the board — but so is the risk. Your call.`;
+  return `The Banker senses an opportunity. A modest offer for now — but remember, everything could change in the next round.`;
+}
+
+function takeDeal() {
+  dealTaken = true;
+  dealValue = parseInt(document.getElementById('banker-offer-val').textContent);
+  document.getElementById('banker-overlay').classList.remove('open');
+
+  // Play out remaining boxes for fun
+  setStatus('🎉 DEAL TAKEN! Open the remaining boxes to see what you would have won...');
+  enableBoxes(true);
+  // Change judge buttons to just "open for fun" mode
+  switchToFunMode();
+}
+
+function switchToFunMode() {
+  // Override judgeAnswer to just open boxes without scoring
+  window._funMode = true;
+}
+
+function noDeal() {
+  document.getElementById('banker-overlay').classList.remove('open');
+  const nextRound = currentRound+1;
+  if (nextRound < ROUND_SCHEDULE.length) {
+    startRound(nextRound);
+  } else {
+    offerSwap();
+  }
+}
+
+// ===== SWAP =====
+function offerSwap() {
+  // Find the last remaining board box
+  let lastBox = null;
+  for (let b=1; b<=22; b++) {
+    if (b===playerBoxNum) continue;
+    const el = document.getElementById(`box-${b}`);
+    if (!el.classList.contains('opened') && !el.classList.contains('banker-stole')) { lastBox=b; break; }
+  }
+
+  document.getElementById('swap-your-num').textContent = playerBoxNum;
+  document.getElementById('swap-their-num').textContent = lastBox || '?';
+  window._lastBox = lastBox;
+  document.getElementById('swap-overlay').classList.add('open');
+}
+
+function swapDecision(swap) {
+  document.getElementById('swap-overlay').classList.remove('open');
+  if (swap && window._lastBox) {
+    // Swap: player gets lastBox's value, lastBox gets 100%
+    const theirVal = boxValues[window._lastBox];
+    showFinalReveal(theirVal, true, 100);
+  } else {
+    showFinalReveal(100, false, window._lastBox ? boxValues[window._lastBox] : null);
+  }
+}
+
+// ===== FINAL REVEAL =====
+function showFinalReveal(playerGets, swapped, otherVal) {
+  const overlay = document.getElementById('reveal-overlay');
+  overlay.classList.add('open');
+
+  document.getElementById('reveal-big').textContent = playerGets + '%';
+
+  let sub = '';
+  if (dealTaken) {
+    sub = `You took the Banker's deal of <strong>${dealValue}%</strong>. Your box contained <strong>${playerBoxValue}%</strong>. `;
+    sub += dealValue >= playerBoxValue ? `Great deal! You came out ahead. 🎉` : `You would have done better staying — but deals are always a gamble!`;
+  } else if (swapped) {
+    sub = `You swapped! Your new box contained <strong>${playerGets}%</strong>. Your original Box ${playerBoxNum} had <strong>${otherVal}%</strong>. `;
+    sub += playerGets >= otherVal ? `Smart swap — you got the better deal! 🎉` : `Oh! Your original box had more — but that's the game!`;
+  } else {
+    sub = `You stuck with your original box — and it contained <strong>${playerGets}%</strong>! `;
+    if (otherVal !== null) sub += `The last box on the board had <strong>${otherVal}%</strong>. `;
+    sub += playerGets === 100 ? `You had the top value all along! 🏆` : ``;
+  }
+
+  document.getElementById('reveal-sub').innerHTML = sub;
+  playReveal();
+  if (playerGets >= 70 || (dealTaken && dealValue >= 50)) spawnConfetti();
+}
+
+function spawnConfetti() {
+  const c = document.getElementById('confetti-el');
+  const cols = ['#f5c518','#e63946','#4361ee','#2dc653','#f4a261','#e9c46a'];
+  for (let i=0;i<60;i++) {
+    const p = document.createElement('div');
+    p.className='confetti-piece';
+    p.style.left=Math.random()*100+'vw';
+    p.style.background=cols[Math.floor(Math.random()*cols.length)];
+    p.style.animationDuration=(2+Math.random()*3)+'s';
+    p.style.animationDelay=Math.random()*2+'s';
+    p.style.width=(6+Math.random()*8)+'px';
+    p.style.height=(6+Math.random()*8)+'px';
+    p.style.borderRadius=Math.random()>0.5?'50%':'2px';
+    c.appendChild(p);
+  }
+}
+
+// ===== STATUS =====
+function setStatus(html) {
+  document.getElementById('status-msg').innerHTML = html;
+}
+</script>
+</body>
+</html>
