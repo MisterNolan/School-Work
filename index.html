@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HWIS Summer Wellness Challenge</title>
+<style>
+:root {
+  --blue: #1a3fa8;
+  --blue-dark: #112880;
+  --blue-mid: #2d52c4;
+  --blue-light: #e8edf8;
+  --gold: #c9a84c;
+  --gold-light: #fdf6e3;
+  --white: #ffffff;
+  --bg: #f4f6fb;
+  --border: rgba(26,63,168,0.12);
+  --border-md: rgba(26,63,168,0.25);
+  --text: #0d1f52;
+  --text2: #4a5a8a;
+  --text3: #8a96b8;
+  --green: #1a7a4a;
+  --green-bg: #e8f5ee;
+  --green-border: rgba(26,122,74,0.25);
+  --r: 12px;
+  --r-sm: 8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;line-height:1.5}
+.screen{display:none}
+.screen.on{display:block}
+
+#s-ob{min-height:100vh;background:linear-gradient(145deg,#112880,#1a3fa8,#2d52c4);display:flex;align-items:center;justify-content:center;padding:2rem 1rem}
+.ob-card{background:var(--white);border-radius:20px;padding:2.25rem 2rem;max-width:440px;width:100%;box-shadow:0 16px 60px rgba(0,0,0,0.25)}
+.ob-logo{display:flex;align-items:center;gap:12px;margin-bottom:1.75rem}
+.ob-mark{width:44px;height:44px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ob-mark svg{width:26px;height:26px}
+.ob-brand-name{font-size:16px;font-weight:700;color:var(--blue);line-height:1.2}
+.ob-brand-sub{font-size:11px;color:var(--text3);letter-spacing:0.07em;text-transform:uppercase}
+.ob-card h1{font-size:26px;font-weight:700;color:var(--text);margin-bottom:0.4rem}
+.ob-desc{font-size:14px;color:var(--text2);margin-bottom:1.75rem;line-height:1.6}
+.lbl{display:block;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.35rem}
+.inp{display:block;width:100%;padding:10px 13px;border:1.5px solid var(--border-md);border-radius:var(--r-sm);font-size:15px;color:var(--text);background:var(--white);outline:none;transition:border-color 0.15s;margin-bottom:1rem;font-family:inherit}
+.inp:focus{border-color:var(--blue)}
+.code-reveal{background:var(--blue-light);border:1.5px solid var(--border-md);border-radius:var(--r-sm);padding:14px 16px;margin-bottom:1.25rem;display:none}
+.code-reveal-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
+.code-reveal-val{font-size:24px;font-weight:700;color:var(--blue);letter-spacing:0.02em;word-break:break-all}
+.code-reveal-hint{font-size:12px;color:var(--text3);margin-top:6px;line-height:1.5}
+.btn{display:block;width:100%;padding:12px;background:var(--blue);color:var(--white);border:none;border-radius:var(--r-sm);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:background 0.15s}
+.btn:hover{background:var(--blue-dark)}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+.err-msg{font-size:13px;color:#a32d2d;margin-top:8px;display:none}
+.divider{text-align:center;font-size:13px;color:var(--text3);margin:1.25rem 0;position:relative}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:var(--border)}
+.divider::before{left:0}.divider::after{right:0}
+.btn-outline{background:transparent;color:var(--blue);border:1.5px solid var(--blue-mid);margin-top:0.75rem}
+.btn-outline:hover{background:var(--blue-light)}
+
+.topbar{background:var(--blue);color:var(--white);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:56px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(26,63,168,0.3)}
+.tb-left{display:flex;align-items:center;gap:10px}
+.tb-mark{width:28px;height:28px;background:rgba(255,255,255,0.15);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.tb-mark svg{width:17px;height:17px}
+.tb-title{font-size:15px;font-weight:700}
+.tb-right{display:flex;align-items:center;gap:10px}
+.tb-name{font-size:13px;opacity:0.75}
+.streak{background:rgba(201,168,76,0.2);border:1px solid rgba(201,168,76,0.4);color:var(--gold);padding:3px 10px;border-radius:100px;font-size:13px;font-weight:600}
+
+.nav{background:var(--white);border-bottom:1.5px solid var(--border);display:flex;padding:0 1.25rem}
+.ntab{padding:12px 14px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1.5px;transition:all 0.15s;user-select:none}
+.ntab:hover{color:var(--text2)}
+.ntab.on{color:var(--blue);border-bottom-color:var(--blue)}
+
+.main{max-width:800px;margin:0 auto;padding:1.75rem 1.25rem}
+.panel{display:none}
+.panel.on{display:block}
+
+.date-bar{background:var(--blue);color:var(--white);border-radius:var(--r);padding:1rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between}
+.date-bar-title{font-size:18px;font-weight:700}
+.date-bar-sub{font-size:12px;opacity:0.65;margin-top:2px}
+.prog-pill{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);padding:4px 12px;border-radius:100px;font-size:12px;font-weight:600}
+
+.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:11px;margin-bottom:1.5rem}
+.cat{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:1rem 1.1rem;cursor:pointer;transition:border-color 0.15s,background 0.15s;position:relative;overflow:hidden}
+.cat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--blue);transform:scaleX(0);transform-origin:left;transition:transform 0.25s}
+.cat.done{border-color:var(--green);background:var(--green-bg)}
+.cat.done::before{background:var(--green);transform:scaleX(1)}
+.cat-top{display:flex;align-items:flex-start;gap:9px;margin-bottom:8px}
+.cat-emoji{font-size:22px;line-height:1;flex-shrink:0}
+.cat-name{font-size:13px;font-weight:600;color:var(--text)}
+.cat.done .cat-name{color:var(--green)}
+.cat-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.cat-tick{margin-left:auto;width:22px;height:22px;border-radius:50%;border:2px solid var(--border-md);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;font-size:12px}
+.cat.done .cat-tick{background:var(--green);border-color:var(--green);color:var(--white)}
+
+.counter{display:flex;align-items:center;gap:9px;margin-top:2px}
+.cbtn{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border-md);background:var(--white);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text2);line-height:1;font-family:inherit;transition:all 0.15s}
+.cbtn:hover{background:var(--blue);color:var(--white);border-color:var(--blue)}
+.cval{font-size:22px;font-weight:700;min-width:28px;text-align:center;color:var(--text)}
+.cgoal{font-size:11px;color:var(--text3)}
+
+.sleep-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.sbtn{padding:3px 9px;border:1.5px solid var(--border-md);border-radius:100px;font-size:12px;cursor:pointer;color:var(--text2);background:var(--white);font-family:inherit;transition:all 0.15s}
+.sbtn:hover{border-color:var(--blue);color:var(--blue)}
+.sbtn.on{background:var(--blue);border-color:var(--blue);color:var(--white)}
+
+.photo-card{background:var(--gold-light);border:1.5px solid rgba(201,168,76,0.35);border-radius:var(--r);padding:1rem 1.1rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:13px}
+.photo-em{font-size:26px;flex-shrink:0}
+.photo-info{flex:1}
+.photo-title{font-size:13px;font-weight:600;color:var(--text)}
+.photo-sub{font-size:12px;color:var(--text2);margin-top:3px;line-height:1.5}
+.photo-sub a{color:var(--blue)}
+.photo-btn{padding:7px 14px;background:var(--gold);color:var(--white);border:none;border-radius:var(--r-sm);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit;transition:background 0.15s}
+.photo-btn:hover{background:#b0922e}
+.photo-btn.claimed{background:var(--green)}
+
+.submit-btn{width:100%;padding:13px;background:var(--blue);color:var(--white);border:none;border-radius:var(--r-sm);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s;margin-bottom:0.5rem}
+.submit-btn:hover{background:var(--blue-dark)}
+.submit-btn:disabled{opacity:0.4;cursor:not-allowed}
+.submit-note{font-size:12px;color:var(--text3);text-align:center}
+
+.done-banner{background:var(--green-bg);border:1.5px solid var(--green-border);border-radius:var(--r);padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:13px}
+.done-em{font-size:30px}
+.done-info{flex:1}
+.done-title{font-size:15px;font-weight:600;color:var(--green)}
+.done-sub{font-size:13px;color:var(--text2);margin-top:2px}
+.done-score{font-size:30px;font-weight:700;color:var(--green)}
+
+.lb-hero{background:linear-gradient(135deg,var(--blue-dark),var(--blue-mid));border-radius:var(--r);padding:1.5rem;margin-bottom:1.5rem;color:var(--white);text-align:center}
+.lb-hero h3{font-size:20px;font-weight:700;margin-bottom:4px}
+.lb-hero p{font-size:13px;opacity:0.7;margin-bottom:12px}
+.lb-rfbtn{padding:7px 16px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:100px;color:var(--white);font-size:13px;cursor:pointer;font-family:inherit;transition:background 0.15s}
+.lb-rfbtn:hover{background:rgba(255,255,255,0.25)}
+.lb-list{display:flex;flex-direction:column;gap:10px}
+.lb-row{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:1rem 1.25rem;display:flex;align-items:center;gap:13px;position:relative;overflow:hidden}
+.lb-row.me{border-color:var(--blue);background:var(--blue-light)}
+.lb-rank{font-size:18px;font-weight:700;min-width:28px;text-align:center;color:var(--text3)}
+.lb-rank.g{color:#c9a84c}.lb-rank.s{color:#8a96b8}.lb-rank.b{color:#b07050}
+.lb-medal{font-size:20px;min-width:26px;text-align:center}
+.lb-nick{flex:1;font-size:14px;font-weight:600;color:var(--text)}
+.lb-row.me .lb-nick::after{content:' (you)';font-size:12px;font-weight:400;color:var(--blue)}
+.lb-days{font-size:12px;color:var(--text3);margin-top:1px}
+.lb-score{font-size:20px;font-weight:700;color:var(--blue)}
+.lb-bar{position:absolute;bottom:0;left:0;height:3px;background:var(--blue);opacity:0.3}
+.lb-row.me .lb-bar{opacity:1}
+.lb-empty{text-align:center;padding:3rem;color:var(--text3);font-size:14px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r)}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem}
+.stat{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:1rem;text-align:center}
+.stat-val{font-size:28px;font-weight:700;color:var(--blue)}
+.stat-lbl{font-size:12px;color:var(--text3);margin-top:3px}
+.hist-head{font-size:16px;font-weight:700;color:var(--text);margin-bottom:0.75rem}
+.hist-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.hist-dlbl{font-size:10px;color:var(--text3);text-align:center}
+.hist-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:1.5rem}
+.hcell{aspect-ratio:1;border-radius:5px;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3);cursor:default;transition:transform 0.1s}
+.hcell:hover{transform:scale(1.1)}
+.hcell.part{background:var(--blue-light);color:var(--blue)}
+.hcell.full{background:var(--blue);color:var(--white)}
+.hcell.today{outline:2px solid var(--gold);outline-offset:1px}
+
+#toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(16px);background:#0d1f52;color:var(--white);padding:10px 20px;border-radius:100px;font-size:13px;font-weight:500;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.2)}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:480px){
+  .cats{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .tb-name{display:none}
+}
+</style>
+</head>
+<body>
+
+<div id="s-ob" class="screen on">
+  <div class="ob-card">
+    <div class="ob-logo">
+      <div class="ob-mark">
+        <svg viewBox="0 0 32 32" fill="none">
+          <path d="M16 3L29 10V22L16 29L3 22V10Z" stroke="white" stroke-width="2"/>
+          <line x1="16" y1="8" x2="16" y2="24" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="10" y1="14" x2="22" y2="14" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="10" y1="20" x2="22" y2="20" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="ob-brand-name">Hong Wen International School</div>
+        <div class="ob-brand-sub">Summer Wellness Challenge 2025</div>
+      </div>
+    </div>
+    <h1>Build your best summer.</h1>
+    <p class="ob-desc">Track eight daily wellness habits, earn points, and compete on the leaderboard — while building routines that will carry you through DP2.</p>
+
+    <div id="new-section">
+      <label class="lbl" for="inp-name">Your first name</label>
+      <input class="inp" id="inp-name" type="text" placeholder="e.g. Emily" maxlength="30" autocomplete="given-name"/>
+      <label class="lbl" for="inp-nick">Leaderboard nickname</label>
+      <input class="inp" id="inp-nick" type="text" placeholder="e.g. NightOwl, CosmicRunner..." maxlength="20"/>
+      <div class="code-reveal" id="code-reveal">
+        <div class="code-reveal-label">🔐 Your secret code — write it down!</div>
+        <div class="code-reveal-val" id="code-val"></div>
+        <div class="code-reveal-hint">You need this to sign back in from any device. Keep it safe and don't share it.</div>
+      </div>
+      <button class="btn" id="new-btn">Get my secret code &amp; start</button>
+      <p class="err-msg" id="new-err">Please fill in both fields first.</p>
+    </div>
+
+    <div class="divider">already have a code?</div>
+
+    <div id="ret-section">
+      <label class="lbl" for="inp-code">Your secret code</label>
+      <input class="inp" id="inp-code" type="text" placeholder="e.g. BlueEagle_4821" style="margin-bottom:0"/>
+      <button class="btn btn-outline" id="ret-btn">Sign in</button>
+      <p class="err-msg" id="ret-err">Code not found — check your spelling.</p>
+    </div>
+  </div>
+</div>
+
+<div id="s-app" class="screen">
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-mark">
+        <svg viewBox="0 0 32 32" fill="none">
+          <path d="M16 3L29 10V22L16 29L3 22V10Z" stroke="white" stroke-width="2"/>
+          <line x1="16" y1="8" x2="16" y2="24" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="10" y1="14" x2="22" y2="14" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="tb-title">HWIS Wellness</span>
+    </div>
+    <div class="tb-right">
+      <span class="tb-name" id="tb-name"></span>
+      <span class="streak">🔥 <span id="tb-streak">0</span></span>
+    </div>
+  </div>
+
+  <div class="nav">
+    <div class="ntab on" data-p="checkin">✅ Check-in</div>
+    <div class="ntab" data-p="leaderboard">🏆 Leaderboard</div>
+    <div class="ntab" data-p="history">📅 My Progress</div>
+  </div>
+
+  <div class="main">
+    <div class="panel on" id="panel-checkin">
+      <div class="date-bar">
+        <div>
+          <div class="date-bar-title" id="date-title"></div>
+          <div class="date-bar-sub">Daily wellness check-in</div>
+        </div>
+        <div class="prog-pill" id="prog-pill">0 / 8</div>
+      </div>
+      <div id="done-banner" style="display:none">
+        <div class="done-banner">
+          <div class="done-em">🎉</div>
+          <div class="done-info">
+            <div class="done-title">Today's check-in is complete!</div>
+            <div class="done-sub">Come back tomorrow to keep your streak alive.</div>
+          </div>
+          <div class="done-score" id="done-score"></div>
+        </div>
+      </div>
+      <div id="checkin-form">
+        <div class="cats" id="cats-grid"></div>
+        <div class="photo-card">
+          <div class="photo-em">📸</div>
+          <div class="photo-info">
+            <div class="photo-title">Photo bonus (+2 pts)</div>
+            <div class="photo-sub">Share a photo of your exercise, healthy meal, or wellness moment to the <a href="https://drive.google.com/drive/folders/1JxKJYG6h8jIFIkrexYdxIxp_JIkpxegp?usp=drive_link" target="_blank" rel="noopener">HWIS Wellness Drive folder</a>, then claim your bonus below.</div>
+          </div>
+          <button class="photo-btn" id="photo-btn">Claim +2</button>
+        </div>
+        <button class="submit-btn" id="submit-btn">Submit today's check-in</button>
+        <p class="submit-note">One submission per day — make it count! 💪</p>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-leaderboard">
+      <div class="lb-hero">
+        <h3>🏆 Summer Leaderboard</h3>
+        <p>Cumulative points across the whole summer — updated in real time.</p>
+        <button class="lb-rfbtn" id="lb-refresh">↻ Refresh</button>
+      </div>
+      <div class="lb-list" id="lb-list"><div class="lb-empty">Loading…</div></div>
+    </div>
+
+    <div class="panel" id="panel-history">
+      <div class="stats">
+        <div class="stat"><div class="stat-val" id="st-streak">0</div><div class="stat-lbl">Day streak 🔥</div></div>
+        <div class="stat"><div class="stat-val" id="st-total">0</div><div class="stat-lbl">Total points</div></div>
+        <div class="stat"><div class="stat-val" id="st-days">0</div><div class="stat-lbl">Days checked in</div></div>
+      </div>
+      <div class="hist-head">Last 35 days</div>
+      <div class="hist-days">
+        <div class="hist-dlbl">M</div><div class="hist-dlbl">T</div><div class="hist-dlbl">W</div>
+        <div class="hist-dlbl">T</div><div class="hist-dlbl">F</div><div class="hist-dlbl">S</div><div class="hist-dlbl">S</div>
+      </div>
+      <div class="hist-grid" id="hist-grid"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var SUPA_URL = 'https://ynxzaxtbsafxogxrfkax.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlueHpheHRic2FmeG9neHJma2F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4MDAxMTEsImV4cCI6MjA5NDM3NjExMX0.pyNsChJkV7zps4ubL_BudVt6cBkJx89lSXU8tg6BG6A';
+
+// CATEGORIES — weightings hidden from students
+var CATS = [
+  {
+    id:'sleep', emoji:'😴', label:'Sleep',
+    sub:'Hours last night — aim for 8+',
+    type:'sleep', weight:25, goal:8
+  },
+  {
+    id:'exercise', emoji:'🏃', label:'Exercise',
+    sub:'Minimum 30 minutes (includes 30 min continuous walking)',
+    type:'check', weight:22
+  },
+  {
+    id:'nutrition', emoji:'🥗', label:'Nutrition',
+    sub:'Healthy meals today (aim for 3)',
+    type:'counter', weight:15, goal:3
+  },
+  {
+    id:'water', emoji:'💧', label:'Hydration',
+    sub:'500ml increments — aim for 2000ml (4 x 500ml)',
+    type:'counter', weight:8, goal:4, unit:'x 500ml'
+  },
+  {
+    id:'screen', emoji:'📵', label:'Screen-free time',
+    sub:'1 hour increments away from all screens (max 3 hrs)',
+    type:'counter', weight:9, goal:3, unit:'hr', max:3, pts_per:3
+  },
+  {
+    id:'social', emoji:'👥', label:'Social connection',
+    sub:'Meaningful time with friends or family',
+    type:'check', weight:9
+  },
+  {
+    id:'mindful', emoji:'🧘', label:'Mindfulness',
+    sub:'30+ mins reading, journalling, meditating or focused study',
+    type:'check', weight:8
+  },
+  {
+    id:'creative', emoji:'🎨', label:'Creative outlet',
+    sub:'Music, art, cooking — anything non-academic',
+    type:'check', weight:4
+  },
+];
+
+var ADJ  = ['Blue','Red','Gold','Swift','Calm','Bright','Wild','Bold','Jade','Iron','Sage','Dawn','Storm','Solar','Lunar','Apex','Echo','Mist','Teal','Crest'];
+var NOUN = ['Tiger','Eagle','River','Phoenix','Comet','Falcon','Panda','Lotus','Dragon','Bamboo','Orchid','Crane','Summit','Horizon','Ember','Frost','Wave','Cedar','Heron','Sparrow'];
+function genCode(){return ADJ[Math.floor(Math.random()*ADJ.length)]+NOUN[Math.floor(Math.random()*NOUN.length)]+'_'+(1000+Math.floor(Math.random()*9000));}
+function todayStr(){return new Date().toISOString().slice(0,10);}
+function lsGet(k){try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}}
+function lsSet(k,v){localStorage.setItem(k,JSON.stringify(v));}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');setTimeout(function(){t.classList.remove('on');},3500);}
+
+async function sbPost(table,data,upsert){
+  try{
+    var url=SUPA_URL+'/rest/v1/'+table+(upsert?'?on_conflict=code,date':'');
+    var pref=upsert?'resolution=merge-duplicates,return=minimal':'return=minimal';
+    var r=await fetch(url,{method:'POST',headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':pref},body:JSON.stringify(data)});
+    return r.ok;
+  }catch(e){return false;}
+}
+
+async function sbGet(table,qs){
+  try{
+    var r=await fetch(SUPA_URL+'/rest/v1/'+table+'?'+(qs||''),{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}});
+    return r.ok?await r.json():[];
+  }catch(e){return[];}
+}
+
+function calcScore(data,photo){
+  var s=0;
+  CATS.forEach(function(c){
+    var v=data[c.id];
+    if(c.type==='check'){if(v)s+=c.weight;}
+    else if(c.type==='counter'){
+      var n=v||0;
+      if(c.pts_per){
+        // screen-free: pts per hour, capped
+        s+=Math.min(c.weight, n*c.pts_per);
+      } else {
+        s+=n>=c.goal?c.weight:n>0?Math.round(c.weight*n/c.goal):0;
+      }
+    }
+    else if(c.type==='sleep'){
+      var h=v||0;
+      s+=h>=8?c.weight:h>=7?Math.round(c.weight*0.8):h>=6?Math.round(c.weight*0.5):h>0?Math.round(c.weight*0.2):0;
+    }
+  });
+  if(photo)s+=2;
+  return s;
+}
+
+var profile=null,formData={},photoClaimed=false,codeGenerated=null,codeShown=false;
+
+document.getElementById('new-btn').addEventListener('click',function(){
+  var name=document.getElementById('inp-name').value.trim();
+  var nick=document.getElementById('inp-nick').value.trim();
+  var err=document.getElementById('new-err');
+  if(!name||!nick){err.style.display='block';return;}
+  err.style.display='none';
+  if(!codeShown){
+    codeGenerated=genCode();
+    document.getElementById('code-val').textContent=codeGenerated;
+    document.getElementById('code-reveal').style.display='block';
+    document.getElementById('new-btn').textContent='Start the challenge →';
+    codeShown=true;
+    return;
+  }
+  profile={name:name,nickname:nick,code:codeGenerated};
+  lsSet('hwis_profile',profile);
+  launchApp();
+});
+
+document.getElementById('ret-btn').addEventListener('click',async function(){
+  var code=document.getElementById('inp-code').value.trim();
+  var err=document.getElementById('ret-err');
+  if(!code)return;
+  this.textContent='Looking up…';this.disabled=true;
+  var rows=await sbGet('checkins','code=eq.'+encodeURIComponent(code)+'&limit=1&select=nickname,code');
+  if(rows&&rows.length){
+    profile={name:rows[0].nickname,nickname:rows[0].nickname,code:rows[0].code};
+    lsSet('hwis_profile',profile);
+    err.style.display='none';
+    launchApp();
+  }else{
+    err.style.display='block';
+    this.textContent='Sign in';this.disabled=false;
+  }
+});
+
+function launchApp(){
+  document.getElementById('s-ob').classList.remove('on');
+  document.getElementById('s-app').classList.add('on');
+  document.getElementById('tb-name').textContent=profile.name;
+  document.getElementById('date-title').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+  buildCheckin();loadHistory();renderLeaderboard();
+}
+
+function isDone(cat){
+  var v=formData[cat.id];
+  if(cat.type==='check')return!!v;
+  if(cat.type==='counter'){
+    if(cat.pts_per)return(v||0)>=cat.goal;
+    return(v||0)>=cat.goal;
+  }
+  if(cat.type==='sleep')return(v||0)>=8;
+  return false;
+}
+
+function refreshCard(cat){
+  var el=document.getElementById('c_'+cat.id);
+  if(!el)return;
+  el.classList.toggle('done',isDone(cat));
+  el.querySelector('.cat-tick').textContent=isDone(cat)?'✓':'';
+}
+
+function refreshProgress(){
+  var done=CATS.filter(isDone).length;
+  document.getElementById('prog-pill').textContent=done+' / '+CATS.length;
+  var score=calcScore(formData,photoClaimed);
+  var btn=document.getElementById('submit-btn');
+  if(btn)btn.textContent='Submit today\'s check-in — '+score+' pts';
+}
+
+function buildCheckin(){
+  var sub=lsGet('hwis_sub_'+todayStr());
+  if(sub){
+    document.getElementById('done-banner').style.display='block';
+    document.getElementById('checkin-form').style.display='none';
+    document.getElementById('done-score').textContent=sub.score+' pts';
+    return;
+  }
+  formData={};photoClaimed=false;
+  var grid=document.getElementById('cats-grid');
+  grid.innerHTML='';
+
+  CATS.forEach(function(cat){
+    var div=document.createElement('div');
+    div.className='cat';div.id='c_'+cat.id;
+    var controls='';
+
+    if(cat.type==='counter'){
+      var goalLabel=cat.unit?cat.goal+' '+cat.unit:cat.goal;
+      controls='<div class="counter">'+
+        '<button class="cbtn" data-dec="'+cat.id+'">−</button>'+
+        '<span class="cval" id="cv_'+cat.id+'">0</span>'+
+        '<button class="cbtn" data-inc="'+cat.id+'">+</button>'+
+        '<span class="cgoal">/ '+goalLabel+'</span></div>';
+    } else if(cat.type==='sleep'){
+      controls='<div class="sleep-row">'+
+        [5,6,7,8,9,10].map(function(h){return'<button class="sbtn" data-slp="'+cat.id+'" data-val="'+h+'">'+h+'h</button>';}).join('')+
+        '</div>';
+    }
+
+    div.innerHTML=
+      '<div class="cat-top">'+
+        '<span class="cat-emoji">'+cat.emoji+'</span>'+
+        '<div><div class="cat-name">'+cat.label+'</div><div class="cat-sub">'+cat.sub+'</div></div>'+
+        '<div class="cat-tick"></div>'+
+      '</div>'+controls;
+
+    if(cat.type==='check'){
+      div.addEventListener('click',function(){
+        formData[cat.id]=!formData[cat.id];
+        refreshCard(cat);refreshProgress();
+      });
+    }
+    grid.appendChild(div);
+  });
+
+  grid.querySelectorAll('[data-inc]').forEach(function(b){
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      var id=b.getAttribute('data-inc');
+      var cat=CATS.find(function(c){return c.id===id;});
+      var maxVal=cat&&cat.max?cat.max:99;
+      formData[id]=Math.min(maxVal,(formData[id]||0)+1);
+      document.getElementById('cv_'+id).textContent=formData[id];
+      if(cat)refreshCard(cat);refreshProgress();
+    });
+  });
+
+  grid.querySelectorAll('[data-dec]').forEach(function(b){
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      var id=b.getAttribute('data-dec');
+      formData[id]=Math.max(0,(formData[id]||0)-1);
+      document.getElementById('cv_'+id).textContent=formData[id];
+      var cat=CATS.find(function(c){return c.id===id;});
+      if(cat)refreshCard(cat);refreshProgress();
+    });
+  });
+
+  grid.querySelectorAll('[data-slp]').forEach(function(b){
+    b.addEventListener('click',function(e){
+      e.stopPropagation();
+      var id=b.getAttribute('data-slp');
+      formData[id]=parseInt(b.getAttribute('data-val'));
+      grid.querySelectorAll('[data-slp="'+id+'"]').forEach(function(x){x.classList.remove('on');});
+      b.classList.add('on');
+      var cat=CATS.find(function(c){return c.id===id;});
+      if(cat)refreshCard(cat);refreshProgress();
+    });
+  });
+
+  document.getElementById('photo-btn').onclick=function(){
+    photoClaimed=!photoClaimed;
+    this.textContent=photoClaimed?'✓ Claimed':'Claim +2';
+    this.classList.toggle('claimed',photoClaimed);
+    refreshProgress();
+  };
+
+  document.getElementById('submit-btn').onclick=submitCheckin;
+  refreshProgress();
+}
+
+async function submitCheckin(){
+  var score=calcScore(formData,photoClaimed);
+  var btn=document.getElementById('submit-btn');
+  btn.disabled=true;btn.textContent='Submitting…';
+  var row={
+    nickname:profile.nickname,code:profile.code,date:todayStr(),
+    sleep:formData.sleep||0,
+    exercise:formData.exercise?1:0,
+    nutrition:formData.nutrition||0,
+    water:formData.water||0,
+    screen_free:formData.screen||0,
+    social:formData.social?1:0,
+    mindfulness:formData.mindful?1:0,
+    creative:formData.creative?1:0,
+    photo_bonus:photoClaimed?1:0,
+    total_score:score
+  };
+  var ok=await sbPost('checkins',row,true);
+  if(ok){
+    lsSet('hwis_sub_'+todayStr(),{score:score});
+    toast('Submitted! You earned '+score+' points today 🎉');
+    document.getElementById('done-banner').style.display='block';
+    document.getElementById('checkin-form').style.display='none';
+    document.getElementById('done-score').textContent=score+' pts';
+    loadHistory();renderLeaderboard();
+  }else{
+    btn.disabled=false;
+    btn.textContent='Connection error — tap to retry';
+    toast('Something went wrong. Check your connection.');
+  }
+}
+
+async function renderLeaderboard(){
+  var list=document.getElementById('lb-list');
+  list.innerHTML='<div class="lb-empty">Loading…</div>';
+  var rows=await sbGet('checkins','select=nickname,code,total_score,date&order=created_at.asc');
+  if(!rows||!rows.length){list.innerHTML='<div class="lb-empty">No entries yet — be the first! 🚀</div>';return;}
+  var agg={};
+  rows.forEach(function(r){
+    if(!agg[r.code])agg[r.code]={nickname:r.nickname,total:0,days:{}};
+    agg[r.code].total+=(r.total_score||0);
+    agg[r.code].days[r.date]=1;
+  });
+  var sorted=Object.keys(agg).map(function(code){
+    return{code:code,nickname:agg[code].nickname,total:agg[code].total,days:Object.keys(agg[code].days).length};
+  }).sort(function(a,b){return b.total-a.total;});
+  var max=sorted.length?sorted[0].total:1;
+  var medals=['🥇','🥈','🥉'],rc=['g','s','b'];
+  list.innerHTML='';
+  sorted.forEach(function(e,i){
+    var isMe=profile&&e.code===profile.code;
+    var pct=max>0?Math.round(e.total/max*100):0;
+    var div=document.createElement('div');
+    div.className='lb-row'+(isMe?' me':'');
+    div.innerHTML=
+      '<div class="lb-rank '+(rc[i]||'')+'">'+(i<3?'':i+1)+'</div>'+
+      '<div class="lb-medal">'+(medals[i]||'')+'</div>'+
+      '<div style="flex:1"><div class="lb-nick">'+e.nickname+'</div><div class="lb-days">'+e.days+' day'+(e.days!==1?'s':'')+' checked in</div></div>'+
+      '<div class="lb-score">'+e.total+' pts</div>'+
+      '<div class="lb-bar" style="width:'+pct+'%"></div>';
+    list.appendChild(div);
+  });
+}
+
+document.getElementById('lb-refresh').addEventListener('click',renderLeaderboard);
+
+async function loadHistory(){
+  if(!profile)return;
+  var rows=await sbGet('checkins','code=eq.'+encodeURIComponent(profile.code)+'&select=date,total_score&order=date.asc');
+  var map={};
+  (rows||[]).forEach(function(r){map[r.date]=r.total_score||0;});
+  var total=Object.values(map).reduce(function(a,b){return a+b;},0);
+  var days=Object.keys(map).length;
+  var streak=0,d=new Date();
+  while(map[d.toISOString().slice(0,10)]!==undefined){streak++;d.setDate(d.getDate()-1);}
+  document.getElementById('st-streak').textContent=streak;
+  document.getElementById('st-total').textContent=total;
+  document.getElementById('st-days').textContent=days;
+  document.getElementById('tb-streak').textContent=streak;
+  var grid=document.getElementById('hist-grid');
+  grid.innerHTML='';
+  var today=new Date(),dow=(today.getDay()+6)%7,start=new Date(today);
+  start.setDate(today.getDate()-dow-28);
+  var ts=todayStr();
+  for(var i=0;i<35;i++){
+    var dd=new Date(start);dd.setDate(start.getDate()+i);
+    var ds=dd.toISOString().slice(0,10);
+    var sc=map[ds];
+    var cell=document.createElement('div');
+    var cls='hcell';
+    if(sc!==undefined)cls+=sc>=80?' full':' part';
+    if(ds===ts)cls+=' today';
+    cell.className=cls;
+    cell.title=ds+(sc!==undefined?' — '+sc+' pts':'');
+    cell.textContent=dd.getDate();
+    grid.appendChild(cell);
+  }
+}
+
+document.querySelectorAll('.ntab').forEach(function(tab){
+  tab.addEventListener('click',function(){
+    document.querySelectorAll('.ntab').forEach(function(t){t.classList.remove('on');});
+    document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('on');});
+    tab.classList.add('on');
+    document.getElementById('panel-'+tab.getAttribute('data-p')).classList.add('on');
+    if(tab.getAttribute('data-p')==='leaderboard')renderLeaderboard();
+    if(tab.getAttribute('data-p')==='history')loadHistory();
+  });
+});
+
+(function(){
+  var saved=lsGet('hwis_profile');
+  if(saved&&saved.code&&saved.name){profile=saved;launchApp();}
+})();
+</script>
+</body>
+</html>
