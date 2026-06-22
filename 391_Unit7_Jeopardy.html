@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unit 7 Review Jeopardy — Lesson 39.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --board:#0a1547; --tile:#0b1fa6; --tile-hi:#1736e0; --tile-used:#0a1138;
+    --gold:#e9b949; --gold-deep:#caa033; --ink:#f3f6ff; --muted:#9fb0e6;
+    --good:#2faa66; --bad:#d6483f; --panel:#0d1c5e;
+    --display:'Oswald',Arial,sans-serif; --body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{
+    background:radial-gradient(120% 120% at 50% -10%, #14225f 0%, var(--board) 55%, #050a26 100%);
+    color:var(--ink); font-family:var(--body); -webkit-font-smoothing:antialiased;
+    min-height:100%; padding:18px clamp(10px,2vw,28px) 28px;
+  }
+  h1,h2,.disp{font-family:var(--display);}
+  .wrap{max-width:1280px;margin:0 auto;}
+  header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
+  .title .eyebrow{font-family:var(--display);letter-spacing:.22em;font-weight:600;color:var(--gold);font-size:13px;text-transform:uppercase;}
+  .title h1{margin:.05em 0 0;font-weight:700;font-size:clamp(26px,4.6vw,52px);letter-spacing:.02em;line-height:.95;text-transform:uppercase;}
+  .title .sub{color:var(--muted);font-size:13px;margin-top:6px;}
+  .top-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  button{font-family:var(--body);cursor:pointer;border:none;border-radius:10px;font-weight:600;}
+  .btn{background:#16266f;color:var(--ink);border:1px solid #2a3c92;padding:9px 14px;font-size:13px;}
+  .btn:hover{background:#1d3290;}
+  .btn-gold{background:var(--gold);color:#1a1400;border:none;}
+  .btn-gold:hover{background:#f3c861;}
+
+  /* board */
+  .board{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;}
+  .cat{
+    background:linear-gradient(180deg,#14266f,#0b1751);border:1px solid #28398f;border-radius:10px;
+    min-height:74px;display:flex;align-items:center;justify-content:center;text-align:center;
+    padding:10px 8px;font-family:var(--display);font-weight:600;text-transform:uppercase;
+    letter-spacing:.03em;line-height:1.05;font-size:clamp(12px,1.25vw,17px);color:var(--ink);
+    text-shadow:0 1px 0 #00000055;
+  }
+  .tile{
+    background:linear-gradient(180deg,var(--tile),#0a1a8f);border:1px solid #2741c9;border-radius:10px;
+    aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;
+    font-family:var(--display);font-weight:700;color:var(--gold);
+    font-size:clamp(22px,3vw,40px);text-shadow:0 2px 0 #00000066, 0 0 18px #e9b94922;
+    transition:transform .08s ease, background .15s ease, box-shadow .15s ease;
+  }
+  .tile:hover{background:linear-gradient(180deg,var(--tile-hi),#1126b8);transform:translateY(-2px);box-shadow:0 6px 18px #0003;}
+  .tile.dd::after{content:'★';position:absolute;}
+  .tile-wrap{position:relative;}
+  .tile-wrap .dd-mark{position:absolute;top:6px;right:9px;color:var(--gold-deep);font-size:13px;opacity:.0;}
+  .tile.used{background:var(--tile-used);color:transparent;border-color:#161f4d;cursor:default;box-shadow:none;}
+  .tile.used:hover{transform:none;}
+
+  /* scoreboard */
+  .scores{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
+  .score{
+    flex:1 1 160px;background:var(--panel);border:1px solid #243a99;border-radius:12px;padding:12px 14px;position:relative;
+  }
+  .score.active{border-color:var(--gold);box-shadow:0 0 0 2px #e9b94955 inset;}
+  .score .nm{font-family:var(--display);text-transform:uppercase;letter-spacing:.05em;font-size:14px;color:var(--muted);}
+  .score .pts{font-family:var(--display);font-weight:700;font-size:34px;margin-top:2px;}
+  .score .pts.neg{color:#ff8a82;}
+  .score .ctrl{display:flex;gap:6px;margin-top:8px;}
+  .score .ctrl button{flex:1;padding:5px 0;font-size:12px;background:#1a2b7a;border:1px solid #2c40a0;color:var(--ink);}
+  .score .pick{position:absolute;top:10px;right:12px;font-size:11px;color:var(--muted);cursor:pointer;text-decoration:underline;}
+
+  /* overlay */
+  .overlay{position:fixed;inset:0;background:#04081fee;display:none;align-items:center;justify-content:center;padding:24px;z-index:50;}
+  .overlay.show{display:flex;}
+  .card{
+    width:min(960px,94vw);background:linear-gradient(180deg,#0c1f9e,#081463);border:2px solid var(--gold);
+    border-radius:18px;padding:clamp(22px,4vw,46px);text-align:center;box-shadow:0 24px 80px #000a;
+    animation:pop .18s ease;
+  }
+  @keyframes pop{from{transform:scale(.94);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .card .lbl{font-family:var(--display);letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-size:14px;font-weight:600;}
+  .card .clue{font-family:var(--display);font-weight:500;text-transform:uppercase;line-height:1.18;
+    font-size:clamp(22px,3.7vw,42px);margin:18px 0 8px;}
+  .card .resp{font-family:var(--display);font-weight:700;color:var(--gold);font-size:clamp(20px,3.2vw,36px);
+    margin:18px 0 4px;min-height:0;display:none;text-transform:uppercase;}
+  .card .resp.show{display:block;animation:pop .18s ease;}
+  .card-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px;}
+  .card-actions .big{padding:12px 22px;font-size:16px;font-family:var(--display);text-transform:uppercase;letter-spacing:.04em;}
+  .award{margin-top:18px;display:none;}
+  .award.show{display:block;}
+  .award .hint{color:var(--muted);font-size:13px;margin-bottom:8px;}
+  .award-grid{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+  .award-team{background:#0a1763;border:1px solid #2a3ca0;border-radius:10px;padding:8px 10px;min-width:150px;}
+  .award-team .tn{font-family:var(--display);text-transform:uppercase;font-size:13px;color:var(--muted);margin-bottom:6px;}
+  .award-team .row{display:flex;gap:6px;}
+  .award-team button{flex:1;padding:7px 0;font-size:14px;font-weight:700;}
+  .b-good{background:var(--good);color:#fff;}
+  .b-bad{background:var(--bad);color:#fff;}
+  .wager{margin:14px 0;display:none;}
+  .wager.show{display:block;}
+  .wager input{font-family:var(--display);font-size:26px;width:160px;text-align:center;padding:6px 10px;border-radius:10px;border:2px solid var(--gold);background:#081463;color:var(--gold);}
+  .ddflag{font-family:var(--display);color:var(--gold);letter-spacing:.2em;font-weight:700;font-size:18px;text-transform:uppercase;}
+
+  /* setup */
+  .setup{background:var(--panel);border:1px solid #243a99;border-radius:16px;padding:22px;max-width:560px;margin:30px auto;}
+  .setup h2{margin:0 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;font-size:22px;}
+  .setup p{color:var(--muted);margin:0 0 18px;font-size:14px;}
+  .teamcount{display:flex;gap:8px;margin-bottom:16px;}
+  .teamcount button{flex:1;padding:12px 0;font-family:var(--display);font-size:20px;background:#16266f;border:1px solid #2a3c92;color:var(--ink);}
+  .teamcount button.sel{background:var(--gold);color:#1a1400;border-color:var(--gold);}
+  .namerow{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .namerow label{font-family:var(--display);text-transform:uppercase;color:var(--muted);width:74px;font-size:13px;}
+  .namerow input{flex:1;padding:9px 12px;border-radius:9px;border:1px solid #2a3c92;background:#0a1763;color:var(--ink);font-size:15px;font-family:var(--body);}
+  .hidden{display:none!important;}
+  .final-banner{text-align:center;margin-top:20px;}
+  footer.note{text-align:center;color:var(--muted);font-size:12px;margin-top:22px;}
+  @media (max-width:640px){
+    .board{gap:5px;} .tile{font-size:20px;border-radius:7px;} .cat{font-size:11px;min-height:54px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- SETUP -->
+  <section id="setup" class="setup">
+    <h2>Unit 7 Review Jeopardy</h2>
+    <p>Lesson 39.1 · Challenges to Improving Quality of Life · Nelson Geo 8</p>
+    <div style="font-family:var(--display);text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-size:13px;margin-bottom:8px;">How many teams?</div>
+    <div class="teamcount" id="teamcount">
+      <button data-n="2">2</button><button data-n="3" class="sel">3</button><button data-n="4">4</button>
+    </div>
+    <div id="nameInputs"></div>
+    <button class="btn-gold" style="width:100%;padding:13px;font-family:var(--display);font-size:18px;text-transform:uppercase;letter-spacing:.05em;margin-top:10px;" onclick="startGame()">Start game</button>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="hidden">
+    <header class="top">
+      <div class="title">
+        <div class="eyebrow">Lesson 39.1 · Nelson Geo 8</div>
+        <h1>Unit 7 Review Jeopardy</h1>
+        <div class="sub">Challenges to Improving Quality of Life — answer in the form of a question</div>
+      </div>
+      <div class="top-actions">
+        <button class="btn" id="finalBtn" onclick="openFinal()">Final Jeopardy</button>
+        <button class="btn" onclick="resetGame()">New game</button>
+      </div>
+    </header>
+    <div class="board" id="board"></div>
+    <div class="scores" id="scores"></div>
+    <footer class="note">Tap a tile to reveal the clue. ★ = Daily Double. Teacher controls the score — tap ✓ or ✗ for each team.</footer>
+  </section>
+</div>
+
+<!-- CLUE OVERLAY -->
+<div class="overlay" id="overlay">
+  <div class="card" id="card">
+    <div class="lbl" id="clueLbl">Category · 100</div>
+    <div id="ddFlag" class="ddflag hidden">★ Daily Double ★</div>
+    <div class="wager" id="wagerBox">
+      <div style="color:var(--muted);font-size:13px;margin-bottom:8px;" id="wagerWho">Team wagers up to their score</div>
+      <input id="wagerInput" type="number" min="0" value="100">
+      <div style="margin-top:14px;"><button class="btn-gold big" onclick="confirmWager()">Lock wager &amp; show clue</button></div>
+    </div>
+    <div id="clueArea">
+      <div class="clue" id="clueText"></div>
+      <div class="resp" id="respText"></div>
+      <div class="card-actions" id="revealRow">
+        <button class="btn-gold big" id="revealBtn" onclick="revealAnswer()">Show answer</button>
+        <button class="btn big" onclick="closeClue(false)">Close — no score</button>
+      </div>
+      <div class="award" id="awardBox">
+        <div class="hint" id="awardHint">Who answered? Tap ✓ to award, ✗ to deduct.</div>
+        <div class="award-grid" id="awardGrid"></div>
+        <div style="margin-top:14px;"><button class="btn big" onclick="closeClue(true)">Done</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- DATA (Nelson Geo 8, Unit 7 / Lessons 31-34) ----------
+const CATS = [
+  {name:"Population Puzzle", clues:[
+    {v:100, c:"The number of babies born per 1,000 people each year.", a:"What is the birth rate?"},
+    {v:200, c:"A graph, often shaped like a triangle, that shows a country's population by age and gender.", a:"What is a population pyramid?"},
+    {v:300, c:"As a country develops, its population growth rate first rises and then does this.", a:"What is fall (slow down)?"},
+    {v:400, c:"The policy China used to limit family size and slow its rapid population growth.", a:"What is the one-child policy?"},
+    {v:500, c:"Countries in the earliest stage of development grow rapidly because of high birth rates and a fall in these.", a:"What are death rates?"},
+  ]},
+  {name:"Whose Land Is It?", clues:[
+    {v:100, c:"Land that Indigenous peoples have occupied and used for thousands of years.", a:"What is traditional territory?"},
+    {v:200, c:"In Canada, many Indigenous peoples were forced to move onto these small, poor-quality areas of land.", a:"What are reserves?"},
+    {v:300, c:"The First Nation that gained control of over 2,000 km² of land in British Columbia through a treaty in 2000.", a:"Who are the Nisga'a?"},
+    {v:400, c:"The island country off southeast Africa that changed its laws in 2003 to let foreign companies buy farmland.", a:"What is Madagascar?", dd:true},
+    {v:500, c:"The country whose company announced a 2009 deal to lease over 1.3 million hectares of Madagascar's land.", a:"What is South Korea?"},
+  ]},
+  {name:"Colonial Legacy", clues:[
+    {v:100, c:"When a powerful country takes control of another land and its people.", a:"What is colonialism?"},
+    {v:200, c:"A territory that is ruled by another, more powerful country.", a:"What is a colony?"},
+    {v:300, c:"South Sudan became the world's newest country in this year.", a:"What is 2011?"},
+    {v:400, c:"The Southeast Asian nation that endured nearly 400 years of colonial rule, leaving a low quality of life.", a:"What is Timor-Leste?"},
+    {v:500, c:"The transition from colony to independent country often creates this between rival groups.", a:"What is conflict?"},
+  ]},
+  {name:"Corruption & Debt", clues:[
+    {v:100, c:"When government officials misuse their power for private gain, such as taking bribes.", a:"What is corruption?"},
+    {v:200, c:"Money that a country borrows from foreign banks, governments, or organizations.", a:"What is foreign debt?"},
+    {v:300, c:"Corruption blocks development because money meant for these public goods gets stolen.", a:"What are schools / hospitals / public services?", dd:true},
+    {v:400, c:"Poor countries get trapped in a cycle when they must keep borrowing just to pay the interest on these.", a:"What are their loans (foreign debt)?"},
+    {v:500, c:"A campaign asking wealthy nations to cancel the loans owed by poor countries.", a:"What is debt forgiveness?"},
+  ]},
+  {name:"Haiti: Hardest Case", clues:[
+    {v:100, c:"Haiti has the lowest quality of life in this region of the world.", a:"What are the Americas?"},
+    {v:200, c:"Almost this percentage of Haitians live in poverty.", a:"What is 80 percent?"},
+    {v:300, c:"The 2010 natural disaster that killed many Haitians and destroyed infrastructure.", a:"What is an earthquake?"},
+    {v:400, c:"Despite billions of dollars of this after 2010, Haiti's quality of life did not quickly improve.", a:"What is aid?"},
+    {v:500, c:"The year a development plan aimed to lift Haitians out of poverty by.", a:"What is 2030?"},
+  ]},
+  {name:"Geo Vocab", clues:[
+    {v:100, c:"A measure of how good people's lives are — health, money, education, and safety.", a:"What is quality of life?"},
+    {v:200, c:"A country still working to improve its industry, income, and services.", a:"What is a developing country?"},
+    {v:300, c:"Roads, water systems, schools, and hospitals — the basic structures a country needs to function.", a:"What is infrastructure?"},
+    {v:400, c:"When a buyer or company from another country owns land inside a developing nation.", a:"What is foreign ownership?"},
+    {v:500, c:"The Malagasy people received none of this when their land was sold to foreign companies.", a:"What is compensation?"},
+  ]},
+];
+const FINAL = {
+  cat:"Breaking the Cycle",
+  c:"Give TWO reasons it is so hard for a developing country to improve its quality of life — and back each with an example from this unit.",
+  a:"Any two of: rapid population growth · loss/foreign control of land & resources · lasting effects of colonialism · corruption · the foreign-debt cycle · natural disasters (Haiti's 2010 earthquake) · weak infrastructure. Examples must be specific (e.g. Madagascar land grab, South Sudan/Timor-Leste independence, Haiti)."
+};
+
+// ---------- STATE ----------
+let teams = [];           // {name, score}
+let teamCount = 3;
+let activeTeam = 0;       // team with board control
+let used = {};            // key "ci-ri" -> true
+let current = null;       // {ci, ri, value, dd}
+let finalMode = false;
+
+// ---------- SETUP ----------
+const nameInputs = document.getElementById('nameInputs');
+function renderNameInputs(){
+  nameInputs.innerHTML = '';
+  for(let i=0;i<teamCount;i++){
+    const row = document.createElement('div');
+    row.className='namerow';
+    row.innerHTML = `<label>Team ${i+1}</label><input id="tn${i}" value="Team ${i+1}" maxlength="22">`;
+    nameInputs.appendChild(row);
+  }
+}
+document.getElementById('teamcount').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  teamCount = +b.dataset.n;
+  [...e.currentTarget.children].forEach(c=>c.classList.toggle('sel', c===b));
+  renderNameInputs();
+});
+renderNameInputs();
+
+function startGame(){
+  teams = [];
+  for(let i=0;i<teamCount;i++){
+    const v = (document.getElementById('tn'+i).value||('Team '+(i+1))).trim();
+    teams.push({name:v||('Team '+(i+1)), score:0});
+  }
+  used = {}; activeTeam = 0;
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('game').classList.remove('hidden');
+  buildBoard(); renderScores();
+}
+function resetGame(){
+  document.getElementById('game').classList.add('hidden');
+  document.getElementById('setup').classList.remove('hidden');
+  document.getElementById('finalBtn').classList.remove('hidden');
+}
+
+// ---------- BOARD ----------
+function buildBoard(){
+  const board = document.getElementById('board');
+  board.innerHTML='';
+  CATS.forEach(cat=>{
+    const h=document.createElement('div'); h.className='cat'; h.textContent=cat.name; board.appendChild(h);
+  });
+  for(let r=0;r<5;r++){
+    CATS.forEach((cat,ci)=>{
+      const clue=cat.clues[r];
+      const wrap=document.createElement('div'); wrap.className='tile-wrap';
+      const t=document.createElement('div'); t.className='tile'+(clue.dd?' dd':'');
+      t.textContent=clue.v;
+      const key=ci+'-'+r;
+      if(used[key]){ t.classList.add('used'); }
+      else t.onclick=()=>openClue(ci,r);
+      wrap.appendChild(t);
+      board.appendChild(wrap);
+    });
+  }
+}
+
+// ---------- SCORES ----------
+function renderScores(){
+  const s=document.getElementById('scores'); s.innerHTML='';
+  teams.forEach((t,i)=>{
+    const d=document.createElement('div');
+    d.className='score'+(i===activeTeam?' active':'');
+    d.innerHTML=`
+      <span class="pick" onclick="setActive(${i})">${i===activeTeam?'in control':'give control'}</span>
+      <div class="nm">${escapeHtml(t.name)}</div>
+      <div class="pts ${t.score<0?'neg':''}">${t.score<0?'-':''}${Math.abs(t.score)}</div>
+      <div class="ctrl">
+        <button onclick="adjust(${i},100)">+100</button>
+        <button onclick="adjust(${i},-100)">−100</button>
+      </div>`;
+    s.appendChild(d);
+  });
+}
+function setActive(i){ activeTeam=i; renderScores(); }
+function adjust(i,delta){ teams[i].score+=delta; renderScores(); }
+
+// ---------- CLUE FLOW ----------
+const overlay=document.getElementById('overlay');
+function openClue(ci,ri){
+  const clue=CATS[ci].clues[ri];
+  current={ci,ri,value:clue.v,dd:!!clue.dd,a:clue.a,c:clue.c};
+  document.getElementById('clueLbl').textContent = CATS[ci].name+' · '+clue.v;
+  document.getElementById('clueText').textContent = clue.c;
+  document.getElementById('respText').textContent = clue.a;
+  document.getElementById('respText').classList.remove('show');
+  document.getElementById('awardBox').classList.remove('show');
+  document.getElementById('revealRow').style.display='flex';
+  document.getElementById('clueArea').classList.remove('hidden');
+
+  if(clue.dd){
+    document.getElementById('ddFlag').classList.remove('hidden');
+    document.getElementById('clueArea').classList.add('hidden');
+    const box=document.getElementById('wagerBox'); box.classList.add('show');
+    const wi=document.getElementById('wagerInput');
+    const cap=Math.max(teams[activeTeam].score, 500);
+    wi.value=clue.v; wi.max=cap;
+    document.getElementById('wagerWho').textContent =
+      teams[activeTeam].name+" wagers — up to "+cap+" (their score, or 500).";
+  } else {
+    document.getElementById('ddFlag').classList.add('hidden');
+    document.getElementById('wagerBox').classList.remove('show');
+  }
+  overlay.classList.add('show');
+}
+function confirmWager(){
+  let w=parseInt(document.getElementById('wagerInput').value,10);
+  if(isNaN(w)||w<0)w=0;
+  const cap=Math.max(teams[activeTeam].score,500);
+  if(w>cap)w=cap;
+  current.value=w;
+  document.getElementById('wagerBox').classList.remove('show');
+  document.getElementById('clueArea').classList.remove('hidden');
+}
+function revealAnswer(){
+  document.getElementById('respText').classList.add('show');
+  document.getElementById('revealRow').style.display='none';
+  buildAward();
+  document.getElementById('awardBox').classList.add('show');
+}
+function buildAward(){
+  const grid=document.getElementById('awardGrid'); grid.innerHTML='';
+  const teamList = current.dd ? [activeTeam] : teams.map((_,i)=>i);
+  document.getElementById('awardHint').textContent = current.dd
+    ? `Daily Double — only ${teams[activeTeam].name} can score (±${current.value}).`
+    : `Who answered? ✓ awards +${current.value}, ✗ deducts −${current.value}.`;
+  teamList.forEach(i=>{
+    const d=document.createElement('div'); d.className='award-team';
+    d.innerHTML=`<div class="tn">${escapeHtml(teams[i].name)}</div>
+      <div class="row">
+        <button class="b-good" onclick="score(${i},1)">✓ +${current.value}</button>
+        <button class="b-bad" onclick="score(${i},-1)">✗ −${current.value}</button>
+      </div>`;
+    grid.appendChild(d);
+  });
+}
+function score(i,sign){
+  teams[i].score += sign*current.value;
+  if(sign>0) activeTeam=i;            // correct team takes control
+  renderScores();
+  closeClue(true);
+}
+function closeClue(markUsed){
+  if(markUsed && current){ used[current.ci+'-'+current.ri]=true; }
+  overlay.classList.remove('show');
+  current=null;
+  buildBoard(); renderScores();
+}
+
+// ---------- FINAL JEOPARDY ----------
+function openFinal(){
+  // wagers first
+  let wagers={};
+  for(let i=0;i<teams.length;i++){
+    let w=prompt(`Final Jeopardy wager for ${teams[i].name} (current score ${teams[i].score}). Max = their score (min 0):`, Math.max(0,teams[i].score));
+    if(w===null) return;
+    w=parseInt(w,10); if(isNaN(w)||w<0)w=0;
+    const cap=Math.max(0,teams[i].score); if(w>cap)w=cap;
+    wagers[i]=w;
+  }
+  current={final:true, value:0};
+  document.getElementById('clueLbl').textContent='Final Jeopardy · '+FINAL.cat;
+  document.getElementById('ddFlag').classList.add('hidden');
+  document.getElementById('wagerBox').classList.remove('show');
+  document.getElementById('clueArea').classList.remove('hidden');
+  document.getElementById('clueText').textContent=FINAL.c;
+  document.getElementById('respText').textContent=FINAL.a;
+  document.getElementById('respText').classList.remove('show');
+  document.getElementById('revealRow').style.display='flex';
+  document.getElementById('awardBox').classList.remove('show');
+  document.getElementById('revealBtn').onclick=function(){
+    document.getElementById('respText').classList.add('show');
+    document.getElementById('revealRow').style.display='none';
+    const grid=document.getElementById('awardGrid'); grid.innerHTML='';
+    document.getElementById('awardHint').textContent='Apply each team\'s wager based on their written answer.';
+    teams.forEach((t,i)=>{
+      const d=document.createElement('div'); d.className='award-team';
+      d.innerHTML=`<div class="tn">${escapeHtml(t.name)} · wager ${wagers[i]}</div>
+        <div class="row">
+          <button class="b-good" onclick="finalScore(${i},${wagers[i]})">✓ +${wagers[i]}</button>
+          <button class="b-bad" onclick="finalScore(${i},${-wagers[i]})">✗ −${wagers[i]}</button>
+        </div>`;
+      grid.appendChild(d);
+    });
+    document.getElementById('awardBox').classList.add('show');
+  };
+  overlay.classList.add('show');
+}
+function finalScore(i,delta){
+  teams[i].score+=delta; renderScores();
+  const btns=document.querySelectorAll('#awardGrid .award-team')[i].querySelectorAll('button');
+  btns.forEach(b=>b.disabled=true);
+}
+
+// reset reveal handler when normal clues are used
+document.getElementById('revealBtn').onclick=revealAnswer;
+const _openClue=openClue;
+openClue=function(ci,ri){ document.getElementById('revealBtn').onclick=revealAnswer; _openClue(ci,ri); };
+
+function escapeHtml(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && overlay.classList.contains('show')) closeClue(false); });
+</script>
+</body>
+</html>
