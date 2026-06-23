@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sociology Jeopardy — S2Q4 Review</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #0a1628;
+    --gold: #f0c040;
+    --gold-dark: #c99a10;
+    --board-blue: #0e2a6e;
+    --cell-blue: #163580;
+    --cell-hover: #1e44a0;
+    --used: #0a1a40;
+    --used-text: #2a3a5a;
+    --white: #f5f0e8;
+    --correct: #1a7a3a;
+    --wrong: #8a1a1a;
+    --modal-bg: rgba(5, 10, 25, 0.96);
+  }
+
+  body {
+    background: var(--navy);
+    font-family: 'Inter', sans-serif;
+    color: var(--white);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 16px 40px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .game-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    color: var(--gold);
+    letter-spacing: 0.08em;
+    line-height: 1;
+    text-shadow: 0 2px 12px rgba(240,192,64,0.3);
+  }
+
+  .game-subtitle {
+    font-size: 0.85rem;
+    color: #8899bb;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* SCOREBOARD */
+  .scoreboard {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 22px;
+    align-items: center;
+  }
+
+  .team-score {
+    background: var(--board-blue);
+    border: 2px solid var(--gold-dark);
+    border-radius: 10px;
+    padding: 10px 24px;
+    text-align: center;
+    min-width: 140px;
+    position: relative;
+  }
+
+  .team-score.active-team {
+    border-color: var(--gold);
+    box-shadow: 0 0 18px rgba(240,192,64,0.35);
+  }
+
+  .team-name-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #3a4a6a;
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-align: center;
+    width: 100%;
+    outline: none;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .score-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.4rem;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .score-controls {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 6px;
+  }
+
+  .score-btn {
+    background: #1e2e50;
+    border: 1px solid #3a4a6a;
+    color: var(--white);
+    border-radius: 5px;
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .score-btn:hover { background: var(--cell-hover); }
+
+  .vs-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    color: #4a5a7a;
+    letter-spacing: 0.1em;
+  }
+
+  /* BOARD */
+  .board-wrap {
+    width: 100%;
+    max-width: 960px;
+    overflow-x: auto;
+  }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    min-width: 560px;
+  }
+
+  .cat-header {
+    background: var(--board-blue);
+    border: 2px solid #1e3a8a;
+    border-radius: 8px;
+    padding: 12px 6px;
+    text-align: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(0.9rem, 2vw, 1.25rem);
+    letter-spacing: 0.06em;
+    color: var(--gold);
+    line-height: 1.2;
+  }
+
+  .cell {
+    background: var(--cell-blue);
+    border: 2px solid #1e3a8a;
+    border-radius: 8px;
+    padding: 0;
+    aspect-ratio: 1.6 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
+    user-select: none;
+  }
+
+  .cell:hover:not(.used) {
+    background: var(--cell-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(14, 42, 110, 0.6);
+  }
+
+  .cell.used {
+    background: var(--used);
+    border-color: #151f35;
+    cursor: default;
+  }
+
+  .cell-points {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.2rem, 3vw, 2rem);
+    color: var(--gold);
+    letter-spacing: 0.04em;
+  }
+
+  .cell.used .cell-points {
+    color: var(--used-text);
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--modal-bg);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.open {
+    display: flex;
+  }
+
+  .modal {
+    background: var(--board-blue);
+    border: 2px solid var(--gold-dark);
+    border-radius: 16px;
+    max-width: 680px;
+    width: 100%;
+    padding: 36px 40px 32px;
+    position: relative;
+    animation: modalIn 0.22s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.92) translateY(20px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-cat {
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+
+  .modal-points {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    color: #6688bb;
+    margin-bottom: 18px;
+  }
+
+  .modal-question {
+    font-size: clamp(1rem, 2.5vw, 1.35rem);
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--white);
+    margin-bottom: 28px;
+  }
+
+  .modal-answer {
+    background: rgba(0,0,0,0.35);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    color: var(--gold);
+    font-size: 1rem;
+    line-height: 1.5;
+    display: none;
+    margin-bottom: 24px;
+  }
+
+  .modal-answer.visible { display: block; }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: opacity 0.15s, transform 0.12s;
+  }
+  .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  .btn-reveal  { background: var(--gold); color: var(--navy); }
+  .btn-correct { background: var(--correct); color: #d0ffdd; }
+  .btn-wrong   { background: var(--wrong); color: #ffd0d0; }
+  .btn-close   { background: #2a3a5a; color: var(--white); margin-left: auto; }
+
+  .award-label {
+    font-size: 0.78rem;
+    color: #6688bb;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    align-self: center;
+    display: none;
+  }
+  .award-label.visible { display: block; }
+
+  /* RESET */
+  .reset-btn {
+    margin-top: 22px;
+    background: transparent;
+    border: 1px solid #2a3a5a;
+    color: #4a5a7a;
+    border-radius: 7px;
+    padding: 7px 20px;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .reset-btn:hover { color: var(--white); border-color: var(--white); }
+
+  /* CONFETTI */
+  .confetti-piece {
+    position: fixed;
+    width: 8px; height: 8px;
+    border-radius: 1px;
+    opacity: 0;
+    pointer-events: none;
+    animation: fall 1.6s ease-out forwards;
+  }
+  @keyframes fall {
+    0%   { opacity: 1; transform: translateY(-10vh) rotate(0deg); }
+    100% { opacity: 0; transform: translateY(110vh) rotate(720deg); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="game-title">Sociology Jeopardy</div>
+  <div class="game-subtitle">S2Q4 Review — Du Bois · Said · Hall · Mr. Nolan</div>
+</header>
+
+<div class="scoreboard">
+  <div class="team-score" id="team1-card">
+    <input class="team-name-input" id="team1-name" value="TEAM 1" maxlength="12" />
+    <div class="score-value" id="team1-score">0</div>
+    <div class="score-controls">
+      <button class="score-btn" onclick="adjustScore(1, -100)">−</button>
+      <button class="score-btn" onclick="adjustScore(1, 100)">+</button>
+    </div>
+  </div>
+  <div class="vs-badge">VS</div>
+  <div class="team-score" id="team2-card">
+    <input class="team-name-input" id="team2-name" value="TEAM 2" maxlength="12" />
+    <div class="score-value" id="team2-score">0</div>
+    <div class="score-controls">
+      <button class="score-btn" onclick="adjustScore(2, -100)">−</button>
+      <button class="score-btn" onclick="adjustScore(2, 100)">+</button>
+    </div>
+  </div>
+</div>
+
+<div class="board-wrap">
+  <div class="board" id="board"></div>
+</div>
+
+<button class="reset-btn" onclick="resetGame()">↺ Reset Board</button>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-cat" id="modal-cat"></div>
+    <div class="modal-points" id="modal-points"></div>
+    <div class="modal-question" id="modal-question"></div>
+    <div class="modal-answer" id="modal-answer"></div>
+    <div class="btn-row">
+      <button class="btn btn-reveal" id="btn-reveal" onclick="revealAnswer()">Reveal Answer</button>
+      <button class="btn btn-correct" id="btn-t1" style="display:none" onclick="award(1)">✓ Team 1</button>
+      <button class="btn btn-correct" id="btn-t2" style="display:none" onclick="award(2)">✓ Team 2</button>
+      <button class="btn btn-wrong"   id="btn-none" style="display:none" onclick="awardNone()">✗ No Point</button>
+      <span class="award-label" id="award-label"></span>
+      <button class="btn btn-close" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATEGORIES = [
+  "W.E.B. Du Bois",
+  "Edward Said",
+  "Stuart Hall",
+  "Translate the MLE",
+  "Mr. Nolan Facts"
+];
+
+const QUESTIONS = [
+  // DU BOIS — 100 200 300 400 500
+  [
+    { q: "Du Bois called this the defining problem of the 20th century.", a: "The color line." },
+    { q: "This term describes the feeling of seeing yourself through the eyes of a racist society — living with two identities at once.", a: "Double consciousness." },
+    { q: "Du Bois criticised Booker T. Washington's Atlanta Compromise for doing this.", a: "Sacrificing Black political and civil rights in exchange for economic acceptance." },
+    { q: "Du Bois argued that the Civil War was caused by this — not just sectional economics.", a: "Slavery and the resistance to its abolition." },
+    { q: "Du Bois was the first African American to earn a doctorate from this university. What was his key argument about how Black Americans must fight for full citizenship?", a: "Harvard University. He argued they must fight for political rights AND higher education simultaneously — not accept compromise." }
+  ],
+  // SAID — 100 200 300 400 500
+  [
+    { q: "Said argued that Orientalism is not a neutral study — it encodes this.", a: "Western bias and misrepresentation of the East." },
+    { q: "According to Said, modern Orientalism was born when Napoleon did this in 1798.", a: "Conquered Egypt and deployed 'experts' to record and categorise the Eastern world." },
+    { q: "Said says Orientalism presents the East in two key ways. Name one.", a: "As homogenous and exotic / as mythical and fearful — flattening its real complexity." },
+    { q: "Said used this word to describe the constructed binary that makes the East seem inferior to the West.", a: "The Other (Othering)." },
+    { q: "Said said the Orient 'almost Europeans itself' over time. What did he mean?", a: "Colonised peoples begin to see themselves through the Western gaze — internalising the idea that Western culture is the standard. A form of self-Othering." }
+  ],
+  // HALL — 100 200 300 400 500
+  [
+    { q: "Hall says the postmodern self is not fixed — it is shaped by this ongoing process.", a: "Continuous social interaction and change — society forms and transforms identity." },
+    { q: "Hall uses this term for the process by which cultural identities are built through contrast with others.", a: "Difference." },
+    { q: "Hall contrasts the Enlightenment self with the postmodern self. What is the key difference?", a: "The Enlightenment self has a stable inner core; the postmodern self is fluid and contingent." },
+    { q: "Hall argues that global consumerism does this to cultural identities.", a: "Detaches them from specific traditions and places — identities become floating and hybrid." },
+    { q: "Top Boy is on the exam. Using Hall's framework, explain why Sully and Dushane's identities are best described as postmodern rather than fixed.", a: "Their identities are shaped by class, race, place (the Summerhouse estate) and constantly renegotiated through power and survival — never stable, always contingent." }
+  ],
+  // MLE TRANSLATION
+  [
+    { q: "Translate into standard English: \"That whip is peak.\"", a: "That car is terrible. / That situation is really bad." },
+    { q: "Translate into standard English: \"She's gassed up, still.\"", a: "She's really excited / hyped about it." },
+    { q: "Translate into standard English: \"Dem man on a madness.\"", a: "Those guys are acting recklessly / doing something wild." },
+    { q: "Translate into standard English: \"Boydem ran in the gaff.\"", a: "The police raided the house." },
+    { q: "Translate into standard English: \"When I was lickle I's gobby and ducking the bobbies.\"", a: "When I was young I was loud-mouthed and avoiding the police." }
+  ],
+  // MR. NOLAN FACTS
+  [
+    { q: "Where did Mr. Nolan live before moving to Taiwan?", a: "TBC — Mr. Nolan to confirm answer before game." },
+    { q: "What passport does Mr. Nolan have?", a: "TBC — Mr. Nolan to confirm answer before game." },
+    { q: "What did Mr. Nolan study at university?", a: "TBC — Mr. Nolan to confirm answer before game." },
+    { q: "What football team does Mr. Nolan support?", a: "TBC — Mr. Nolan to confirm answer before game." },
+    { q: "What colour is Mr. Nolan's bicycle?", a: "TBC — Mr. Nolan to confirm answer before game." }
+  ]
+];
+
+const POINTS = [100, 200, 300, 400, 500];
+
+let used = Array.from({length: 5}, () => Array(5).fill(false));
+let scores = [0, 0];
+let currentCell = null;
+
+function buildBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+
+  // Headers
+  CATEGORIES.forEach(cat => {
+    const h = document.createElement('div');
+    h.className = 'cat-header';
+    h.textContent = cat;
+    board.appendChild(h);
+  });
+
+  // Cells
+  for (let row = 0; row < 5; row++) {
+    for (let col = 0; col < 5; col++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell' + (used[col][row] ? ' used' : '');
+      cell.innerHTML = `<span class="cell-points">${POINTS[row]}</span>`;
+      if (!used[col][row]) {
+        cell.onclick = () => openModal(col, row);
+      }
+      board.appendChild(cell);
+    }
+  }
+}
+
+function openModal(col, row) {
+  currentCell = { col, row };
+  const q = QUESTIONS[col][row];
+  document.getElementById('modal-cat').textContent = CATEGORIES[col];
+  document.getElementById('modal-points').textContent = `$${POINTS[row]}`;
+  document.getElementById('modal-question').textContent = q.q;
+  document.getElementById('modal-answer').textContent = q.a;
+  document.getElementById('modal-answer').classList.remove('visible');
+  document.getElementById('btn-reveal').style.display = 'inline-flex';
+  document.getElementById('btn-t1').style.display = 'none';
+  document.getElementById('btn-t2').style.display = 'none';
+  document.getElementById('btn-none').style.display = 'none';
+  document.getElementById('award-label').classList.remove('visible');
+  document.getElementById('award-label').textContent = '';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function revealAnswer() {
+  document.getElementById('modal-answer').classList.add('visible');
+  document.getElementById('btn-reveal').style.display = 'none';
+  const t1name = document.getElementById('team1-name').value || 'Team 1';
+  const t2name = document.getElementById('team2-name').value || 'Team 2';
+  document.getElementById('btn-t1').textContent = `✓ ${t1name}`;
+  document.getElementById('btn-t2').textContent = `✓ ${t2name}`;
+  document.getElementById('btn-t1').style.display = 'inline-flex';
+  document.getElementById('btn-t2').style.display = 'inline-flex';
+  document.getElementById('btn-none').style.display = 'inline-flex';
+}
+
+function award(team) {
+  const pts = POINTS[currentCell.row];
+  scores[team - 1] += pts;
+  updateScores();
+  confetti(team - 1);
+  const name = document.getElementById(`team${team}-name`).value || `Team ${team}`;
+  document.getElementById('award-label').textContent = `+${pts} → ${name}`;
+  document.getElementById('award-label').classList.add('visible');
+  document.getElementById('btn-t1').style.display = 'none';
+  document.getElementById('btn-t2').style.display = 'none';
+  document.getElementById('btn-none').style.display = 'none';
+  markUsed();
+}
+
+function awardNone() {
+  document.getElementById('award-label').textContent = 'No point awarded';
+  document.getElementById('award-label').classList.add('visible');
+  document.getElementById('btn-t1').style.display = 'none';
+  document.getElementById('btn-t2').style.display = 'none';
+  document.getElementById('btn-none').style.display = 'none';
+  markUsed();
+}
+
+function markUsed() {
+  used[currentCell.col][currentCell.row] = true;
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  buildBoard();
+  currentCell = null;
+}
+
+function updateScores() {
+  document.getElementById('team1-score').textContent = scores[0];
+  document.getElementById('team2-score').textContent = scores[1];
+}
+
+function adjustScore(team, delta) {
+  scores[team - 1] = Math.max(0, scores[team - 1] + delta);
+  updateScores();
+}
+
+function confetti(teamIdx) {
+  const colors = teamIdx === 0
+    ? ['#f0c040','#ffd700','#ffe980']
+    : ['#60aaff','#90cfff','#c0e8ff'];
+  for (let i = 0; i < 40; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.left = (20 + Math.random() * 60) + 'vw';
+    el.style.top = '-10px';
+    el.style.background = colors[Math.floor(Math.random() * colors.length)];
+    el.style.animationDelay = (Math.random() * 0.5) + 's';
+    el.style.transform = `rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2200);
+  }
+}
+
+function resetGame() {
+  if (!confirm('Reset the board? Scores will be kept.')) return;
+  used = Array.from({length: 5}, () => Array(5).fill(false));
+  buildBoard();
+}
+
+buildBoard();
+
+// Close modal on overlay click
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// Keyboard support
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+</script>
+</body>
+</html>
