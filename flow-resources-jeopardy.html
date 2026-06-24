@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flow Resources Jeopardy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap');
+
+  :root {
+    --navy: #0a1628;
+    --deep: #0e1f3d;
+    --mid: #1a3a6b;
+    --bright: #2a5fc4;
+    --gold: #f5c518;
+    --gold-light: #ffe580;
+    --silver: #c8d8f0;
+    --white: #f0f4ff;
+    --answered: #1a2a1a;
+    --answered-text: #2d4a2d;
+    --red: #e04040;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-image: radial-gradient(ellipse at 50% 0%, #1a3a6b44 0%, transparent 70%);
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .game-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    letter-spacing: 0.08em;
+    color: var(--gold);
+    text-shadow: 0 0 40px #f5c51866, 3px 3px 0 #7a6000;
+    line-height: 1;
+  }
+
+  .game-subtitle {
+    font-size: 0.85rem;
+    color: var(--silver);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 6px;
+    opacity: 0.8;
+  }
+
+  /* SCOREBOARD */
+  .scoreboard {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .team-card {
+    background: var(--deep);
+    border: 2px solid var(--mid);
+    border-radius: 8px;
+    padding: 10px 18px;
+    min-width: 120px;
+    text-align: center;
+    transition: border-color 0.2s;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .team-card.active-team {
+    border-color: var(--gold);
+    box-shadow: 0 0 12px #f5c51844;
+  }
+
+  .team-name {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--silver);
+    margin-bottom: 4px;
+  }
+
+  .team-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .score-btns {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+    justify-content: center;
+  }
+
+  .score-btn {
+    background: var(--mid);
+    border: none;
+    color: var(--white);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    font-weight: 700;
+    transition: background 0.15s;
+  }
+
+  .score-btn:hover { background: var(--bright); }
+  .score-btn.neg { background: #3a1a1a; }
+  .score-btn.neg:hover { background: var(--red); }
+
+  /* BOARD */
+  .board-wrap {
+    width: 100%;
+    max-width: 1000px;
+  }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    width: 100%;
+  }
+
+  .cat-header {
+    background: var(--mid);
+    border: 2px solid var(--bright);
+    border-radius: 6px;
+    padding: 12px 6px;
+    text-align: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(0.85rem, 1.5vw, 1.1rem);
+    letter-spacing: 0.06em;
+    color: var(--gold-light);
+    line-height: 1.2;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cell {
+    background: var(--mid);
+    border: 2px solid var(--bright);
+    border-radius: 6px;
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    color: var(--gold);
+    text-shadow: 1px 1px 0 #7a6000;
+    user-select: none;
+  }
+
+  .cell:hover:not(.used) {
+    background: var(--bright);
+    transform: scale(1.03);
+    box-shadow: 0 4px 20px #2a5fc466;
+  }
+
+  .cell.used {
+    background: var(--answered);
+    border-color: var(--answered-text);
+    color: var(--answered-text);
+    cursor: default;
+    transform: none;
+  }
+
+  /* MODAL */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: #000000cc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-backdrop.hidden { display: none; }
+
+  .modal {
+    background: var(--deep);
+    border: 3px solid var(--gold);
+    border-radius: 12px;
+    max-width: 680px;
+    width: 100%;
+    padding: 36px 40px;
+    position: relative;
+    box-shadow: 0 0 60px #f5c51833;
+  }
+
+  .modal-points {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    color: var(--gold);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    opacity: 0.8;
+  }
+
+  .modal-category {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--silver);
+    margin-bottom: 20px;
+    opacity: 0.7;
+  }
+
+  .modal-question {
+    font-size: clamp(1.1rem, 2.5vw, 1.45rem);
+    font-weight: 700;
+    line-height: 1.5;
+    color: var(--white);
+    margin-bottom: 28px;
+  }
+
+  .modal-answer {
+    background: #0a2a0a;
+    border: 2px solid #2a6a2a;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: none;
+  }
+
+  .modal-answer.revealed { display: block; }
+
+  .answer-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: #6aaa6a;
+    margin-bottom: 6px;
+  }
+
+  .answer-text {
+    font-size: 1rem;
+    color: #b0ffb0;
+    line-height: 1.5;
+    font-weight: 600;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 10px 22px;
+    border: none;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.15s;
+  }
+
+  .btn-reveal {
+    background: var(--gold);
+    color: var(--navy);
+  }
+  .btn-reveal:hover { background: var(--gold-light); }
+
+  .btn-close {
+    background: var(--mid);
+    color: var(--white);
+  }
+  .btn-close:hover { background: var(--bright); }
+
+  .btn-dismiss {
+    background: #3a1a1a;
+    color: #ffaaaa;
+  }
+  .btn-dismiss:hover { background: var(--red); color: white; }
+
+  /* FINAL JEOPARDY */
+  .final-row {
+    margin-top: 8px;
+    width: 100%;
+  }
+
+  .final-cell {
+    background: linear-gradient(135deg, #2a1a6b, #1a3a6b);
+    border: 2px solid var(--gold);
+    border-radius: 6px;
+    padding: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    color: var(--gold);
+    letter-spacing: 0.08em;
+  }
+
+  .final-cell:hover { transform: scale(1.01); box-shadow: 0 4px 20px #f5c51833; }
+  .final-cell.used { opacity: 0.4; cursor: default; transform: none; }
+
+  .reset-btn {
+    margin-top: 20px;
+    background: transparent;
+    border: 1px solid var(--mid);
+    color: var(--silver);
+    padding: 8px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+  }
+  .reset-btn:hover { opacity: 1; }
+
+  @media (max-width: 600px) {
+    .board { gap: 4px; }
+    .cell { min-height: 52px; }
+    .modal { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="game-title">FLOW RESOURCES JEOPARDY</div>
+  <div class="game-subtitle">Grade 7 Honours Physical Geography · Q4 Review</div>
+</header>
+
+<!-- SCOREBOARD -->
+<div class="scoreboard" id="scoreboard"></div>
+
+<!-- BOARD -->
+<div class="board-wrap">
+  <div class="board" id="board"></div>
+  <div class="final-row">
+    <div class="final-cell" id="final-cell" onclick="openFinal()">⭐ FINAL JEOPARDY — Click to reveal</div>
+  </div>
+</div>
+
+<button class="reset-btn" onclick="resetGame()">↺ Reset Board</button>
+
+<!-- MODAL -->
+<div class="modal-backdrop hidden" id="modal-backdrop">
+  <div class="modal">
+    <div class="modal-points" id="modal-points"></div>
+    <div class="modal-category" id="modal-category"></div>
+    <div class="modal-question" id="modal-question"></div>
+    <div class="modal-answer" id="modal-answer">
+      <div class="answer-label">Answer</div>
+      <div class="answer-text" id="modal-answer-text"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-reveal" id="reveal-btn" onclick="revealAnswer()">Reveal Answer</button>
+      <button class="btn btn-close" onclick="closeModal(true)">Mark &amp; Close ✓</button>
+      <button class="btn btn-dismiss" onclick="closeModal(false)">Close ✗</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATEGORIES = [
+  "What is a Flow Resource?",
+  "Water & Aquifers",
+  "Wind & Solar",
+  "Threats & Conservation",
+  "Vocabulary Challenge"
+];
+
+const POINTS = [100, 200, 300, 400, 500];
+
+// [question, answer]
+const QUESTIONS = [
+  // CAT 0: What is a Flow Resource?
+  [
+    ["A student says fresh water is renewable because rain always returns. What mistake are they making?",
+     "Flow resources like water must be used where and when they occur — if not captured, they are lost. They are not stored in a bank for later use like renewable resources."],
+    ["Name TWO examples of flow resources and explain what they have in common.",
+     "Any two of: fresh water, wind, solar energy, air. All three continuously flow or move through natural processes and cannot be stockpiled — if unused, the energy or resource is gone."],
+    ["Explain in your own words: why is a flow resource different from both a renewable resource and a non-renewable resource?",
+     "Non-renewables are used up forever. Renewables regenerate over time. Flow resources are continuously supplied by natural processes but must be used immediately — they cannot be stored and will not run out, but they can be wasted."],
+    ["Give an example of a flow resource being 'lost' because it was not used in time. Explain what that means.",
+     "E.g. wind that blows without a turbine, sunshine on a cloudy day after a clear one. 'Lost' means the energy moved past without being captured — it cannot be retrieved later."],
+    ["A country claims it will 'save' its solar energy for winter. What problem does this statement reveal about flow resources?",
+     "Flow resources cannot be stored indefinitely in their natural form. Solar energy arriving in summer cannot be paused and released in winter — it must be converted and stored as another form of energy (e.g. battery), which is costly and inefficient at scale."]
+  ],
+  // CAT 1: Water & Aquifers
+  [
+    ["Where is the largest single store of Earth's fresh water found?",
+     "Glaciers and ice caps — mainly in Antarctica and Greenland."],
+    ["What is an aquifer? Give one real-world example of where people rely on one.",
+     "An underground layer of rock or sediment that holds and transmits water. Example: the Ogallala Aquifer (USA), the North China Plain aquifer, or any accepted regional example."],
+    ["Why is most of Earth's water not useful to humans even though water covers 71% of the planet?",
+     "About 97% of Earth's water is saltwater in the oceans. Of the remaining 3% fresh water, most is locked in ice caps and glaciers, leaving less than 1% accessible in rivers, lakes, and aquifers."],
+    ["Explain why fresh water is not equally available to all people on Earth. Name at least TWO reasons.",
+     "Geography/climate: some regions receive very little rainfall (deserts). Population pressure: densely populated areas may exceed their local supply. Infrastructure: poor countries may lack pipes, treatment plants. Pollution: contamination reduces usable supply."],
+    ["A government drills into an aquifer to supply a growing city. Explain TWO long-term risks of relying on aquifer water.",
+     "1. Aquifers refill slowly — over-extraction leads to permanent depletion. 2. Removing groundwater can cause land to sink (subsidence). 3. Drilling too close to coasts can allow saltwater intrusion. (Any two accepted.)"]
+  ],
+  // CAT 2: Wind & Solar
+  [
+    ["Why are wind and solar classified as flow resources rather than renewable resources?",
+     "They are supplied continuously by natural processes (the sun, atmospheric circulation) and cannot be depleted — but they must be captured at the moment they occur or the energy is lost."],
+    ["Name ONE advantage of solar energy compared to burning fossil fuels.",
+     "Solar energy produces no greenhouse gas emissions during operation / it is free once infrastructure is built / it has no fuel cost and no combustion pollution. (Any one valid advantage.)"],
+    ["A wind farm produces no electricity on a calm day. What does this reveal about the limitation of flow resources?",
+     "Flow resources are intermittent and location-dependent — they cannot be relied on continuously. When the resource is not flowing (no wind, night-time for solar), no energy is produced without storage solutions."],
+    ["How does a hydroelectric dam use water as a flow resource to generate electricity? Describe the process.",
+     "Water held behind a dam is released in a controlled flow. The falling/moving water spins turbines, which turn generators that produce electricity. The water itself is not consumed — it flows on downstream."],
+    ["Compare wind energy and solar energy: what do they share, and what is one key difference between them?",
+     "Both are flow resources that produce no greenhouse gases and are continuously replenished. Key difference: solar depends on sunlight (unavailable at night or in cloudy climates); wind depends on wind speed (varies by location and season)."]
+  ],
+  // CAT 3: Threats & Conservation
+  [
+    ["Name ONE major human threat to the world's fresh water supply.",
+     "Any one of: industrial pollution, agricultural runoff (fertilisers, pesticides), over-extraction of aquifers, climate change reducing glacier meltwater, sewage contamination."],
+    ["How does the atmosphere protect life on Earth? Give TWO specific functions.",
+     "1. Filters harmful ultraviolet (UV) radiation from the sun (ozone layer). 2. Traps heat through the greenhouse effect, keeping temperatures within a livable range. 3. Provides the air (oxygen, nitrogen) needed for breathing and combustion."],
+    ["Explain why air quality is worse in some places than others. Use at least TWO geographic factors.",
+     "1. Industry/urbanisation: cities with factories and heavy traffic release more pollutants. 2. Topography: valleys trap pollution (temperature inversions). 3. Wind patterns: some areas have less wind to disperse pollutants. 4. Proximity to sources: coal plants, wildfires."],
+    ["Describe ONE strategy an individual and ONE strategy a government could use to conserve fresh water.",
+     "Individual: shorter showers, fixing leaks, using grey water for gardens, drought-resistant plants. Government: water pricing policies, investment in efficient irrigation, water recycling plants, regulation of industrial discharge."],
+    ["A city is running short of water due to population growth and drought. Suggest TWO realistic strategies and explain one trade-off for each.",
+     "E.g. 1) Desalination — provides reliable supply but is expensive and energy-intensive. 2) Water rationing — reduces demand but may be unpopular and hard to enforce. 3) Importing virtual water (water-intensive goods) — reduces local pressure but increases dependency on trade."]
+  ],
+  // CAT 4: Vocabulary Challenge
+  [
+    ["Define 'flow resource' in your own words.",
+     "A natural resource that moves or flows continuously through natural processes and must be used at the time and place it occurs — it cannot be stored indefinitely and will not be permanently depleted."],
+    ["Define 'aquifer' and explain why it matters to human populations.",
+     "An underground layer of rock or sediment that holds water and allows it to flow. Aquifers are vital because they supply fresh water to billions of people for drinking, farming, and industry, especially where surface water is scarce."],
+    ["What is hydroelectricity? Name ONE country that generates a significant share of its power this way.",
+     "Electricity generated by harnessing the energy of moving or falling water, typically using dams and turbines. Examples: Norway, Brazil, China, Canada, New Zealand, Paraguay."],
+    ["What does 'water scarcity' mean? Distinguish between physical scarcity and economic scarcity.",
+     "Physical scarcity: not enough water exists in a region to meet demand. Economic scarcity: water exists but people cannot access it due to lack of infrastructure or money. Many developing regions face economic scarcity even where rainfall is relatively high."],
+    ["Define 'conservation' as it applies to flow resources. Give a specific example.",
+     "Using a resource carefully and efficiently to avoid waste or permanent damage, ensuring it remains available in the future. Example: drip irrigation conserves fresh water by delivering it directly to plant roots, reducing evaporation losses."]
+  ]
+];
+
+const FINAL = {
+  category: "Final Jeopardy — Flow Resources Extended",
+  question: "A large city in a semi-arid region relies on a nearby river, an underground aquifer, and imported bottled water. The river is drying up due to climate change. The aquifer is being pumped faster than it refills. Evaluate the city's situation using geographic terminology and suggest TWO strategies the government could take to secure water for the future.",
+  answer: "Students should identify: over-extraction of the aquifer (depletion risk), reduced river flow (physical water scarcity), and climate vulnerability. Strategies might include: desalination, water recycling/grey water systems, demand management (pricing, rationing), cloud seeding, infrastructure investment for rainwater harvesting, regional water-sharing agreements. Evaluation should note trade-offs (cost, energy, political difficulty). Award marks for geographic terminology: aquifer, flow resource, water scarcity, conservation, sustainability."
+};
+
+// State
+let usedCells = {};
+let finalUsed = false;
+let currentCell = null;
+let teams = [
+  { name: "Team 1", score: 0 },
+  { name: "Team 2", score: 0 },
+  { name: "Team 3", score: 0 }
+];
+
+function initScoreboard() {
+  const sb = document.getElementById('scoreboard');
+  sb.innerHTML = '';
+  teams.forEach((t, i) => {
+    const card = document.createElement('div');
+    card.className = 'team-card';
+    card.id = `team-${i}`;
+    card.innerHTML = `
+      <div class="team-name" contenteditable="true" style="outline:none">${t.name}</div>
+      <div class="team-score" id="score-${i}">${t.score}</div>
+      <div class="score-btns">
+        <button class="score-btn" onclick="adjustScore(${i}, 1)">+</button>
+        <button class="score-btn neg" onclick="adjustScore(${i}, -1)">−</button>
+      </div>
+    `;
+    sb.appendChild(card);
+  });
+}
+
+function adjustScore(teamIdx, delta) {
+  if (currentCell) {
+    const pts = currentCell.points * delta;
+    teams[teamIdx].score += pts;
+  } else {
+    teams[teamIdx].score += delta * 100;
+  }
+  document.getElementById(`score-${teamIdx}`).textContent = teams[teamIdx].score;
+}
+
+function buildBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+
+  CATEGORIES.forEach(cat => {
+    const header = document.createElement('div');
+    header.className = 'cat-header';
+    header.textContent = cat;
+    board.appendChild(header);
+  });
+
+  POINTS.forEach((pts, row) => {
+    CATEGORIES.forEach((cat, col) => {
+      const cell = document.createElement('div');
+      const key = `${col}-${row}`;
+      cell.className = 'cell' + (usedCells[key] ? ' used' : '');
+      cell.textContent = usedCells[key] ? '' : pts;
+      if (!usedCells[key]) {
+        cell.onclick = () => openQuestion(col, row, pts, cat, cell);
+      }
+      board.appendChild(cell);
+    });
+  });
+}
+
+function openQuestion(col, row, pts, cat, cellEl) {
+  const key = `${col}-${row}`;
+  const [q, a] = QUESTIONS[col][row];
+  currentCell = { key, pts, cellEl };
+
+  document.getElementById('modal-points').textContent = `${pts} points`;
+  document.getElementById('modal-category').textContent = cat;
+  document.getElementById('modal-question').textContent = q;
+  document.getElementById('modal-answer-text').textContent = a;
+  document.getElementById('modal-answer').classList.remove('revealed');
+  document.getElementById('reveal-btn').style.display = '';
+  document.getElementById('modal-backdrop').classList.remove('hidden');
+}
+
+function openFinal() {
+  if (finalUsed) return;
+  currentCell = { key: 'final', pts: 1000, cellEl: document.getElementById('final-cell') };
+
+  document.getElementById('modal-points').textContent = 'Final Jeopardy';
+  document.getElementById('modal-category').textContent = FINAL.category;
+  document.getElementById('modal-question').textContent = FINAL.question;
+  document.getElementById('modal-answer-text').textContent = FINAL.answer;
+  document.getElementById('modal-answer').classList.remove('revealed');
+  document.getElementById('reveal-btn').style.display = '';
+  document.getElementById('modal-backdrop').classList.remove('hidden');
+}
+
+function revealAnswer() {
+  document.getElementById('modal-answer').classList.add('revealed');
+  document.getElementById('reveal-btn').style.display = 'none';
+}
+
+function closeModal(markUsed) {
+  if (markUsed && currentCell) {
+    usedCells[currentCell.key] = true;
+    if (currentCell.key === 'final') {
+      finalUsed = true;
+      document.getElementById('final-cell').classList.add('used');
+      document.getElementById('final-cell').textContent = '⭐ Final Jeopardy — Completed';
+    } else {
+      currentCell.cellEl.classList.add('used');
+      currentCell.cellEl.textContent = '';
+      currentCell.cellEl.onclick = null;
+    }
+  }
+  document.getElementById('modal-backdrop').classList.add('hidden');
+  currentCell = null;
+}
+
+function resetGame() {
+  if (!confirm('Reset the entire board? All progress will be lost.')) return;
+  usedCells = {};
+  finalUsed = false;
+  currentCell = null;
+  teams.forEach(t => t.score = 0);
+  initScoreboard();
+  buildBoard();
+  document.getElementById('final-cell').classList.remove('used');
+  document.getElementById('final-cell').textContent = '⭐ FINAL JEOPARDY — Click to reveal';
+}
+
+// Init
+initScoreboard();
+buildBoard();
+</script>
+</body>
+</html>
