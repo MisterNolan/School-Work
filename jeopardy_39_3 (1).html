@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G7 Lit Jeopardy – Week 39</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap');
+
+  :root {
+    --navy: #0a1628;
+    --gold: #f5c518;
+    --gold-dark: #c49a10;
+    --blue: #1a3a6b;
+    --blue-light: #2255a4;
+    --correct: #1a7a3f;
+    --wrong: #8b1a1a;
+    --card-bg: #1a3a6b;
+    --card-hover: #2255a4;
+    --text-light: #ffffff;
+    --text-gold: #f5c518;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    color: var(--text-light);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SCOREBOARD ── */
+  #scoreboard {
+    background: #060e1c;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    border-bottom: 3px solid var(--gold);
+  }
+
+  #scoreboard h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    color: var(--gold);
+    letter-spacing: 2px;
+    margin-right: auto;
+  }
+
+  .team-score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--blue);
+    border: 2px solid var(--gold);
+    border-radius: 8px;
+    padding: 6px 14px;
+    min-width: 120px;
+    position: relative;
+  }
+
+  .team-name {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--gold);
+  }
+
+  .team-points {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    line-height: 1;
+    color: #fff;
+    cursor: pointer;
+    border-bottom: 1px dashed rgba(255,255,255,0.2);
+    text-align: center;
+  }
+  .team-points:hover { border-color: var(--gold); color: var(--gold); }
+
+  .team-btn-row {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .team-btn {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .team-btn:hover { background: rgba(255,255,255,0.1); }
+  .team-btn.add { border-color: var(--gold); color: var(--gold); }
+  .team-btn.sub { border-color: #f55; color: #f55; }
+  .team-btn.edit { border-color: #88aaff; color: #88aaff; }
+
+  /* ── BOARD ── */
+  #board-wrap {
+    padding: 16px;
+  }
+
+  #board {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .cat-header {
+    background: var(--gold);
+    color: var(--navy);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    text-align: center;
+    padding: 14px 8px;
+    border-radius: 6px;
+    line-height: 1.2;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 2px solid var(--blue-light);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    aspect-ratio: 4/3;
+    transition: background 0.15s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card:hover:not(.used) {
+    background: var(--card-hover);
+    transform: translateY(-2px);
+    border-color: var(--gold);
+  }
+
+  .card.used {
+    background: #0a1628;
+    border-color: #1a2a40;
+    cursor: default;
+  }
+
+  .card-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.2rem;
+    color: var(--gold);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  }
+
+  .card.used .card-value { opacity: 0; }
+
+  /* ── MODAL ── */
+  #modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  #modal-overlay.open { display: flex; }
+
+  #modal {
+    background: var(--navy);
+    border: 3px solid var(--gold);
+    border-radius: 14px;
+    max-width: 680px;
+    width: 92%;
+    padding: 36px 40px;
+    position: relative;
+    text-align: center;
+  }
+
+  #modal-category {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+
+  #modal-points {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+
+  #modal-question {
+    font-size: 1.3rem;
+    line-height: 1.55;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 28px;
+  }
+
+  #show-answer-btn {
+    background: var(--gold);
+    color: var(--navy);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 32px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  #show-answer-btn:hover { background: var(--gold-dark); }
+
+  #modal-answer {
+    display: none;
+    margin-top: 20px;
+    background: #0f1f3d;
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-size: 1.1rem;
+    color: #a8d8a8;
+    font-weight: 600;
+  }
+  #modal-answer.visible { display: block; }
+
+  #modal-actions {
+    display: none;
+    margin-top: 20px;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  #modal-actions.visible { display: flex; }
+
+  .award-btn {
+    background: var(--blue);
+    border: 2px solid var(--gold);
+    color: var(--gold);
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .award-btn:hover { background: var(--blue-light); }
+
+  #close-modal {
+    margin-top: 18px;
+    background: none;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: rgba(255,255,255,0.6);
+    border-radius: 6px;
+    padding: 7px 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  #close-modal:hover { border-color: #fff; color: #fff; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--correct);
+    color: #fff;
+    font-weight: 700;
+    padding: 12px 28px;
+    border-radius: 30px;
+    font-size: 1rem;
+    transition: transform 0.3s;
+    z-index: 200;
+    white-space: nowrap;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* responsive */
+  @media (max-width: 700px) {
+    .cat-header { font-size: 0.75rem; padding: 8px 4px; }
+    .card-value { font-size: 1.4rem; }
+    #modal { padding: 24px 20px; }
+    #modal-question { font-size: 1rem; }
+  }
+
+  /* EDIT SCORE MODAL */
+  #edit-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  #edit-overlay.open { display: flex; }
+  #edit-modal {
+    background: var(--navy);
+    border: 3px solid #88aaff;
+    border-radius: 14px;
+    padding: 36px 44px;
+    text-align: center;
+    min-width: 300px;
+  }
+  #edit-modal h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    color: #88aaff;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+  #edit-team-label { font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-bottom: 20px; }
+  #edit-score-input {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.8rem;
+    background: #0f1f3d;
+    border: 2px solid #88aaff;
+    border-radius: 8px;
+    color: #fff;
+    text-align: center;
+    width: 160px;
+    padding: 8px;
+    outline: none;
+  }
+  #edit-modal-btns { display: flex; gap: 10px; justify-content: center; margin-top: 22px; }
+  .edit-confirm {
+    background: #88aaff;
+    color: var(--navy);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 28px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+  .edit-confirm:hover { background: #aabbff; }
+  .edit-cancel {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: rgba(255,255,255,0.6);
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .edit-cancel:hover { border-color: #fff; color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- SCOREBOARD -->
+<div id="scoreboard">
+  <h1>G7 Lit Jeopardy</h1>
+  <div id="teams-container"></div>
+</div>
+
+<!-- BOARD -->
+<div id="board-wrap">
+  <div id="board"></div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay">
+  <div id="modal">
+    <div id="modal-category"></div>
+    <div id="modal-points"></div>
+    <div id="modal-question"></div>
+    <button id="show-answer-btn">Reveal Answer</button>
+    <div id="modal-answer"></div>
+    <div id="modal-actions"></div>
+    <br>
+    <button id="close-modal">✕ Close &amp; mark used</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<!-- EDIT SCORE MODAL -->
+<div id="edit-overlay">
+  <div id="edit-modal">
+    <h2>Edit Score</h2>
+    <div id="edit-team-label"></div>
+    <input id="edit-score-input" type="number" min="0" />
+    <div id="edit-modal-btns">
+      <button class="edit-confirm" id="edit-confirm-btn">Set Score</button>
+      <button class="edit-cancel" id="edit-cancel-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+const categories = [
+  "The Names",
+  "Sleeping in the Forest",
+  "The Earth is a Living Thing",
+  "Identify the Literary Device",
+  "Mr. Nolan Facts"
+];
+
+// 5 questions per category, values 100-500
+const questions = [
+  // ── THE NAMES ──
+  [
+    { q: "What tragic historical event inspired Billy Collins to write 'The Names'?", a: "The September 11, 2001 terrorist attacks on the World Trade Center in New York City." },
+    { q: "In 'The Names,' Collins begins listing names in alphabetical order, starting with the letter A. What is the first name he mentions?", a: "Ackerman." },
+    { q: "What is the poetic form of 'The Names'? What does this mean?", a: "Free verse — poetry with no regular pattern of rhyme, rhythm, or line length." },
+    { q: "At the end of the poem, Collins writes 'So many names, there is barely room on the walls of the ____.' What word completes this line?", a: "Heart." },
+    { q: "Collins uses the phrase 'Twenty-six willows on the banks of a stream' (line 10). What is the significance of the number twenty-six here?", a: "There are twenty-six letters in the alphabet — Collins is honouring a victim for every letter, suggesting the names are endless." }
+  ],
+  // ── SLEEPING IN THE FOREST ──
+  [
+    { q: "Who is the author of 'Sleeping in the Forest'?", a: "Mary Oliver." },
+    { q: "In 'Sleeping in the Forest,' the speaker compares her sleep to a stone on a riverbed. What type of figurative language is this?", a: "A metaphor (she says she slept 'as never before, a stone / on the riverbed' — she IS the stone, an equation without like/as as a direct comparison)." },
+    { q: "What does the speaker say her thoughts were 'light as' in the poem?", a: "Moths (her thoughts floated 'light as moths among the branches')." },
+    { q: "By morning, the speaker says she had 'vanished at least a dozen times into' what?", a: "She vanished into the forest / into nature — she became one with it, losing her individual self." },
+    { q: "What is the main theme of 'Sleeping in the Forest'? Use evidence from the poem to support your answer.", a: "Humans can find peace and belonging by surrendering to nature. The earth 'took me back so tenderly' and by morning the speaker has 'vanished' into it, showing a complete union with the natural world." }
+  ],
+  // ── THE EARTH IS A LIVING THING ──
+  [
+    { q: "Who is the author of 'The Earth is a Living Thing'?", a: "Lucille Clifton." },
+    { q: "In 'The Earth is a Living Thing,' to what four animals is the Earth compared in the first eight lines?", a: "A bear, a hawk, a fish, and a diamond (the diamond refers to coal — 'a diamond blind in the black belly of coal')." },
+    { q: "The poem describes the earth as 'a favorite child of the universe.' What literary device is this an example of?", a: "Personification — the universe is given the human quality of having a favourite child, and the earth is treated like a person." },
+    { q: "What does the phrase 'feel her rolling her hand in its kinky hair' suggest about the relationship between the earth and the universe?", a: "It suggests the universe is a loving, nurturing parent caring for the earth as its child — a warm, intimate relationship." },
+    { q: "How does Clifton's view of nature in 'The Earth is a Living Thing' differ from Oliver's view in 'Sleeping in the Forest'? Give one similarity and one difference.", a: "Similarity: both see nature as alive and connected to humans. Difference: Clifton presents the earth as powerful and wild (a bear, a hawk), while Oliver presents nature as gentle and comforting ('took me back so tenderly')." }
+  ],
+  // ── IDENTIFY THE LITERARY DEVICE ──
+  [
+    { q: "'A soft rain stole in, unhelped by any breeze.' (The Names) — What literary device is used and why?", a: "Personification — rain is given the human action of 'stealing in,' suggesting it crept in quietly and gently, matching the poem's tender, mournful mood." },
+    { q: "'I slept as never before, a stone / on the riverbed.' (Sleeping in the Forest) — Is this a simile or a metaphor? Explain.", a: "Metaphor. The speaker IS the stone (a direct equation). Although 'as never before' appears, the comparison 'a stone on the riverbed' has no like/as linking the two things — it states she was the stone." },
+    { q: "'Names written in the air / And stitched into the cloth of the day.' (The Names) — What literary device is this?", a: "Metaphor / imagery. The day is compared to a cloth and the names are stitched into it, suggesting the victims are woven permanently into history and memory." },
+    { q: "'The earth is a black shuffling bear ruffling / its wild back and tossing / mountains into the sea.' — What is this an example of?", a: "Metaphor and personification. The earth is directly compared to a bear (metaphor) and given the human/animal actions of shuffling, ruffling, and tossing (personification)." },
+    { q: "'All night I heard the small kingdoms breathing around me, the insects, and the birds / who do their work in the darkness.' (Sleeping in the Forest) — Identify TWO literary devices used in these lines.", a: "1. Personification — the insects and birds are said to do 'their work,' a human concept. 2. Imagery — the reader can almost hear the nighttime forest creatures, creating a vivid sensory picture." }
+  ],
+  // ── MR. NOLAN FACTS ──
+  [
+    { q: "What city did Mr. Nolan live in before moving to Taiwan?", a: "Hanoi, Vietnam." },
+    { q: "What passport does Mr. Nolan hold?", a: "An Irish passport." },
+    { q: "What subject did Mr. Nolan study at university?", a: "History." },
+    { q: "What colour is Mr. Nolan's bicycle?", a: "Blue." },
+    { q: "How old is Mr. Nolan?", a: "32 years old." }
+  ]
+];
+
+const pointValues = [100, 200, 300, 400, 500];
+const NUM_TEAMS = 5;
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let teams = Array.from({length: NUM_TEAMS}, (_, i) => ({ name: `Team ${i+1}`, points: 0 }));
+let currentCard = null; // {catIdx, qIdx}
+let usedCards = new Set();
+
+// ── BUILD SCOREBOARD ───────────────────────────────────────────────────────
+function buildScoreboard() {
+  const container = document.getElementById('teams-container');
+  container.innerHTML = '';
+  container.style.display = 'flex';
+  container.style.gap = '10px';
+  container.style.flexWrap = 'wrap';
+
+  teams.forEach((team, i) => {
+    const div = document.createElement('div');
+    div.className = 'team-score';
+    div.id = `team-${i}`;
+    div.innerHTML = `
+      <div class="team-name">${team.name}</div>
+      <div class="team-points" id="pts-${i}">${team.points}</div>
+      <div class="team-btn-row">
+        <button class="team-btn sub" onclick="adjustScore(${i}, -pointValues[currentCard ? currentCard.qIdx : 0])">−</button>
+        <button class="team-btn add" onclick="awardTeam(${i})">+</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// ── BUILD BOARD ────────────────────────────────────────────────────────────
+function buildBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+
+  // Headers
+  categories.forEach(cat => {
+    const h = document.createElement('div');
+    h.className = 'cat-header';
+    h.textContent = cat;
+    board.appendChild(h);
+  });
+
+  // Cards: row by row (point value), col by col (category)
+  pointValues.forEach((pts, qIdx) => {
+    categories.forEach((cat, catIdx) => {
+      const key = `${catIdx}-${qIdx}`;
+      const card = document.createElement('div');
+      card.className = 'card' + (usedCards.has(key) ? ' used' : '');
+      card.id = `card-${key}`;
+      card.innerHTML = `<span class="card-value">$${pts}</span>`;
+      if (!usedCards.has(key)) {
+        card.addEventListener('click', () => openModal(catIdx, qIdx));
+      }
+      board.appendChild(card);
+    });
+  });
+}
+
+// ── MODAL ──────────────────────────────────────────────────────────────────
+function openModal(catIdx, qIdx) {
+  currentCard = {catIdx, qIdx};
+  const q = questions[catIdx][qIdx];
+  const pts = pointValues[qIdx];
+
+  document.getElementById('modal-category').textContent = categories[catIdx];
+  document.getElementById('modal-points').textContent = `$${pts}`;
+  document.getElementById('modal-question').textContent = q.q;
+  document.getElementById('modal-answer').textContent = `✓ ${q.a}`;
+  document.getElementById('modal-answer').classList.remove('visible');
+  document.getElementById('show-answer-btn').style.display = 'inline-block';
+
+  // Build award buttons
+  const actions = document.getElementById('modal-actions');
+  actions.classList.remove('visible');
+  actions.innerHTML = '';
+  teams.forEach((team, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'award-btn';
+    btn.textContent = `+${pts} → ${team.name}`;
+    btn.onclick = () => { awardTeam(i); closeModal(); };
+    actions.appendChild(btn);
+  });
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+document.getElementById('show-answer-btn').addEventListener('click', () => {
+  document.getElementById('modal-answer').classList.add('visible');
+  document.getElementById('modal-actions').classList.add('visible');
+  document.getElementById('show-answer-btn').style.display = 'none';
+});
+
+document.getElementById('close-modal').addEventListener('click', closeModal);
+
+document.getElementById('modal-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+
+function closeModal() {
+  if (currentCard) {
+    const key = `${currentCard.catIdx}-${currentCard.qIdx}`;
+    usedCards.add(key);
+    const cardEl = document.getElementById(`card-${key}`);
+    if (cardEl) {
+      cardEl.classList.add('used');
+      cardEl.replaceWith(cardEl.cloneNode(true)); // remove listener
+    }
+  }
+  document.getElementById('modal-overlay').classList.remove('open');
+  currentCard = null;
+}
+
+// ── SCORING ────────────────────────────────────────────────────────────────
+function awardTeam(teamIdx) {
+  if (!currentCard) return;
+  const pts = pointValues[currentCard.qIdx];
+  teams[teamIdx].points += pts;
+  updateScore(teamIdx);
+  showToast(`+${pts} → ${teams[teamIdx].name}!`);
+}
+
+function adjustScore(teamIdx) {
+  const pts = currentCard ? pointValues[currentCard.qIdx] : 100;
+  teams[teamIdx].points = Math.max(0, teams[teamIdx].points - pts);
+  updateScore(teamIdx);
+}
+
+let editingTeamIdx = null;
+
+function openEditModal(teamIdx) {
+  editingTeamIdx = teamIdx;
+  document.getElementById('edit-team-label').textContent = teams[teamIdx].name;
+  document.getElementById('edit-score-input').value = teams[teamIdx].points;
+  document.getElementById('edit-overlay').classList.add('open');
+  setTimeout(() => {
+    const inp = document.getElementById('edit-score-input');
+    inp.focus(); inp.select();
+  }, 50);
+}
+
+document.getElementById('edit-confirm-btn').addEventListener('click', () => {
+  const val = parseInt(document.getElementById('edit-score-input').value, 10);
+  if (!isNaN(val) && val >= 0 && editingTeamIdx !== null) {
+    teams[editingTeamIdx].points = val;
+    updateScore(editingTeamIdx);
+    showToast(teams[editingTeamIdx].name + ' -> ' + val + ' pts');
+  }
+  closeEditModal();
+});
+
+document.getElementById('edit-cancel-btn').addEventListener('click', closeEditModal);
+
+document.getElementById('edit-score-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('edit-confirm-btn').click();
+  if (e.key === 'Escape') closeEditModal();
+});
+
+document.getElementById('edit-overlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('edit-overlay')) closeEditModal();
+});
+
+function closeEditModal() {
+  document.getElementById('edit-overlay').classList.remove('open');
+  editingTeamIdx = null;
+}
+
+function updateScore(teamIdx) {
+  const el = document.getElementById(`pts-${teamIdx}`);
+  if (el) el.textContent = teams[teamIdx].points;
+}
+
+// ── TOAST ──────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+buildScoreboard();
+buildBoard();
+</script>
+</body>
+</html>
