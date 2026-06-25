@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Non-Renewable Resources Jeopardy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap');
+
+  :root {
+    --navy: #1a0a0a;
+    --deep: #2a0f0f;
+    --mid: #5a1a1a;
+    --bright: #c43a2a;
+    --gold: #f5c518;
+    --gold-light: #ffe580;
+    --silver: #f0d8d0;
+    --white: #fff4f0;
+    --answered: #1a1a0a;
+    --answered-text: #3a3a1a;
+    --green: #2a7a2a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-image: radial-gradient(ellipse at 50% 0%, #5a1a1a33 0%, transparent 70%);
+  }
+
+  header { text-align: center; margin-bottom: 24px; }
+
+  .game-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 4.5vw, 3.6rem);
+    letter-spacing: 0.08em;
+    color: var(--gold);
+    text-shadow: 0 0 40px #f5c51866, 3px 3px 0 #7a6000;
+    line-height: 1;
+  }
+
+  .game-subtitle {
+    font-size: 0.85rem;
+    color: var(--silver);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 6px;
+    opacity: 0.8;
+  }
+
+  .scoreboard {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .team-card {
+    background: var(--deep);
+    border: 2px solid var(--mid);
+    border-radius: 8px;
+    padding: 10px 18px;
+    min-width: 120px;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+
+  .team-card.active-team {
+    border-color: var(--gold);
+    box-shadow: 0 0 12px #f5c51844;
+  }
+
+  .team-name {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--silver);
+    margin-bottom: 4px;
+  }
+
+  .team-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .score-btns {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+    justify-content: center;
+  }
+
+  .score-btn {
+    background: var(--mid);
+    border: none;
+    color: var(--white);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    font-weight: 700;
+    transition: background 0.15s;
+  }
+
+  .score-btn:hover { background: var(--bright); }
+  .score-btn.neg { background: #2a1a0a; }
+  .score-btn.neg:hover { background: #884400; }
+
+  .board-wrap { width: 100%; max-width: 1000px; }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    width: 100%;
+  }
+
+  .cat-header {
+    background: var(--mid);
+    border: 2px solid var(--bright);
+    border-radius: 6px;
+    padding: 12px 6px;
+    text-align: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(0.8rem, 1.4vw, 1.05rem);
+    letter-spacing: 0.06em;
+    color: var(--gold-light);
+    line-height: 1.2;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cell {
+    background: var(--mid);
+    border: 2px solid var(--bright);
+    border-radius: 6px;
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    color: var(--gold);
+    text-shadow: 1px 1px 0 #7a6000;
+    user-select: none;
+  }
+
+  .cell:hover:not(.used) {
+    background: var(--bright);
+    transform: scale(1.03);
+    box-shadow: 0 4px 20px #c43a2a55;
+  }
+
+  .cell.used {
+    background: var(--answered);
+    border-color: var(--answered-text);
+    color: var(--answered-text);
+    cursor: default;
+    transform: none;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: #000000cc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-backdrop.hidden { display: none; }
+
+  .modal {
+    background: var(--deep);
+    border: 3px solid var(--gold);
+    border-radius: 12px;
+    max-width: 680px;
+    width: 100%;
+    padding: 36px 40px;
+    position: relative;
+    box-shadow: 0 0 60px #f5c51833;
+  }
+
+  .modal-points {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    color: var(--gold);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    opacity: 0.8;
+  }
+
+  .modal-category {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--silver);
+    margin-bottom: 20px;
+    opacity: 0.7;
+  }
+
+  .modal-question {
+    font-size: clamp(1.1rem, 2.5vw, 1.45rem);
+    font-weight: 700;
+    line-height: 1.5;
+    color: var(--white);
+    margin-bottom: 28px;
+  }
+
+  .modal-answer {
+    background: #0a2a0a;
+    border: 2px solid #2a6a2a;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: none;
+  }
+
+  .modal-answer.revealed { display: block; }
+
+  .answer-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: #6aaa6a;
+    margin-bottom: 6px;
+  }
+
+  .answer-text {
+    font-size: 1rem;
+    color: #b0ffb0;
+    line-height: 1.5;
+    font-weight: 600;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 10px 22px;
+    border: none;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.15s;
+  }
+
+  .btn-reveal { background: var(--gold); color: var(--navy); }
+  .btn-reveal:hover { background: var(--gold-light); }
+  .btn-close { background: var(--mid); color: var(--white); }
+  .btn-close:hover { background: var(--bright); }
+  .btn-dismiss { background: #2a1a0a; color: #ffccaa; }
+  .btn-dismiss:hover { background: #884400; color: white; }
+
+  .final-row { margin-top: 8px; width: 100%; }
+
+  .final-cell {
+    background: linear-gradient(135deg, #3a1a6b, #6b1a1a);
+    border: 2px solid var(--gold);
+    border-radius: 6px;
+    padding: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    color: var(--gold);
+    letter-spacing: 0.08em;
+  }
+
+  .final-cell:hover { transform: scale(1.01); box-shadow: 0 4px 20px #f5c51833; }
+  .final-cell.used { opacity: 0.4; cursor: default; transform: none; }
+
+  .reset-btn {
+    margin-top: 20px;
+    background: transparent;
+    border: 1px solid var(--mid);
+    color: var(--silver);
+    padding: 8px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+  }
+  .reset-btn:hover { opacity: 1; }
+
+  @media (max-width: 600px) {
+    .board { gap: 4px; }
+    .cell { min-height: 52px; }
+    .modal { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="game-title">NON-RENEWABLE RESOURCES JEOPARDY</div>
+  <div class="game-subtitle">Grade 7 Honours Physical Geography · Q4 Review</div>
+</header>
+
+<div class="scoreboard" id="scoreboard"></div>
+
+<div class="board-wrap">
+  <div class="board" id="board"></div>
+  <div class="final-row">
+    <div class="final-cell" id="final-cell" onclick="openFinal()">⭐ FINAL JEOPARDY — Click to reveal</div>
+  </div>
+</div>
+
+<button class="reset-btn" onclick="resetGame()">↺ Reset Board</button>
+
+<div class="modal-backdrop hidden" id="modal-backdrop">
+  <div class="modal">
+    <div class="modal-points" id="modal-points"></div>
+    <div class="modal-category" id="modal-category"></div>
+    <div class="modal-question" id="modal-question"></div>
+    <div class="modal-answer" id="modal-answer">
+      <div class="answer-label">Answer</div>
+      <div class="answer-text" id="modal-answer-text"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-reveal" id="reveal-btn" onclick="revealAnswer()">Reveal Answer</button>
+      <button class="btn btn-close" onclick="closeModal(true)">Mark &amp; Close ✓</button>
+      <button class="btn btn-dismiss" onclick="closeModal(false)">Close ✗</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATEGORIES = [
+  "What is Non-Renewable?",
+  "How We Extract It",
+  "Environmental Impact",
+  "People & Power",
+  "Vocabulary Challenge"
+];
+
+const POINTS = [100, 200, 300, 400, 500];
+
+const QUESTIONS = [
+  // CAT 0: What is Non-Renewable?
+  [
+    ["What makes a resource non-renewable? Give one example.",
+     "A resource that forms so slowly it cannot be replaced within a human lifetime. Examples: coal, oil, natural gas, gold, copper, iron ore."],
+    ["What is the main difference between a mineral and a fossil fuel?",
+     "Minerals are inorganic — they were never living organisms. Fossil fuels (coal, oil, natural gas) formed from the remains of ancient plants and animals that were buried, compressed, and heated over millions of years."],
+    ["Why did fossil fuels take millions of years to form? Describe the process.",
+     "Ancient organisms died and were buried under layers of sediment. Over millions of years, heat and pressure transformed organic matter into coal, oil, or gas. This process cannot be accelerated — once used, these fuels are gone for good."],
+    ["A student says: 'We can just make more oil if we run out.' Explain why this is wrong using geographic knowledge.",
+     "Fossil fuels require millions of years of geological processes — burial, compression, and heat — to form. They cannot be manufactured or regrown on a human timescale. Once extracted and burned, they are permanently depleted."],
+    ["Compare non-renewable resources and flow resources. What is the key difference between them?",
+     "Flow resources (wind, solar, water) are continuously replenished by natural processes and cannot be permanently used up. Non-renewable resources (fossil fuels, minerals) exist in fixed quantities — once extracted, they do not reform within a human lifetime and will eventually run out."]
+  ],
+  // CAT 1: How We Extract It
+  [
+    ["What extraction method is used for coal found close to the Earth's surface?",
+     "Strip mining or mountaintop removal — the overlying rock and soil is stripped away to expose coal seams near the surface."],
+    ["Describe fracking in simple terms. What resource does it mainly target?",
+     "Fracking (hydraulic fracturing) involves drilling deep into rock and injecting a high-pressure mixture of water, sand, and chemicals to fracture the rock and release trapped natural gas or oil."],
+    ["Why does the method of extraction depend on where a resource is found?",
+     "Resources near the surface can be extracted cheaply by open-cut or strip mining. Deeper deposits require underground mines or drilling. Resources under the sea require offshore platforms. Unconventional deposits (shale, oil sands) need special techniques like fracking or steam injection."],
+    ["What are oil sands, and why is extracting oil from them controversial?",
+     "Oil sands are mixtures of sand, clay, water, and thick bitumen (heavy oil). Extracting the oil requires huge amounts of water and energy, produces large volumes of toxic waste, destroys boreal forests, and generates significantly more greenhouse gas emissions than conventional oil drilling."],
+    ["Compare underground coal mining and strip mining: what is one advantage and one disadvantage of each?",
+     "Strip mining: cheaper and safer for workers, but destroys large areas of land and habitat. Underground mining: less surface disruption, but dangerous for miners (collapse, gas explosions) and expensive to operate."]
+  ],
+  // CAT 2: Environmental Impact
+  [
+    ["Name TWO environmental consequences of extracting non-renewable resources.",
+     "Any two of: habitat destruction, soil erosion and contamination, water pollution (rivers, groundwater), air pollution from dust and gases, acid mine drainage, landscape scarring, greenhouse gas emissions."],
+    ["How can mining operations pollute water sources? Give a specific example.",
+     "Mining exposes sulphide minerals to air and water, producing sulphuric acid that drains into rivers (acid mine drainage). Chemicals used in processing (e.g. cyanide in gold mining) can leak into groundwater. Tailings ponds can overflow and contaminate local waterways."],
+    ["Explain how fracking can harm the natural environment. Give at least TWO specific concerns.",
+     "1. Risk of groundwater contamination from fracking chemicals or methane leaks. 2. Wastewater disposal can trigger small earthquakes. 3. Surface spills of fracking fluid harm soil and ecosystems. 4. Methane leaks during drilling contribute to greenhouse gas emissions."],
+    ["Extracting oil from oil sands causes major environmental damage. Describe TWO specific impacts.",
+     "1. Massive areas of boreal forest and wetland are cleared, destroying wildlife habitat. 2. Enormous quantities of water are used and contaminated, stored in toxic tailings ponds. 3. The process produces far more CO₂ per barrel than conventional drilling, worsening climate change."],
+    ["A mining company claims its new mine will have 'minimal environmental impact.' What questions should a geographer ask to evaluate this claim?",
+     "Possible questions: What extraction method will be used? How will wastewater be managed? What will happen to the land after mining ends? Are there rivers or groundwater sources nearby? What species live in the area? Has an independent environmental impact assessment been conducted? What reclamation plan is in place?"]
+  ],
+  // CAT 3: People & Power
+  [
+    ["Why do Indigenous communities often oppose mining on their traditional lands?",
+     "Mining can destroy ecosystems, contaminate water sources, and damage sacred or culturally significant sites that Indigenous communities depend on for their way of life, food, and cultural identity."],
+    ["What are conflict minerals? Name ONE mineral associated with this term.",
+     "Conflict minerals are natural resources whose extraction and trade fund armed conflict, often through militias or armed groups that control mining areas. Associated minerals include coltan (tantalum), gold, cassiterite (tin), wolframite (tungsten) — mainly from the DRC."],
+    ["Why is the Democratic Republic of Congo (DRC) significant in the story of non-renewable resources?",
+     "The DRC contains vast deposits of minerals critical to modern technology (coltan for capacitors, cobalt for batteries, gold). However, armed groups control many mines, using forced labour and violence, while profits fund conflict rather than benefiting local people."],
+    ["Your smartphone contains minerals mined in conflict zones. Who pays the real price for these minerals? Explain your answer.",
+     "Local communities and miners — often including children — pay the real price through forced labour, violence, environmental destruction of their land and water, and displacement. Profits flow to armed groups and multinational companies, while consumers in wealthy countries benefit from cheap devices without awareness of the true cost."],
+    ["Why is reducing dependence on non-renewable resources difficult, even when people understand the problems? Give TWO challenges.",
+     "1. Economic dependence: many countries and communities rely on fossil fuel industries for jobs and government revenue. 2. Infrastructure lock-in: existing power grids, vehicles, and factories are built around fossil fuels and cannot switch overnight. 3. Cost: renewable alternatives require large upfront investment. 4. Political resistance from powerful fossil fuel industries. (Any two accepted.)"]
+  ],
+  // CAT 4: Vocabulary Challenge
+  [
+    ["Define 'non-renewable resource' in your own words.",
+     "A natural resource that exists in a fixed quantity and forms so slowly that it cannot be replaced within a human lifetime. Once used, it is effectively gone forever."],
+    ["Define 'fossil fuel' and give TWO examples.",
+     "Fossil fuels are energy sources formed from the remains of ancient living organisms that were buried and transformed by heat and pressure over millions of years. Examples: coal, crude oil (petroleum), natural gas."],
+    ["Define 'fracking' and explain ONE reason why it is controversial.",
+     "Fracking (hydraulic fracturing) is the process of injecting high-pressure fluid into underground rock to release trapped oil or gas. It is controversial because of risks to groundwater contamination, earthquake activity, and methane leaks that contribute to climate change."],
+    ["Define 'mineral' and explain how it differs from a fossil fuel.",
+     "A mineral is a naturally occurring inorganic solid with a definite chemical composition (e.g. gold, copper, iron ore). Unlike fossil fuels, minerals were never living organisms and are not used primarily for energy — they are used to make products, tools, and technology."],
+    ["Define 'conflict minerals' and explain the geographic connection to the DRC.",
+     "Conflict minerals are resources whose trade finances armed groups in war zones. The DRC in Central Africa is the most prominent example — it holds vast deposits of coltan, cobalt, and gold, but armed militias control many mines, funding conflict while local people suffer exploitation and violence."]
+  ]
+];
+
+const FINAL = {
+  category: "Final Jeopardy — Non-Renewable Resources Extended",
+  question: "A developing country earns 80% of its income from coal exports. Scientists have warned that the coal industry causes severe air and water pollution, and that global demand for coal will fall as countries switch to renewables. Evaluate the country's situation using geographic terminology and suggest TWO strategies it could use to reduce its dependence on coal while protecting its people.",
+  answer: "Students should identify: economic dependence on a non-renewable resource, environmental costs of extraction (pollution, habitat loss), and the long-term risk of declining global demand. Strategies might include: investing in renewable energy infrastructure, economic diversification, retraining workers for new industries, international aid for green transition, carbon taxes to fund alternatives. Evaluation should address trade-offs (short-term economic pain vs long-term sustainability). Award marks for geographic terminology: non-renewable, fossil fuel, sustainable development, economic dependence, transition, emissions."
+};
+
+let usedCells = {};
+let finalUsed = false;
+let currentCell = null;
+let teams = [
+  { name: "Team 1", score: 0 },
+  { name: "Team 2", score: 0 },
+  { name: "Team 3", score: 0 }
+];
+
+function initScoreboard() {
+  const sb = document.getElementById('scoreboard');
+  sb.innerHTML = '';
+  teams.forEach((t, i) => {
+    const card = document.createElement('div');
+    card.className = 'team-card';
+    card.id = `team-${i}`;
+    card.innerHTML = `
+      <div class="team-name" contenteditable="true" style="outline:none">${t.name}</div>
+      <div class="team-score" id="score-${i}">${t.score}</div>
+      <div class="score-btns">
+        <button class="score-btn" onclick="adjustScore(${i}, 1)">+</button>
+        <button class="score-btn neg" onclick="adjustScore(${i}, -1)">−</button>
+      </div>
+    `;
+    sb.appendChild(card);
+  });
+}
+
+function adjustScore(teamIdx, delta) {
+  const pts = currentCell ? currentCell.pts * delta : 100 * delta;
+  teams[teamIdx].score += pts;
+  document.getElementById(`score-${teamIdx}`).textContent = teams[teamIdx].score;
+}
+
+function buildBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+
+  CATEGORIES.forEach(cat => {
+    const header = document.createElement('div');
+    header.className = 'cat-header';
+    header.textContent = cat;
+    board.appendChild(header);
+  });
+
+  POINTS.forEach((pts, row) => {
+    CATEGORIES.forEach((cat, col) => {
+      const cell = document.createElement('div');
+      const key = `${col}-${row}`;
+      cell.className = 'cell' + (usedCells[key] ? ' used' : '');
+      cell.textContent = usedCells[key] ? '' : pts;
+      if (!usedCells[key]) {
+        cell.onclick = () => openQuestion(col, row, pts, cat, cell);
+      }
+      board.appendChild(cell);
+    });
+  });
+}
+
+function openQuestion(col, row, pts, cat, cellEl) {
+  const key = `${col}-${row}`;
+  const [q, a] = QUESTIONS[col][row];
+  currentCell = { key, pts, cellEl };
+
+  document.getElementById('modal-points').textContent = `${pts} points`;
+  document.getElementById('modal-category').textContent = cat;
+  document.getElementById('modal-question').textContent = q;
+  document.getElementById('modal-answer-text').textContent = a;
+  document.getElementById('modal-answer').classList.remove('revealed');
+  document.getElementById('reveal-btn').style.display = '';
+  document.getElementById('modal-backdrop').classList.remove('hidden');
+}
+
+function openFinal() {
+  if (finalUsed) return;
+  currentCell = { key: 'final', pts: 1000, cellEl: document.getElementById('final-cell') };
+
+  document.getElementById('modal-points').textContent = 'Final Jeopardy';
+  document.getElementById('modal-category').textContent = FINAL.category;
+  document.getElementById('modal-question').textContent = FINAL.question;
+  document.getElementById('modal-answer-text').textContent = FINAL.answer;
+  document.getElementById('modal-answer').classList.remove('revealed');
+  document.getElementById('reveal-btn').style.display = '';
+  document.getElementById('modal-backdrop').classList.remove('hidden');
+}
+
+function revealAnswer() {
+  document.getElementById('modal-answer').classList.add('revealed');
+  document.getElementById('reveal-btn').style.display = 'none';
+}
+
+function closeModal(markUsed) {
+  if (markUsed && currentCell) {
+    usedCells[currentCell.key] = true;
+    if (currentCell.key === 'final') {
+      finalUsed = true;
+      document.getElementById('final-cell').classList.add('used');
+      document.getElementById('final-cell').textContent = '⭐ Final Jeopardy — Completed';
+    } else {
+      currentCell.cellEl.classList.add('used');
+      currentCell.cellEl.textContent = '';
+      currentCell.cellEl.onclick = null;
+    }
+  }
+  document.getElementById('modal-backdrop').classList.add('hidden');
+  currentCell = null;
+}
+
+function resetGame() {
+  if (!confirm('Reset the entire board? All progress will be lost.')) return;
+  usedCells = {};
+  finalUsed = false;
+  currentCell = null;
+  teams.forEach(t => t.score = 0);
+  initScoreboard();
+  buildBoard();
+  document.getElementById('final-cell').classList.remove('used');
+  document.getElementById('final-cell').textContent = '⭐ FINAL JEOPARDY — Click to reveal';
+}
+
+initScoreboard();
+buildBoard();
+</script>
+</body>
+</html>
