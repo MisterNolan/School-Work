@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Q4 Final Jeopardy Showdown</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700;800&display=swap');
+
+  :root {
+    /* Flow: deep ocean blue */
+    --flow-bg: #0a1628;
+    --flow-mid: #1a3a6b;
+    --flow-bright: #2a5fc4;
+    --flow-border: #4a8ff0;
+
+    /* Non-renewable: deep earth red */
+    --nr-bg: #1a0808;
+    --nr-mid: #5a1a1a;
+    --nr-bright: #c43a2a;
+    --nr-border: #e06040;
+
+    /* Mr Nolan: deep forest green */
+    --mn-bg: #0a1a0a;
+    --mn-mid: #1a4a1a;
+    --mn-bright: #2a8a2a;
+    --mn-border: #4abf4a;
+
+    /* Shared */
+    --gold: #f5c518;
+    --gold-light: #ffe580;
+    --white: #f8f8ff;
+    --answered: #111118;
+    --answered-border: #2a2a38;
+
+    --bg: #070710;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 12px 32px;
+    background-image:
+      radial-gradient(ellipse at 20% 0%, #1a3a6b22 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 0%, #5a1a1a22 0%, transparent 55%),
+      radial-gradient(ellipse at 50% 100%, #1a4a1a11 0%, transparent 50%);
+  }
+
+  /* ── HEADER ── */
+  header {
+    text-align: center;
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .crown {
+    font-size: 2rem;
+    line-height: 1;
+    margin-bottom: 4px;
+    filter: drop-shadow(0 0 12px #f5c51888);
+  }
+
+  .game-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.8rem, 5vw, 3.6rem);
+    letter-spacing: 0.12em;
+    background: linear-gradient(90deg, var(--flow-border) 0%, var(--gold) 40%, var(--gold) 60%, var(--nr-border) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    text-shadow: none;
+  }
+
+  .game-subtitle {
+    font-size: 0.75rem;
+    color: #8888aa;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+  }
+
+  .legend-flow { background: #1a3a6b; color: var(--flow-border); border: 1px solid var(--flow-border); }
+  .legend-nr { background: #3a1010; color: var(--nr-border); border: 1px solid var(--nr-border); }
+  .legend-mn { background: #0a2a0a; color: var(--mn-border); border: 1px solid var(--mn-border); }
+
+  /* ── SCOREBOARD ── */
+  .scoreboard {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .team-card {
+    background: #0f0f1e;
+    border: 2px solid #2a2a45;
+    border-radius: 8px;
+    padding: 10px 16px;
+    min-width: 110px;
+    text-align: center;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .team-card:hover { border-color: var(--gold); box-shadow: 0 0 10px #f5c51822; }
+
+  .team-name {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: #8888aa;
+    margin-bottom: 4px;
+  }
+
+  .team-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .score-btns {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+    justify-content: center;
+  }
+
+  .score-btn {
+    background: #1a1a2e;
+    border: 1px solid #2a2a45;
+    color: var(--white);
+    border-radius: 4px;
+    padding: 2px 9px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: 800;
+    transition: background 0.15s;
+  }
+  .score-btn:hover { background: #2a5fc4; border-color: var(--flow-border); }
+  .score-btn.neg:hover { background: #8a2010; border-color: var(--nr-border); }
+
+  /* ── BOARD ── */
+  .board-wrap { width: 100%; max-width: 1060px; }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+    width: 100%;
+  }
+
+  /* Category headers */
+  .cat-header {
+    border-radius: 6px;
+    padding: 10px 6px;
+    text-align: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(0.75rem, 1.3vw, 1rem);
+    letter-spacing: 0.06em;
+    color: var(--gold-light);
+    line-height: 1.25;
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cat-flow { background: var(--flow-mid); border: 2px solid var(--flow-border); }
+  .cat-nr   { background: var(--nr-mid);   border: 2px solid var(--nr-border); }
+  .cat-mn   { background: var(--mn-mid);   border: 2px solid var(--mn-border); }
+
+  /* Cells */
+  .cell {
+    border-radius: 6px;
+    min-height: 66px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.15s, filter 0.15s;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.3rem, 2.8vw, 1.9rem);
+    color: var(--gold);
+    text-shadow: 1px 1px 0 #7a6000;
+    user-select: none;
+    border: 2px solid transparent;
+  }
+
+  .cell-flow { background: var(--flow-mid); border-color: var(--flow-bright); }
+  .cell-nr   { background: var(--nr-mid);   border-color: var(--nr-bright); }
+  .cell-mn   { background: var(--mn-mid);   border-color: var(--mn-bright); }
+
+  .cell-flow:hover:not(.used) { background: var(--flow-bright); transform: scale(1.04); box-shadow: 0 4px 18px #2a5fc455; }
+  .cell-nr:hover:not(.used)   { background: var(--nr-bright);   transform: scale(1.04); box-shadow: 0 4px 18px #c43a2a55; }
+  .cell-mn:hover:not(.used)   { background: var(--mn-bright);   transform: scale(1.04); box-shadow: 0 4px 18px #2a8a2a55; }
+
+  .cell.used {
+    background: var(--answered) !important;
+    border-color: var(--answered-border) !important;
+    color: var(--answered-border) !important;
+    cursor: default;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  /* ── FINAL CELL ── */
+  .final-row { margin-top: 6px; width: 100%; }
+
+  .final-cell {
+    background: linear-gradient(135deg, var(--flow-mid), #2a1a5a, var(--nr-mid));
+    border: 2px solid var(--gold);
+    border-radius: 6px;
+    padding: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    box-shadow: 0 0 20px #f5c51822;
+  }
+
+  .final-cell:hover:not(.used) { transform: scale(1.008); box-shadow: 0 0 30px #f5c51844; }
+  .final-cell.used { opacity: 0.35; cursor: default; transform: none; }
+
+  /* ── MODAL ── */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: #000000dd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 20px;
+    backdrop-filter: blur(6px);
+  }
+
+  .modal-backdrop.hidden { display: none; }
+
+  .modal {
+    border-radius: 12px;
+    max-width: 700px;
+    width: 100%;
+    padding: 36px 40px;
+    position: relative;
+  }
+
+  .modal-flow { background: #0a1628; border: 3px solid var(--flow-border); box-shadow: 0 0 50px #2a5fc433; }
+  .modal-nr   { background: #1a0808; border: 3px solid var(--nr-border);   box-shadow: 0 0 50px #c43a2a33; }
+  .modal-mn   { background: #0a1a0a; border: 3px solid var(--mn-border);   box-shadow: 0 0 50px #2a8a2a33; }
+  .modal-final { background: #0a0a1a; border: 3px solid var(--gold);        box-shadow: 0 0 60px #f5c51833; }
+
+  .modal-points {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    opacity: 0.75;
+  }
+
+  .modal-flow .modal-points   { color: var(--flow-border); }
+  .modal-nr .modal-points     { color: var(--nr-border); }
+  .modal-mn .modal-points     { color: var(--mn-border); }
+  .modal-final .modal-points  { color: var(--gold); }
+
+  .modal-category {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: #8888aa;
+    margin-bottom: 20px;
+  }
+
+  .modal-question {
+    font-size: clamp(1.05rem, 2.2vw, 1.4rem);
+    font-weight: 700;
+    line-height: 1.55;
+    color: var(--white);
+    margin-bottom: 26px;
+  }
+
+  .modal-answer {
+    background: #081a08;
+    border: 2px solid #2a5a2a;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 22px;
+    display: none;
+  }
+
+  .modal-answer.revealed { display: block; }
+
+  .answer-label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: #5a9a5a;
+    margin-bottom: 6px;
+  }
+
+  .answer-text {
+    font-size: 0.95rem;
+    color: #a8ffb0;
+    line-height: 1.6;
+    font-weight: 600;
+  }
+
+  .modal-no-answer {
+    background: #1a1a08;
+    border: 2px solid #5a5a20;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 22px;
+    font-size: 0.9rem;
+    color: #e0e080;
+    font-style: italic;
+    display: none;
+  }
+
+  .modal-no-answer.revealed { display: block; }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 800;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.15s;
+  }
+
+  .btn-reveal { background: var(--gold); color: #0a0a0a; }
+  .btn-reveal:hover { background: var(--gold-light); }
+  .btn-close { background: #1a2a3a; color: var(--white); border: 1px solid #2a4a6a; }
+  .btn-close:hover { background: #2a5fc4; border-color: var(--flow-border); }
+  .btn-dismiss { background: #2a1010; color: #ffaaaa; border: 1px solid #5a2020; }
+  .btn-dismiss:hover { background: #8a2010; }
+  .btn-nolan { background: #0a2a0a; color: #aaffaa; border: 1px solid #2a5a2a; }
+  .btn-nolan:hover { background: #1a4a1a; }
+
+  .reset-btn {
+    margin-top: 18px;
+    background: transparent;
+    border: 1px solid #2a2a45;
+    color: #6666aa;
+    padding: 7px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+  .reset-btn:hover { opacity: 1; border-color: var(--gold); color: var(--gold); }
+
+  @media (max-width: 580px) {
+    .board { gap: 3px; }
+    .cell { min-height: 50px; }
+    .modal { padding: 22px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="crown">👑</div>
+  <div class="game-title">Q4 FINAL SHOWDOWN</div>
+  <div class="game-subtitle">Grade 7 Honours Physical Geography · End of Unit Review</div>
+  <div class="legend">
+    <span class="legend-item legend-flow">Flow Resources</span>
+    <span class="legend-item legend-nr">Non-Renewable</span>
+    <span class="legend-item legend-mn">Mr. Nolan Facts</span>
+  </div>
+</header>
+
+<div class="scoreboard" id="scoreboard"></div>
+
+<div class="board-wrap">
+  <div class="board" id="board"></div>
+  <div class="final-row">
+    <div class="final-cell" id="final-cell" onclick="openFinal()">
+      👑 FINAL JEOPARDY — The Ultimate Q4 Question
+    </div>
+  </div>
+</div>
+
+<button class="reset-btn" onclick="resetGame()">↺ Reset Board</button>
+
+<!-- MODAL -->
+<div class="modal-backdrop hidden" id="modal-backdrop">
+  <div class="modal" id="modal">
+    <div class="modal-points" id="modal-points"></div>
+    <div class="modal-category" id="modal-category"></div>
+    <div class="modal-question" id="modal-question"></div>
+    <div class="modal-answer" id="modal-answer">
+      <div class="answer-label">Answer</div>
+      <div class="answer-text" id="modal-answer-text"></div>
+    </div>
+    <div class="modal-no-answer" id="modal-no-answer">
+      🎤 Mr. Nolan will announce the answer!
+    </div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+
+const COLUMNS = [
+  {
+    label: "Flow Resources I",
+    type: "flow",
+    questions: [
+      ["What type of resource must be used at the time and place it occurs — or it is lost?",
+       "A flow resource. Unlike renewable resources, flow resources cannot be stored — if unused, the energy or water is gone."],
+      ["Most of Earth's water covers the planet's surface. So why do billions of people face water scarcity?",
+       "97% of Earth's water is saltwater. Of the 3% that is fresh, most is locked in glaciers and ice caps, leaving less than 1% available in rivers, lakes, and aquifers."],
+      ["Explain how a hydroelectric dam uses water as a flow resource to generate electricity.",
+       "Water stored behind a dam is released in a controlled flow. The moving water spins turbines connected to generators, producing electricity. The water is not consumed — it flows on downstream."],
+      ["A wind farm produces zero electricity for three days. What geographic concept does this demonstrate?",
+       "Intermittency — flow resources are available only when the natural process is occurring. Wind energy depends on wind speed; without wind, no power is generated regardless of the infrastructure in place."],
+      ["Evaluate ONE strategy a government could use to protect a country's fresh water supply. Include a trade-off.",
+       "Examples: desalination (reliable but expensive and energy-intensive); water pricing (reduces demand but may hurt poorer households); dam construction (stores water but displaces communities and harms ecosystems). Full marks require a named strategy plus an explained trade-off."]
+    ]
+  },
+  {
+    label: "Flow Resources II",
+    type: "flow",
+    questions: [
+      ["Name TWO ways humans use the sun's energy as a flow resource.",
+       "Solar panels (photovoltaic cells) convert sunlight into electricity. Solar thermal systems use sunlight to heat water. Passive solar design uses building orientation to heat/cool buildings without extra energy."],
+      ["How does the atmosphere protect life on Earth? Give TWO specific functions.",
+       "1. The ozone layer filters harmful ultraviolet radiation. 2. The greenhouse effect traps heat, keeping temperatures within a livable range. 3. It provides oxygen and nitrogen needed for breathing."],
+      ["Why is air quality worse in some cities than in others? Give TWO geographic factors.",
+       "1. Industrial activity and vehicle density release more pollutants. 2. Valley topography traps pollution (temperature inversions). 3. Low wind speeds reduce dispersal. 4. Proximity to coal plants or wildfires."],
+      ["Compare solar energy and wind energy. What is one thing they share and one key difference?",
+       "Both are flow resources that produce no greenhouse gas emissions during operation and are continuously replenished by natural processes. Key difference: solar is unavailable at night or under heavy cloud cover; wind is available day and night but depends on wind speed and location."],
+      ["A coastal city faces both water scarcity AND air pollution. Using geographic knowledge, suggest ONE solution for each problem and explain why each solution suits that city's geography.",
+       "Water: desalination suits a coastal city because seawater is readily available — the challenge is energy cost. Air: sea breezes may help disperse pollutants naturally, but stricter vehicle or industrial emission controls are needed for lasting improvement. Award marks for linking the solution to the coastal geography."]
+    ]
+  },
+  {
+    label: "Non-Renewable I",
+    type: "nr",
+    questions: [
+      ["What is the key difference between a mineral and a fossil fuel?",
+       "Minerals are inorganic — they were never living things. Fossil fuels (coal, oil, gas) formed from ancient organisms buried, compressed, and heated over millions of years."],
+      ["Why did fossil fuels take millions of years to form? Briefly describe the process.",
+       "Ancient plants and animals died and were buried under layers of sediment. Over millions of years, heat and pressure transformed the organic matter into coal, oil, or natural gas. This cannot be sped up — once used, they are permanently gone."],
+      ["What is fracking, and why do some communities oppose it?",
+       "Fracking (hydraulic fracturing) involves drilling into rock and injecting high-pressure fluid to release trapped oil or gas. Communities oppose it due to risks of groundwater contamination, minor earthquakes, methane leaks, and surface disruption."],
+      ["Explain TWO environmental consequences of extracting fossil fuels.",
+       "Any two of: habitat destruction from mining/drilling; water pollution from spills or acid mine drainage; soil contamination; air pollution from dust and methane; greenhouse gas emissions from burning; landscape scarring that persists after extraction ends."],
+      ["A country extracts oil from oil sands. Describe the process and evaluate TWO environmental impacts.",
+       "Oil sands contain thick bitumen mixed with sand. Extraction requires clearing vast areas of boreal forest and using enormous quantities of water and energy to separate and upgrade the bitumen. Impacts: 1. Permanent destruction of forest and wetland habitat. 2. Toxic tailings ponds that risk contaminating groundwater. 3. Significantly higher CO₂ emissions per barrel than conventional oil."]
+    ]
+  },
+  {
+    label: "Non-Renewable II",
+    type: "nr",
+    questions: [
+      ["What does it mean to say a resource is non-renewable? Give ONE example.",
+       "A non-renewable resource forms so slowly — over millions of years — that it cannot be replaced within a human lifetime. Once used, it is effectively gone. Examples: coal, oil, natural gas, gold, copper, iron ore."],
+      ["Why do Indigenous communities often oppose mining projects on their traditional lands?",
+       "Mining can destroy ecosystems, contaminate water sources, and damage sacred or culturally significant sites. Indigenous communities often depend on these lands for food, water, cultural identity, and spiritual practice — threats to the land are threats to their way of life."],
+      ["What are conflict minerals? Name ONE mineral and ONE country strongly associated with this issue.",
+       "Conflict minerals are natural resources whose extraction funds armed groups in conflict zones. Example: coltan (used in electronics), primarily from the Democratic Republic of Congo (DRC), where militias control mines and use forced labour."],
+      ["Give TWO reasons why reducing dependence on fossil fuels is difficult, even when the problems are well understood.",
+       "1. Economic dependence: many countries and communities rely on fossil fuel industries for jobs and government income. 2. Infrastructure lock-in: power grids, vehicles, and factories are built around fossil fuels and cannot switch overnight. 3. Political resistance from powerful fossil fuel industries. 4. High upfront cost of renewable alternatives."],
+      ["Evaluate ONE strategy for reducing dependence on non-renewable resources. Include what the strategy involves, who benefits, and ONE limitation.",
+       "Example: Investing in solar/wind infrastructure — reduces emissions and creates new jobs, but requires large upfront capital and may not suit all climates. Carbon tax — raises revenue for green investment but increases costs for poorer households. Full marks require: strategy named, beneficiaries identified, limitation explained."]
+    ]
+  },
+  {
+    label: "Mr. Nolan Facts",
+    type: "mn",
+    nolan: true,
+    questions: [
+      ["How old is Mr. Nolan?", ""],
+      ["Which country passport does Mr. Nolan hold?", ""],
+      ["Where did Mr. Nolan go to university?", ""],
+      ["What was the last city Mr. Nolan lived in before Taiwan?", ""],
+      ["What colour is Mr. Nolan's bicycle?", ""]
+    ]
+  }
+];
+
+const FINAL = {
+  question: "You have studied two types of natural resources this quarter: flow resources and non-renewable resources. Using evidence from BOTH units, explain why managing Earth's natural resources is one of the most important geographic challenges of the 21st century. In your answer, refer to at least ONE specific flow resource and ONE non-renewable resource, and suggest ONE strategy for each that could help protect resources for future generations.",
+  answer: "Students should: (1) Define and distinguish flow and non-renewable resources with accurate examples. (2) Explain specific challenges — e.g. freshwater scarcity/intermittency for flow; depletion, pollution, conflict for non-renewable. (3) Suggest one specific strategy per resource type with justification. Award higher marks for geographic terminology (flow resource, non-renewable, sustainability, conservation, extraction, depletion, scarcity), specific named examples, and explained trade-offs."
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+
+let usedCells = {};
+let finalUsed = false;
+let currentCell = null;
+let teams = [
+  { name: "Team 1", score: 0 },
+  { name: "Team 2", score: 0 },
+  { name: "Team 3", score: 0 },
+  { name: "Team 4", score: 0 }
+];
+
+const POINTS = [100, 200, 300, 400, 500];
+
+// ── SCOREBOARD ────────────────────────────────────────────────────────────────
+
+function initScoreboard() {
+  const sb = document.getElementById('scoreboard');
+  sb.innerHTML = '';
+  teams.forEach((t, i) => {
+    const card = document.createElement('div');
+    card.className = 'team-card';
+    card.innerHTML = `
+      <div class="team-name" contenteditable="true" style="outline:none">${t.name}</div>
+      <div class="team-score" id="score-${i}">${t.score}</div>
+      <div class="score-btns">
+        <button class="score-btn" onclick="adjustScore(${i}, 1)">+</button>
+        <button class="score-btn neg" onclick="adjustScore(${i}, -1)">−</button>
+      </div>
+    `;
+    sb.appendChild(card);
+  });
+}
+
+function adjustScore(teamIdx, delta) {
+  const pts = currentCell ? currentCell.pts * delta : 100 * delta;
+  teams[teamIdx].score += pts;
+  document.getElementById(`score-${teamIdx}`).textContent = teams[teamIdx].score;
+}
+
+// ── BOARD ─────────────────────────────────────────────────────────────────────
+
+function buildBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+
+  // Headers
+  COLUMNS.forEach(col => {
+    const h = document.createElement('div');
+    h.className = `cat-header cat-${col.type}`;
+    h.textContent = col.label;
+    board.appendChild(h);
+  });
+
+  // Cells
+  POINTS.forEach((pts, row) => {
+    COLUMNS.forEach((col, colIdx) => {
+      const cell = document.createElement('div');
+      const key = `${colIdx}-${row}`;
+      cell.className = `cell cell-${col.type}${usedCells[key] ? ' used' : ''}`;
+      cell.textContent = usedCells[key] ? '' : pts;
+      if (!usedCells[key]) {
+        cell.onclick = () => openQuestion(colIdx, row, pts, col, cell);
+      }
+      board.appendChild(cell);
+    });
+  });
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+
+function openQuestion(colIdx, row, pts, col, cellEl) {
+  const key = `${colIdx}-${row}`;
+  const [q, a] = col.questions[row];
+  const isNolan = !!col.nolan;
+  currentCell = { key, pts, cellEl };
+
+  const modal = document.getElementById('modal');
+  modal.className = `modal modal-${col.type}`;
+
+  document.getElementById('modal-points').textContent = `${pts} points`;
+  document.getElementById('modal-category').textContent = col.label;
+  document.getElementById('modal-question').textContent = q;
+
+  const answerBox = document.getElementById('modal-answer');
+  const noAnswerBox = document.getElementById('modal-no-answer');
+  document.getElementById('modal-answer-text').textContent = a;
+  answerBox.classList.remove('revealed');
+  noAnswerBox.classList.remove('revealed');
+
+  const actions = document.getElementById('modal-actions');
+  actions.innerHTML = '';
+
+  if (isNolan) {
+    // No reveal button — Mr. Nolan announces
+    const announceBtn = document.createElement('button');
+    announceBtn.className = 'btn btn-nolan';
+    announceBtn.textContent = '🎤 Show Announcement';
+    announceBtn.onclick = () => { noAnswerBox.classList.add('revealed'); announceBtn.style.display = 'none'; };
+    actions.appendChild(announceBtn);
+  } else {
+    const revealBtn = document.createElement('button');
+    revealBtn.className = 'btn btn-reveal';
+    revealBtn.textContent = 'Reveal Answer';
+    revealBtn.onclick = () => { answerBox.classList.add('revealed'); revealBtn.style.display = 'none'; };
+    actions.appendChild(revealBtn);
+  }
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'btn btn-close';
+  closeBtn.innerHTML = 'Mark &amp; Close ✓';
+  closeBtn.onclick = () => closeModal(true);
+  actions.appendChild(closeBtn);
+
+  const dismissBtn = document.createElement('button');
+  dismissBtn.className = 'btn btn-dismiss';
+  dismissBtn.textContent = 'Close ✗';
+  dismissBtn.onclick = () => closeModal(false);
+  actions.appendChild(dismissBtn);
+
+  document.getElementById('modal-backdrop').classList.remove('hidden');
+}
+
+function openFinal() {
+  if (finalUsed) return;
+  currentCell = { key: 'final', pts: 1000, cellEl: document.getElementById('final-cell') };
+
+  const modal = document.getElementById('modal');
+  modal.className = 'modal modal-final';
+
+  document.getElementById('modal-points').textContent = 'Final Jeopardy';
+  document.getElementById('modal-category').textContent = 'Flow Resources + Non-Renewable Resources';
+  document.getElementById('modal-question').textContent = FINAL.question;
+  document.getElementById('modal-answer-text').textContent = FINAL.answer;
+
+  const answerBox = document.getElementById('modal-answer');
+  const noAnswerBox = document.getElementById('modal-no-answer');
+  answerBox.classList.remove('revealed');
+  noAnswerBox.classList.remove('revealed');
+
+  const actions = document.getElementById('modal-actions');
+  actions.innerHTML = '';
+
+  const revealBtn = document.createElement('button');
+  revealBtn.className = 'btn btn-reveal';
+  revealBtn.textContent = 'Reveal Answer Guide';
+  revealBtn.onclick = () => { answerBox.classList.add('revealed'); revealBtn.style.display = 'none'; };
+  actions.appendChild(revealBtn);
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'btn btn-close';
+  closeBtn.innerHTML = 'Mark &amp; Close ✓';
+  closeBtn.onclick = () => closeModal(true);
+  actions.appendChild(closeBtn);
+
+  const dismissBtn = document.createElement('button');
+  dismissBtn.className = 'btn btn-dismiss';
+  dismissBtn.textContent = 'Close ✗';
+  dismissBtn.onclick = () => closeModal(false);
+  actions.appendChild(dismissBtn);
+
+  document.getElementById('modal-backdrop').classList.remove('hidden');
+}
+
+function closeModal(markUsed) {
+  if (markUsed && currentCell) {
+    usedCells[currentCell.key] = true;
+    if (currentCell.key === 'final') {
+      finalUsed = true;
+      const fc = document.getElementById('final-cell');
+      fc.classList.add('used');
+      fc.textContent = '👑 Final Jeopardy — Completed';
+    } else {
+      currentCell.cellEl.classList.add('used');
+      currentCell.cellEl.textContent = '';
+      currentCell.cellEl.onclick = null;
+    }
+  }
+  document.getElementById('modal-backdrop').classList.add('hidden');
+  currentCell = null;
+}
+
+// ── RESET ─────────────────────────────────────────────────────────────────────
+
+function resetGame() {
+  if (!confirm('Reset the entire board? All scores and progress will be lost.')) return;
+  usedCells = {};
+  finalUsed = false;
+  currentCell = null;
+  teams.forEach(t => t.score = 0);
+  initScoreboard();
+  buildBoard();
+  const fc = document.getElementById('final-cell');
+  fc.classList.remove('used');
+  fc.textContent = '👑 FINAL JEOPARDY — The Ultimate Q4 Question';
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+initScoreboard();
+buildBoard();
+</script>
+</body>
+</html>
